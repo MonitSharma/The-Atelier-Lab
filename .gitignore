@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Atelier runtime data (local, regenerable, can be large)
+data/vectorstore/
+data/traces/
+data/memory/
+data/eval_reports/
+.eval_workspace/
+*.log
+
+# Environment / secrets
+.env
+.env.*
+
+# Model / HF caches if ever placed in-tree
+models/*.gguf
+models/*.safetensors
+.cache/
+
+# OS
+.DS_Store

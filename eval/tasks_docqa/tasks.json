@@ -1,0 +1,42 @@
+{
+  "_comment": "FROZEN knowledge-mode eval suite. Do not edit casually — changing the ruler invalidates comparisons (PROJECT.md §9). Questions are answerable only from the indexed corpus (Project.md, myNotes.md, README.md).",
+  "corpus": ["Project.md", "myNotes.md", "README.md"],
+  "tasks": [
+    {
+      "id": "binding-limit",
+      "question": "According to my notes, what is the binding limit of the project — is it the 36 GB of RAM?",
+      "expected_contains": ["reasoning ceiling", "error compounding"],
+      "expected_source": "Project.md"
+    },
+    {
+      "id": "hard-constraints",
+      "question": "What are the hard, non-negotiable constraints of Atelier?",
+      "expected_contains": ["local", "$0"],
+      "expected_source": "Project.md"
+    },
+    {
+      "id": "two-modes",
+      "question": "What are the two capability modes the agent has, and what verifies each?",
+      "expected_contains": ["knowledge", "build", "test"],
+      "expected_source": "Project.md"
+    },
+    {
+      "id": "non-goals",
+      "question": "Name two explicit non-goals of the project.",
+      "expected_contains": ["frontier"],
+      "expected_source": "Project.md"
+    },
+    {
+      "id": "embedding-choice",
+      "question": "Which embedding model does Atelier use and on what device?",
+      "expected_contains": ["bge-base", "mps"],
+      "expected_source": "README.md"
+    },
+    {
+      "id": "memory-table",
+      "question": "Roughly how much memory does a 13B-14B parameter model need according to my notes table?",
+      "expected_contains": ["10 gb", "12 gb"],
+      "expected_source": "myNotes.md"
+    }
+  ]
+}

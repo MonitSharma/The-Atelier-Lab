@@ -1,0 +1,5 @@
+{
+  "id": "offbyone",
+  "prompt": "There is a failing test in the directory `{path}`. Use repo_map and read_file to understand the code, find the bug, fix it with edit_file, then run test_runner on `{path}` to prove every test passes. Finish only when the tests pass cleanly.",
+  "verify_path": "."
+}
