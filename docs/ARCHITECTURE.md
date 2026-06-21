@@ -69,8 +69,9 @@ One registry is the single source of truth, consumed by both the ReAct loop and
 the MCP server.
 
 - **Build:** `read_file` / `write_file` / `edit_file` (workspace-sandboxed),
-  `code_exec` (subprocess + timeout + macOS seatbelt network deny), `test_runner`
-  (pytest, parsed — the *verifier*), `repo_map` (AST outline), `search` (local grep).
+  `ast_edit` (compile-checked Python function body replacement), `code_exec`
+  (subprocess + timeout + macOS seatbelt network deny), `test_runner` (pytest,
+  parsed — the *verifier*), `repo_map` (AST outline), `search` (local grep).
 - **Knowledge:** `search_notes` (semantic RAG as a tool).
 - **Memory:** `remember`, `recall`.
 - **Opt-in:** `shell` (powerful, lightly guarded).
@@ -115,7 +116,7 @@ verifies with the real pytest runner, JSON reports, and a **regression gate**
 ## Data & control flow: "fix the failing test"
 1. `atelier agent "fix sample_task/"` → `ReActAgent.run`
 2. brain emits a JSON tool call → registry executes → observation appended
-3. typical arc: `repo_map → read_file → edit_file → test_runner`
+3. typical arc: `repo_map → read_file → edit_file` or `ast_edit` → `test_runner`
 4. agent finalizes only when `test_runner.passed_clean` is true; trace saved
 
 ## Hard constraints honored (PROJECT.md §1)
@@ -124,5 +125,6 @@ and one-time model downloads. Code execution is sandboxed; file/test tools are
 pinned to the workspace.
 
 ## What's intentionally *not* here
-No cloud APIs, no hosted vector DB, no always-on service, no multi-agent
-orchestrator (single agent for now), no fine-tuned router yet (Phase 6).
+No cloud APIs, no hosted vector DB, no always-on service, and no multi-agent
+orchestrator yet. The fine-tuned router is present as a local component, but the
+main build loop is still a single ReAct agent.

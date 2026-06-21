@@ -13,9 +13,10 @@ from __future__ import annotations
 import json
 import shutil
 import time
-from datetime import datetime, timezone
+from collections.abc import Callable
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from atelier.config import settings
 from eval import metrics
@@ -23,6 +24,7 @@ from eval import metrics
 ROOT = settings.root
 DOCQA_FILE = ROOT / "eval" / "tasks_docqa" / "tasks.json"
 CODE_DIR = ROOT / "eval" / "tasks_code"
+COMBINED_DIR = ROOT / "eval" / "tasks_combined"
 WORKSPACE = ROOT / ".eval_workspace"
 
 
@@ -56,8 +58,13 @@ def run_docqa(judge: bool = False, ingest: bool = True) -> dict[str, Any]:
         ans = answer_question(task["question"])
         row: dict[str, Any] = {
             "id": task["id"],
+            "category": task.get("category", "general"),
+            "difficulty": task.get("difficulty", "easy"),
             "keyword": metrics.keyword_score(ans.text, task.get("expected_contains", [])),
-            "retrieval_hit": int(metrics.retrieval_hit(ans.sources, task.get("expected_source"))),
+            "retrieval_hit": int(metrics.retrieval_hit(
+                ans.sources,
+                task.get("expected_sources", task.get("expected_source")),
+            )),
             "cited": int(metrics.cites_sources(ans.text)),
             "latency_s": round(time.time() - t0, 1),
             "answer": ans.text[:240],
@@ -72,7 +79,12 @@ def run_docqa(judge: bool = False, ingest: bool = True) -> dict[str, Any]:
     agg_keys = ["correct", "keyword", "retrieval_hit", "cited"]
     if judge:
         agg_keys += ["judge_correct", "judge_grounded"]
-    return {"rows": rows, "aggregate": metrics.aggregate(rows, agg_keys)}
+    return {
+        "rows": rows,
+        "aggregate": metrics.aggregate(rows, agg_keys),
+        "by_category": metrics.aggregate_by(rows, "category", agg_keys),
+        "by_difficulty": metrics.aggregate_by(rows, "difficulty", agg_keys),
+    }
 
 
 # --------------------------------------------------------------------------- #
@@ -90,6 +102,15 @@ def _tool_errors(trace: list[dict[str, Any]]) -> int:
                and e["observation"].get("status") == "error")
 
 
+def _tools_used(trace: list[dict[str, Any]]) -> list[str]:
+    tools: list[str] = []
+    for entry in trace:
+        decision = entry.get("decision")
+        if isinstance(decision, dict) and isinstance(decision.get("tool"), str):
+            tools.append(decision["tool"])
+    return tools
+
+
 def run_code_task(task_dir: Path, agent_runner: Callable[[str], Any] | None = None) -> dict[str, Any]:
     """Set up an isolated copy of a frozen task, run the agent, verify with pytest."""
     from tools.test_runner import run_tests
@@ -100,7 +121,7 @@ def run_code_task(task_dir: Path, agent_runner: Callable[[str], Any] | None = No
         shutil.rmtree(work)
     work.mkdir(parents=True)
     for f in task_dir.iterdir():
-        if f.name != "task.json":
+        if f.is_file() and f.name != "task.json":
             shutil.copy2(f, work / f.name)
 
     rel = work.relative_to(ROOT).as_posix()
@@ -116,6 +137,9 @@ def run_code_task(task_dir: Path, agent_runner: Callable[[str], Any] | None = No
 
     return {
         "id": spec["id"],
+        "category": spec.get("category", "general"),
+        "difficulty": spec.get("difficulty", "easy"),
+        "edit_scope": spec.get("edit_scope", "single_file"),
         "solved": int(solved),
         "steps": getattr(result, "steps", None),
         "tool_errors": _tool_errors(getattr(result, "trace", []) or []),
@@ -128,7 +152,83 @@ def run_code_task(task_dir: Path, agent_runner: Callable[[str], Any] | None = No
 def run_code(agent_runner: Callable[[str], Any] | None = None) -> dict[str, Any]:
     rows = [run_code_task(d, agent_runner) for d in sorted(CODE_DIR.iterdir())
             if d.is_dir() and (d / "task.json").exists()]
-    return {"rows": rows, "aggregate": metrics.aggregate(rows, ["solved", "tool_errors", "steps"])}
+    agg_keys = ["solved", "tool_errors", "steps"]
+    return {
+        "rows": rows,
+        "aggregate": metrics.aggregate(rows, agg_keys),
+        "by_category": metrics.aggregate_by(rows, "category", agg_keys),
+        "by_difficulty": metrics.aggregate_by(rows, "difficulty", agg_keys),
+        "by_edit_scope": metrics.aggregate_by(rows, "edit_scope", agg_keys),
+    }
+
+
+# --------------------------------------------------------------------------- #
+# Combined knowledge -> build mode
+# --------------------------------------------------------------------------- #
+def run_combined_task(
+    task_dir: Path,
+    agent_runner: Callable[[str], Any] | None = None,
+    *,
+    ingest: bool = True,
+) -> dict[str, Any]:
+    """Run a task that must use knowledge retrieval and then prove a code change."""
+    from tools.test_runner import run_tests
+
+    spec = json.loads((task_dir / "task.json").read_text())
+    if ingest:
+        ensure_corpus(spec.get("corpus", []))
+
+    work = WORKSPACE / "combined" / spec["id"]
+    if work.exists():
+        shutil.rmtree(work)
+    work.mkdir(parents=True)
+    for f in task_dir.iterdir():
+        if f.is_file() and f.name != "task.json":
+            shutil.copy2(f, work / f.name)
+
+    rel = work.relative_to(ROOT).as_posix()
+    prompt = spec["prompt"].format(path=rel)
+
+    runner = agent_runner or _default_agent_runner
+    t0 = time.time()
+    result = runner(prompt)
+    elapsed = round(time.time() - t0, 1)
+
+    trace = getattr(result, "trace", []) or []
+    tools_used = _tools_used(trace)
+    verify = run_tests({"path": rel})
+    tests_passed = bool(verify.get("passed_clean"))
+    used_search_notes = "search_notes" in tools_used
+    solved = tests_passed and used_search_notes
+
+    return {
+        "id": spec["id"],
+        "category": spec.get("category", "general"),
+        "difficulty": spec.get("difficulty", "easy"),
+        "edit_scope": spec.get("edit_scope", "single_file"),
+        "solved": int(solved),
+        "tests_passed": int(tests_passed),
+        "used_search_notes": int(used_search_notes),
+        "steps": getattr(result, "steps", None),
+        "tool_errors": _tool_errors(trace),
+        "tools_used": tools_used,
+        "agent_finished": int(getattr(result, "success", False)),
+        "latency_s": elapsed,
+        "test_summary": verify.get("summary", ""),
+    }
+
+
+def run_combined(agent_runner: Callable[[str], Any] | None = None) -> dict[str, Any]:
+    rows = [run_combined_task(d, agent_runner) for d in sorted(COMBINED_DIR.iterdir())
+            if d.is_dir() and (d / "task.json").exists()]
+    agg_keys = ["solved", "tests_passed", "used_search_notes", "tool_errors", "steps"]
+    return {
+        "rows": rows,
+        "aggregate": metrics.aggregate(rows, agg_keys),
+        "by_category": metrics.aggregate_by(rows, "category", agg_keys),
+        "by_difficulty": metrics.aggregate_by(rows, "difficulty", agg_keys),
+        "by_edit_scope": metrics.aggregate_by(rows, "edit_scope", agg_keys),
+    }
 
 
 # --------------------------------------------------------------------------- #
@@ -136,7 +236,7 @@ def run_code(agent_runner: Callable[[str], Any] | None = None) -> dict[str, Any]
 # --------------------------------------------------------------------------- #
 def run_all(mode: str = "all", judge: bool = False) -> dict[str, Any]:
     report: dict[str, Any] = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "brain_model": settings.brain_model,
         "embed_model": settings.embed_model,
     }
@@ -144,12 +244,14 @@ def run_all(mode: str = "all", judge: bool = False) -> dict[str, Any]:
         report["docqa"] = run_docqa(judge=judge)
     if mode in ("all", "code"):
         report["code"] = run_code()
+    if mode in ("all", "combined"):
+        report["combined"] = run_combined()
     return report
 
 
 #: Metrics where higher is better (used by the regression gate).
 HIGHER_BETTER = {"correct", "retrieval_hit", "cited", "solved",
-                 "judge_correct", "judge_grounded"}
+                 "tests_passed", "used_search_notes", "judge_correct", "judge_grounded"}
 
 
 def latest_report() -> dict[str, Any] | None:
@@ -166,7 +268,7 @@ def latest_report() -> dict[str, Any] | None:
 def compare_reports(prev: dict[str, Any], cur: dict[str, Any], tol: float = 0.01) -> list[str]:
     """Return human-readable regressions where a 'higher is better' metric dropped."""
     regressions: list[str] = []
-    for mode in ("docqa", "code"):
+    for mode in ("docqa", "code", "combined"):
         if mode not in prev or mode not in cur:
             continue
         pa = prev[mode].get("aggregate", {})
@@ -181,7 +283,7 @@ def save_report(report: dict[str, Any]) -> Path:
     settings.ensure_dirs()
     out_dir = settings.data_dir / "eval_reports"
     out_dir.mkdir(parents=True, exist_ok=True)
-    ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+    ts = datetime.now(UTC).strftime("%Y%m%dT%H%M%S")
     path = out_dir / f"report_{ts}.json"
     path.write_text(json.dumps(report, indent=2, default=str))
     return path
@@ -191,7 +293,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", choices=["all", "docqa", "code"], default="all")
+    parser.add_argument("--mode", choices=["all", "docqa", "code", "combined"], default="all")
     parser.add_argument("--judge", action="store_true")
     args = parser.parse_args()
 

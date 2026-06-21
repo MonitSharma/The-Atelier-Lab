@@ -1,5 +1,6 @@
 from typing import Any
 
+from tools.ast_edit import AST_EDIT_TOOL
 from tools.base import Tool
 from tools.calculator import CALCULATOR_TOOL
 from tools.code_exec import CODE_EXEC_TOOL
@@ -90,6 +91,7 @@ def create_default_registry(include_shell: bool = False) -> ToolRegistry:
         READ_FILE_TOOL,
         WRITE_FILE_TOOL,
         EDIT_FILE_TOOL,
+        AST_EDIT_TOOL,
         SEARCH_TOOL,
         SEARCH_NOTES_TOOL,
         REPO_MAP_TOOL,

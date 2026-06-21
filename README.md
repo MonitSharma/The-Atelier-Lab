@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎩 Atelier
+# Project Atelier
 
 **A fully local, zero-cost, dual-mode AI agent that runs on a single MacBook.**
 
@@ -25,6 +25,12 @@ its own reliability — and reports where it fails.
 > **Why local-only?** The research question this project answers is *"how far can a
 > fully local, $0 agent go on one laptop?"* The constraints are the point, not a
 > limitation. Privacy is a free side effect: nothing is ever sent to a third party.
+
+**Current state:** Phases 0-7 are complete. The project now has an installable
+CLI, a local RAG system, an autonomous build-mode agent, durable memory, MCP
+tool serving, hybrid retrieval, a fine-tuned router, trace logging, and an
+expanded reliability suite: **18 doc-QA tasks** and **13 code-repair tasks**
+stratified by category, difficulty, and edit scope.
 
 ---
 
@@ -67,7 +73,7 @@ its own reliability — and reports where it fails.
 | 🧩 | **Persistent memory** | Remembers facts/preferences across sessions (semantic recall) |
 | 🛰️ | **MCP server** | Exposes its toolbox to Claude Desktop/Code or any MCP host |
 | ⚡ | **Fine-tuned router** | A 1-min LoRA fine-tune of a 0.5B model cuts brain calls ~50% with no accuracy loss |
-| 📊 | **Self-evaluation** | Frozen task suites + metrics + regression gate; honest reliability numbers |
+| 📊 | **Self-evaluation** | 18 doc-QA tasks + 13 code tasks, grouped metrics, regression gate, honest reliability numbers |
 | 🔒 | **100% local & free** | Only network use: the local Ollama endpoint + one-time model downloads |
 
 ---
@@ -167,7 +173,7 @@ authoritative log lives in [`PROJECT.md`](PROJECT.md) (Decision Log + Changelog)
 | Phase | Title | What it delivered | Where |
 |---|---|---|---|
 | **0** | The loop, from scratch | A hand-written ReAct loop (perceive→plan→act→observe), a local Ollama client, and one verifiable tool (an AST-sandboxed calculator). | `agent/loop.py`, `agent/brain.py`, `tools/calculator.py` |
-| **1** | Tools & the protocol | A `Tool`/`ToolRegistry` abstraction and the full toolbox: file read/write/edit (workspace-sandboxed), local search, repo map, **sandboxed code execution**, a **pytest runner**, plus an **MCP server** publishing them all. | `tools/`, `atelier/mcp_server.py` |
+| **1** | Tools & the protocol | A `Tool`/`ToolRegistry` abstraction and the full toolbox: file read/write/edit + AST edits (workspace-sandboxed), local search, repo map, **sandboxed code execution**, a **pytest runner**, plus an **MCP server** publishing them all. | `tools/`, `atelier/mcp_server.py` |
 | **2** | Knowledge mode (RAG) | Ingest (md/txt/pdf/code) → heading-aware chunking → local embeddings → ChromaDB → retrieval → **grounded, cited answers**. | `rag/` |
 | **3** | Memory & state | Persistent, semantic long-term memory in its own vector collection; `remember`/`recall` as both CLI commands and agent tools; cross-session persistence. | `agent/memory.py`, `tools/memory_tools.py` |
 | **4** | Build mode + reliability | A registry-driven ReAct engine with **reflection** (recovers from tool/parse errors), observation capping, and full **trace logging**. Verified live: the agent fixes a failing test and proves it. | `agent/react.py` |
@@ -277,10 +283,10 @@ client (Claude Desktop/Code, etc.):
 atelier mcp        # speaks JSON-RPC over stdio
 ```
 
-Point your MCP host's server command at `atelier mcp`. It publishes 11 tools:
-`calculator`, `read_file`, `write_file`, `edit_file`, `search`, `search_notes`,
-`repo_map`, `code_exec`, `test_runner`, `remember`, `recall` (add `--shell` for the
-shell tool).
+Point your MCP host's server command at `atelier mcp`. It publishes 12 tools:
+`calculator`, `read_file`, `write_file`, `edit_file`, `ast_edit`, `search`,
+`search_notes`, `repo_map`, `code_exec`, `test_runner`, `remember`, `recall`
+(add `--shell` for the shell tool).
 
 ### Evaluation
 
@@ -288,13 +294,24 @@ shell tool).
 atelier eval                  # score both modes, print tables, save a JSON report
 atelier eval --mode docqa     # knowledge mode only
 atelier eval --mode code      # build mode only
+atelier eval --mode combined  # knowledge -> build composition only
 atelier eval --judge          # add the local LLM-as-judge (groundedness)
 atelier eval --gate           # FAIL (exit 1) if any metric regressed vs the last report
+atelier eval-plots            # generate SVG plots from the latest saved report
 ```
 
 Reports are saved to `data/eval_reports/`. The suites in `eval/tasks_docqa/` and
 `eval/tasks_code/` are **frozen on purpose** — add new tasks, don't edit existing
-ones, or you invalidate comparisons.
+ones, or you invalidate comparisons. The current suite has **18 knowledge-mode
+questions** and **13 build-mode code tasks**; report rows include `category`,
+`difficulty`, and code `edit_scope` so you can plot success rate by task type.
+The combined suite counts a task as solved only if tests pass and the trace used
+`search_notes`.
+
+`atelier eval-plots` writes dependency-free SVG charts under
+`data/eval_reports/plots/<report-name>/`, including overall doc-QA scores,
+correctness by doc-QA category, build solved-rate by difficulty/edit scope, and
+steps-by-task.
 
 ---
 
@@ -315,6 +332,7 @@ ones, or you invalidate comparisons.
 | `atelier route "TASK"` | Classify a task easy/hard and show the chosen model (`--backend`) |
 | `atelier mcp` | Serve the toolbox over MCP (stdio) |
 | `atelier eval` | Run the reliability suites (`--mode/--judge/--gate`) |
+| `atelier eval-plots` | Generate SVG charts from the latest or selected eval report |
 
 Run `atelier --help` or `atelier <command> --help` for full options.
 
@@ -373,30 +391,83 @@ fine-tune simultaneously — serialize them.
 
 ## Reliability results
 
-From the frozen eval suites on an M3 Pro with `qwen3:14b` (full analysis and
-honest caveats in [`docs/EVAL.md`](docs/EVAL.md) and the writeup in
-[`docs/WRITEUP.md`](docs/WRITEUP.md)):
-
-**Knowledge mode (8 questions over the real corpus)**
+Latest expanded results with `qwen3:14b` on an M3 Pro, generated with
+`atelier eval --mode all` after the repo-map path fix and retrieval-metric
+update.
 
 | Metric | Score |
 |---|---|
-| Correct | **100%** (8/8) |
-| Retrieval hit@k | **100%** (8/8) |
-| Citation rate | **75%** (6/8) ← the gap to close |
+| Knowledge correctness | **94%** (17/18) |
+| Knowledge retrieval hit@k | **83%** (15/18) |
+| Knowledge citation rate | **100%** (18/18) |
+| Code tasks solved | **100%** (13/13) |
+| Combined tasks solved | **100%** (3/3) |
+| Combined tasks using `search_notes` | **100%** (3/3) |
+| Single-line code fixes | **100%** (8/8) |
+| Multi-line code fixes | **100%** (5/5) |
+| Average code steps | **6.1** |
+| Average tool errors | **0.0** |
 
-**Build mode (3 fix-the-failing-test tasks)**
+![Knowledge mode overview](docs/assets/eval/report_20260621T173650/docqa_overview.svg)
 
-| Task | Solved |
-|---|---|
-| add_bug (single-line) | ✅ |
-| offbyone (single-line) | ✅ |
-| median_bug (multi-line if/else) | ❌ |
-| **Overall** | **67%** (2/3) |
+![Build mode overview](docs/assets/eval/report_20260621T173650/code_overview.svg)
 
-The unsolved task is the *finding*: `qwen3:14b` reliably makes single-line fixes
-but is unreliable on multi-line **structural** edits — a clean measurement of the
-local-model reasoning ceiling, not something hidden.
+**Build-mode breakdown**
+
+| Slice | Solved | Finding |
+|---|---:|---|
+| Easy tasks | **100%** | arithmetic, off-by-one, API misuse, normalization all pass |
+| Medium tasks | **100%** | all medium tasks now pass |
+| Single-line edits | **100%** | reliable on the expanded suite |
+| Multi-line edits | **100%** | the prior weak boundary now passes on this suite |
+
+![Solved by difficulty](docs/assets/eval/report_20260621T173650/code_by_difficulty.svg)
+
+![Solved by edit scope](docs/assets/eval/report_20260621T173650/code_by_edit_scope.svg)
+
+![Steps by task](docs/assets/eval/report_20260621T173650/code_steps_by_task.svg)
+
+The earlier expanded code run failed only `median_bug` and scored 92% (12/13).
+Trace inspection showed that the agent was confused by paths from `repo_map`.
+After `repo_map` was changed to emit workspace-relative paths, the full code
+suite passed: **13/13 solved, 0 tool errors**. `ast_edit` remains available as a
+safer compile-checked option for future structural Python edits.
+
+**Combined knowledge → build**
+
+The combined suite tests the actual composition goal: retrieve a project/user
+decision from notes, edit code based on that decision, and prove it with tests.
+
+| Task | Result |
+|---|---:|
+| `license_preference` | passed |
+| `testing_preference` | passed |
+| `locality_constraint` | passed |
+| **Overall** | **100%** (3/3) |
+
+![Combined overview](docs/assets/eval/report_20260621T174453/combined_overview.svg)
+
+![Combined by category](docs/assets/eval/report_20260621T174453/combined_by_category.svg)
+
+**Knowledge-mode breakdown**
+
+![Correctness by doc-QA category](docs/assets/eval/report_20260621T173650/docqa_by_category.svg)
+
+The knowledge suite is mostly correct, and citation discipline is now perfect on
+this run. Retrieval hit@k improved from 61% to 83% after allowing multiple valid
+expected sources where the same fact appears in several project docs.
+
+**Suite size**
+
+| Suite | Size | What it probes |
+|---|---:|---|
+| Doc-QA | 18 tasks | constraints, architecture, RAG, tools, models, usage, evaluation |
+| Code repair | 13 tasks | arithmetic, off-by-one, normalization, mutation, order preservation, structural logic |
+| Combined | 3 tasks | retrieve a project/user decision, then make a verified code change |
+
+Earlier baseline on the smaller 8+3 suite was 100% doc-QA correctness and 67%
+code solved. The expanded run is more informative: it shows build mode is now
+reliable on this 13-task single-file repair suite after the path-handoff fix.
 
 **Router (fine-tuned 0.5B)**
 
@@ -422,6 +493,8 @@ make setup            # uv venv + install
 make test             # unit suite (no model)
 make ingest           # index the sample corpus
 make eval             # reliability eval
+make eval-plots       # SVG charts for the latest eval report
+make planner-data     # build task -> plan/router SFT data from eval metadata
 make train-router     # LoRA fine-tune + evaluate the router (~1 min)
 make route-eval       # measure routing savings
 make demo             # quick end-to-end build-mode demo
@@ -438,7 +511,7 @@ A complete, ability-by-ability test playbook (with expected outputs) lives in
 [`docs/TESTING.md`](docs/TESTING.md). The fast automated suite needs **no model**:
 
 ```bash
-pytest -q             # 54 tests: tools, sandbox/escape guards, chunking,
+pytest -q             # fast tests: tools, sandbox/escape guards, chunking,
                       # vector store, ReAct engine, memory, retrieval, router, eval
 ```
 
@@ -473,6 +546,7 @@ atelier/
 ├── tools/                    # the shared toolbox (one registry, two modes)
 │   ├── registry.py           #   register/validate/dispatch tools
 │   ├── files.py              #   read/write/edit (workspace-sandboxed, syntax-checked)
+│   ├── ast_edit.py           #   AST-aware Python function body replacement
 │   ├── code_exec.py          #   sandboxed Python execution
 │   ├── test_runner.py        #   pytest runner — build mode's verifier
 │   ├── repo_map.py           #   AST outline of a codebase
@@ -493,12 +567,14 @@ atelier/
 ├── eval/                     # reliability harness
 │   ├── tasks_docqa/          #   frozen knowledge-mode suite
 │   ├── tasks_code/           #   frozen build-mode suite (repo + bug + hidden test)
+│   ├── tasks_combined/       #   knowledge -> build suite
 │   ├── metrics.py            #   scoring + local LLM-as-judge
 │   ├── run_eval.py           #   runner, reports, regression gate
 │   └── route_eval.py         #   routing-savings measurement
 │
 ├── models/router/            # Phase 6 fine-tune
 │   ├── make_dataset.py       #   synthetic difficulty dataset
+│   ├── make_planner_dataset.py # eval metadata -> planner/router SFT data
 │   ├── evaluate.py           #   base vs fine-tuned accuracy
 │   └── adapter/              #   the trained LoRA adapter (~6 MB)
 │

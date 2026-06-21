@@ -37,9 +37,11 @@ is the Ollama endpoint and one-time model downloads. Full design:
 
 - **Models:** brain `qwen3:14b` (4-bit), worker `qwen3:4b`, embeddings
   `bge-base-en-v1.5`, router `Qwen2.5-0.5B` + LoRA.
-- **Suites (frozen):** 8 doc-QA questions over the real corpus; 3 build tasks
+- **Baseline suites:** 8 doc-QA questions over the real corpus; 3 build tasks
   (repo + bug + hidden test). Metrics: keyword-coverage correctness, retrieval
   hit@k, citation rate (knowledge); solved / steps / tool-errors (build).
+  The repo now also contains an expanded 18 doc-QA + 13 code-task suite for the
+  next reliability curve.
 - **Router fine-tune:** 256 synthetic difficulty-labeled examples, LoRA on 0.5B,
   200 iters (~1 min, peak 1.5 GB). Held-out test accuracy, base vs. adapted.
 - **Honesty rules:** suites are frozen; we report failures; no tuning-to-pass.
@@ -116,8 +118,9 @@ agent without hurting it.
 
 ## 5. Honest limitations
 
-- **Small suites** (8 + 3). 100% on knowledge means "no obvious failures on a
-  modest corpus," not "robust at scale." Next: stratify by difficulty.
+- **Small recorded baseline** (8 + 3). 100% on knowledge means "no obvious
+  failures on a modest corpus," not "robust at scale." The expanded suite is in
+  the repo; the next step is running it and reporting success by difficulty.
 - **In-distribution router test.** 100% reflects pattern learning on templated
   data; the novel-phrasing spot-checks are encouraging but not a generalization
   benchmark.

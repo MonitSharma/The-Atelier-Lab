@@ -1,0 +1,8 @@
+{
+  "id": "inventory_total",
+  "category": "arithmetic",
+  "difficulty": "easy",
+  "edit_scope": "single_line",
+  "prompt": "There is a failing test in the directory `{path}`. Use repo_map and read_file to understand the code. Use the workspace-relative file paths shown by repo_map, find the bug, fix it with edit_file for single-line changes, or ast_edit for multi-line Python function body changes. Do not use edit_file for multi-line function body rewrites. Then run test_runner on `{path}` to prove every test passes. Finish only when the tests pass cleanly.",
+  "verify_path": "."
+}

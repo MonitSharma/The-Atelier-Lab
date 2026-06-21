@@ -35,8 +35,8 @@ it prints.
 pytest -q
 ```
 
-**Expect:** all green (35+ tests). These cover the calculator sandbox, file
-read/write/edit + path-escape rejection, markdown chunking, the ChromaDB
+**Expect:** all green. These cover the calculator sandbox, file
+read/write/edit + AST edit + path-escape rejection, markdown chunking, the ChromaDB
 round-trip, every build-mode tool, and the ReAct engine (with a scripted brain).
 None of them call Ollama, so they finish in seconds.
 
@@ -270,7 +270,7 @@ async def main():
 asyncio.run(main())
 PY
 ```
-**Expect:** a list of 11 tools and `calculator(6*7)` returning `42`. To wire it
+**Expect:** a list of 12 tools and `calculator(6*7)` returning `42`. To wire it
 into Claude Desktop/Code, point an MCP server entry at the command `atelier mcp`.
 
 ## 6b. Reliability eval — measure, don't guess
@@ -309,6 +309,31 @@ change lowered `correct` / `retrieval_hit` / `solved`, it prints the deltas and
 exits non-zero — wire this into a pre-commit or CI step. The gate logic itself is
 unit-tested in `tests/test_eval.py`.
 
+### Eval plots
+```bash
+atelier eval --mode all
+atelier eval-plots
+```
+**Expect:** SVG charts under `data/eval_reports/plots/<report-name>/`, including
+doc-QA overview, doc-QA by category, code overview, code by difficulty, code by
+edit scope, and code steps by task. Plot generation itself is unit-tested in
+`tests/test_eval_plots.py` with a fake report, so it does not require Ollama.
+
+### Combined eval
+```bash
+atelier eval --mode combined
+```
+**Expect:** each task first uses `search_notes`, then edits a small repo and
+proves the result with `test_runner`. A row only counts as solved if both the
+tests pass and the trace contains `search_notes`.
+
+### Planner-router data
+```bash
+make planner-data
+```
+**Expect:** JSONL files under `models/router/data/` that map task prompts to
+`category`, `difficulty`, `edit_scope`, `tool_plan`, and `model_route`.
+
 ## 7. One-command sanity sweep
 
 ```bash
@@ -324,7 +349,7 @@ knowledge mode, and build-mode tooling are all intact.
 | Ability | Command | Success signal |
 |---|---|---|
 | Health | `atelier doctor` | all models green |
-| Unit tests | `pytest -q` | 35+ passed |
+| Unit tests | `pytest -q` | all fast tests passed |
 | Ingest | `atelier ingest <path>` | chunks stored, dim 768 |
 | Grounded Q&A | `atelier ask "..."` | cited answer matching your notes |
 | RAG lift | §2c before/after | grounded wins over baseline |

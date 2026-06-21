@@ -9,11 +9,14 @@ tracked over time.
 
 ```bash
 source .venv/bin/activate
-atelier eval                 # both suites
+atelier eval                 # all suites
+atelier eval --mode combined # knowledge -> build composition only
 atelier eval --judge         # add local LLM-as-judge for groundedness
+atelier eval-plots           # SVG plots from the latest saved report
 ```
 
 Reports are written to `data/eval_reports/report_*.json`.
+Plots are written to `data/eval_reports/plots/<report-name>/`.
 
 ## Setup
 
@@ -23,48 +26,140 @@ Reports are written to `data/eval_reports/report_*.json`.
 | Embeddings | `BAAI/bge-base-en-v1.5` (768-dim, MPS) |
 | Retrieval k | 6 |
 | Hardware | MacBook M3 Pro, 36 GB |
-| Suites | `eval/tasks_docqa/` (6 Qs), `eval/tasks_code/` (2 tasks) |
+| Suites | `eval/tasks_docqa/` (18 Qs), `eval/tasks_code/` (13 tasks), `eval/tasks_combined/` (3 tasks) |
 
-## Results — 2026-06-21 (expanded suite: 8 doc-QA + 3 code)
-
-### Knowledge mode (doc-QA, 8 questions over the real corpus)
+## Latest expanded run — 2026-06-21 UTC (18 doc-QA + 13 code)
 
 | Metric | Score |
 |---|---|
-| Correct (keyword coverage ≥ 0.5) | **100%** (8/8) |
-| Retrieval hit@k (expected source retrieved) | **100%** (8/8) |
-| Cited sources | **75%** (6/8) |
+| Knowledge correctness | **94%** (17/18) |
+| Knowledge retrieval hit@k | **83%** (15/18) |
+| Knowledge citations | **100%** (18/18) |
+| Code solved after path fix | **100%** (13/13) |
+| Combined solved | **100%** (3/3) |
+| Combined used `search_notes` | **100%** (3/3) |
+| Average code steps after path fix | **6.1** |
+| Average tool errors after path fix | **0.0** |
 
-Retrieval and correctness are saturated on this corpus; the gap is **citation
-discipline** — on 2 of 8 answers the model gave the right content but omitted the
-`[n]` markers. A concrete, trackable target for prompt work.
+Plots from this run are checked into `docs/assets/eval/report_20260621T173650/`
+and embedded in the README.
 
-### Build mode (code, 3 fix-the-failing-test tasks)
+### Knowledge mode
 
-| Task | Solved | Steps | Note |
-|---|---|---|---|
-| add_bug (arithmetic) | ✅ | 5 | clean single-line fix |
-| offbyone (slice off-by-one) | ✅ | 6 | clean single-line fix |
-| median_bug (even-length averaging) | ❌ | 12 (budget hit) | see finding below |
-| **Overall** | **67%** (2/3) | avg 7.7 | tool_errors 0.0 |
+The model answered 17/18 questions correctly and cited sources on all 18
+answers. The only incorrect task in this run was `median-failure-finding`.
 
-#### Finding: the reliability boundary is multi-line edits
-`median_bug` requires replacing one line with a multi-line `if/else` that averages
-the two middle elements. `qwen3:14b` is **unreliable** here: in one run it wrote
-correct logic but with broken indentation (`return` outside the function →
-`SyntaxError`); in another it failed to land a working edit within the 12-step
-budget and left the original line. It reliably handles *single-line* fixes but
-not *structural* multi-line edits at this size — a clean, honest demonstration of
-the local-model reasoning ceiling (PROJECT.md §3, §11).
+Retrieval hit@k improved from 61% to 83% after the metric was updated to allow
+multiple valid expected sources for facts repeated across README, Project.md,
+and docs files.
 
-**Mitigation already shipped from this finding:** `write_file`/`edit_file` now
-run a Python `compile()` check and return `syntax_ok` / `syntax_error`, so the
-agent is told immediately when an edit breaks the file (and the system prompt
-instructs it to fix syntax first). This removed the "can't even collect the
-tests" failure mode; the underlying multi-line-edit difficulty remains and is the
-right next target (more steps, the `--heavy` model, or better edit ergonomics).
+### Build mode
 
-Total wall-clock for the full run: ~6 min.
+| Slice | Solved | Steps | Tool errors |
+|---|---:|---:|---:|
+| All code tasks | **100%** (13/13) | 6.1 | 0.0 |
+| Easy tasks | **100%** | 5.6 | 0.0 |
+| Medium tasks | **100%** | 6.2 | 0.0 |
+| Single-line edits | **100%** | 5.6 | 0.0 |
+| Multi-line edits | **100%** | 6.2 | 0.0 |
+
+Every category now solves at 100% on the 13-task code suite, including
+`structural_logic`.
+
+This is the clearest current finding: **the prior failure was not only a model
+reasoning limit; a path-handoff bug between `repo_map` and file tools was a major
+cause.** Once `repo_map` emitted workspace-relative paths, `median_bug` passed
+and the full code suite reached 100%.
+
+### Post-eval fix
+
+After the 92% full run, two fixes were added:
+
+- `repo_map` now emits workspace-relative paths, so the agent can copy paths
+  directly into `read_file`, `edit_file`, and `ast_edit`.
+- `ast_edit` can replace Python function bodies with a compile check before
+  writing.
+
+A targeted live rerun of `median_bug` passed in 5 steps with 0 tool errors.
+Then the full 13-task code suite passed:
+
+```text
+code solved: 100%
+average steps: 5.8
+average tool errors: 0.0
+report: data/eval_reports/report_20260621T171954.json
+```
+
+The latest full all-mode report is:
+
+```text
+data/eval_reports/report_20260621T173650.json
+```
+
+### Combined mode
+
+The first combined knowledge→build suite passed:
+
+| Task | Knowledge needed | Result |
+|---|---|---:|
+| `license_preference` | user license preference | passed |
+| `testing_preference` | user testing framework preference | passed |
+| `locality_constraint` | local-only / no-cloud constraint | passed |
+| **Overall** | tests + `search_notes` required | **100%** (3/3) |
+
+Report:
+
+```text
+data/eval_reports/report_20260621T174453.json
+```
+
+Plots:
+
+```text
+docs/assets/eval/report_20260621T174453/
+```
+
+## Smaller baseline — 2026-06-21 (8 doc-QA + 3 code)
+
+The earlier baseline was intentionally smaller:
+
+| Suite | Result |
+|---|---:|
+| Doc-QA correctness | **100%** (8/8) |
+| Retrieval hit@k | **100%** (8/8) |
+| Citation rate | **75%** (6/8) |
+| Code solved | **67%** (2/3) |
+
+The expanded run is more informative than this baseline: it shows that build
+mode is stronger across simple repairs than the 3-task suite suggested, while
+confirming the same hard boundary around structural multi-line edits.
+
+## Expanded suite — added 2026-06-22
+
+The current frozen suite is larger than the recorded baseline:
+
+| Suite | Count | Coverage |
+|---|---:|---|
+| Doc-QA | 18 | constraints, architecture, RAG, tools, models, usage, evaluation |
+| Code repair | 13 | arithmetic, off-by-one, normalization, mutation, order preservation, structural logic |
+| Combined | 3 | retrieve a project/user decision, then make a verified code change |
+
+The code tasks now include task metadata:
+
+| Field | Meaning |
+|---|---|
+| `category` | bug family, e.g. `off_by_one`, `normalization`, `structural_logic` |
+| `difficulty` | coarse label: `easy` or `medium` |
+| `edit_scope` | expected repair shape: `single_line` or `multi_line` |
+
+`eval/run_eval.py` includes grouped aggregates under `by_category`,
+`by_difficulty`, and `by_edit_scope`, which is the basis for the reliability
+curve: success rate vs. task type/difficulty. Run `atelier eval --mode all` to
+generate a new report under `data/eval_reports/`, then run `atelier eval-plots`
+to generate charts for that report.
+
+Combined tasks are stricter than normal code tasks: they require both a clean
+test run and `search_notes` appearing in the agent trace.
 
 ### Router (Phase 6) — fine-tuned cheap component
 
@@ -97,10 +192,10 @@ Reproduce: `make train-router && make route-eval`.
 These are **strong baseline numbers on a small, deliberately tractable suite** —
 they are a starting point, not a claim of general reliability:
 
-- **Suite size is tiny** (6 + 2). 100% here means "no obvious failures on easy
-  cases," not "reliable on hard ones." The next work is *expanding difficulty*:
-  multi-hop questions, ambiguous retrieval, multi-file bugs, tasks needing
-  several coordinated edits.
+- **The recorded baseline is small** (8 + 3). 100% on doc-QA means "no obvious
+  failures on easy cases," not "reliable on hard ones." The expanded suite is in
+  place now, but its live model results should be reported separately after a
+  fresh run.
 - **doc-QA "correct" is keyword-based** — a coarse proxy. Run `--judge` to add
   the local LLM-as-judge (correctness + groundedness); treat the judge as
   advisory, since a small local judge is itself fallible.
@@ -119,9 +214,7 @@ A fully local, $0, laptop-sized agent **reliably**:
 
 ## Next on the eval roadmap
 
-- Grow both suites and stratify by difficulty; plot success vs. difficulty (the
-  "one clear figure" of PROJECT.md §10).
-- Add a regression gate: `atelier eval` compares against the last saved report
-  and flags any drop.
+- Run the expanded 18 + 13 suite and plot success vs. difficulty / edit scope
+  (the "one clear figure" of PROJECT.md §10).
 - Add combined knowledge→build tasks (retrieve from notes, then make a verified
   code change) to the code suite.

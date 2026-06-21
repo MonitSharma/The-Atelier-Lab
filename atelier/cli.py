@@ -12,7 +12,6 @@ Run `python -m atelier.cli ...` if you haven't `pip install -e .`'d the package.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -23,6 +22,9 @@ from atelier.config import settings
 
 app = typer.Typer(add_completion=False, help="Atelier — a local, zero-cost dual-mode agent.")
 console = Console()
+INGEST_PATHS_ARG = typer.Argument(None, help="Files or folders to index. Defaults to data/corpus.")
+EVAL_PLOT_REPORT_OPT = typer.Option(None, "--report", help="Specific report JSON to plot.")
+EVAL_PLOT_OUT_OPT = typer.Option(None, "--out", help="Directory for generated SVG plots.")
 
 
 @app.callback()
@@ -72,7 +74,7 @@ def doctor() -> None:
 
 @app.command()
 def ingest(
-    paths: list[str] = typer.Argument(None, help="Files or folders to index. Defaults to data/corpus."),
+    paths: list[str] = INGEST_PATHS_ARG,
     reset: bool = typer.Option(False, "--reset", help="Clear the store before indexing."),
 ) -> None:
     """Index notes/PDFs/code into the local vector store."""
@@ -223,7 +225,7 @@ def agent(
 
 @app.command()
 def eval(
-    mode: str = typer.Option("all", "--mode", help="all | docqa | code"),
+    mode: str = typer.Option("all", "--mode", help="all | docqa | code | combined"),
     judge: bool = typer.Option(False, "--judge", help="Add the local LLM-as-judge (slower)."),
     gate: bool = typer.Option(False, "--gate", help="Fail (exit 1) if any metric regressed vs the last report."),
 ) -> None:
@@ -239,9 +241,17 @@ def eval(
     if "docqa" in report:
         agg = report["docqa"]["aggregate"]
         t = Table(title="Knowledge mode (doc-QA)")
-        t.add_column("id"); t.add_column("correct"); t.add_column("retrieval"); t.add_column("cited")
+        t.add_column("id")
+        t.add_column("category")
+        t.add_column("difficulty")
+        t.add_column("correct")
+        t.add_column("retrieval")
+        t.add_column("cited")
         for r in report["docqa"]["rows"]:
-            t.add_row(r["id"], f'{r["correct"]}', f'{r["retrieval_hit"]}', f'{r["cited"]}')
+            t.add_row(
+                r["id"], r.get("category", ""), r.get("difficulty", ""),
+                f'{r["correct"]}', f'{r["retrieval_hit"]}', f'{r["cited"]}',
+            )
         console.print(t)
         console.print(f"[bold]doc-QA[/] correct={agg['correct']:.0%}  "
                       f"retrieval_hit={agg['retrieval_hit']:.0%}  cited={agg['cited']:.0%}")
@@ -249,12 +259,43 @@ def eval(
     if "code" in report:
         agg = report["code"]["aggregate"]
         t = Table(title="Build mode (code)")
-        t.add_column("id"); t.add_column("solved"); t.add_column("steps"); t.add_column("tool_errs")
+        t.add_column("id")
+        t.add_column("category")
+        t.add_column("difficulty")
+        t.add_column("scope")
+        t.add_column("solved")
+        t.add_column("steps")
+        t.add_column("tool_errs")
         for r in report["code"]["rows"]:
-            t.add_row(r["id"], f'{r["solved"]}', f'{r["steps"]}', f'{r["tool_errors"]}')
+            t.add_row(
+                r["id"], r.get("category", ""), r.get("difficulty", ""), r.get("edit_scope", ""),
+                f'{r["solved"]}', f'{r["steps"]}', f'{r["tool_errors"]}',
+            )
         console.print(t)
         console.print(f"[bold]code[/] solved={agg['solved']:.0%}  "
                       f"avg_steps={agg['steps']:.1f}  avg_tool_errors={agg['tool_errors']:.1f}")
+
+    if "combined" in report:
+        agg = report["combined"]["aggregate"]
+        t = Table(title="Combined mode (knowledge → build)")
+        t.add_column("id")
+        t.add_column("category")
+        t.add_column("difficulty")
+        t.add_column("solved")
+        t.add_column("tests")
+        t.add_column("search_notes")
+        t.add_column("steps")
+        for r in report["combined"]["rows"]:
+            t.add_row(
+                r["id"], r.get("category", ""), r.get("difficulty", ""),
+                f'{r["solved"]}', f'{r["tests_passed"]}', f'{r["used_search_notes"]}',
+                f'{r["steps"]}',
+            )
+        console.print(t)
+        console.print(f"[bold]combined[/] solved={agg['solved']:.0%}  "
+                      f"tests_passed={agg['tests_passed']:.0%}  "
+                      f"used_search_notes={agg['used_search_notes']:.0%}  "
+                      f"avg_steps={agg['steps']:.1f}")
 
     console.print(f"[dim]Report: {path}[/]")
 
@@ -268,6 +309,27 @@ def eval(
                                     border_style="red"))
                 raise typer.Exit(code=1)
             console.print("[green]Gate: no regressions vs. last report.[/]")
+
+
+@app.command("eval-plots")
+def eval_plots(
+    report: Path | None = EVAL_PLOT_REPORT_OPT,
+    out: Path | None = EVAL_PLOT_OUT_OPT,
+) -> None:
+    """Generate SVG plots from a saved eval report."""
+    from eval.plots import main
+
+    try:
+        paths = main(str(report) if report else None, str(out) if out else None)
+    except FileNotFoundError as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=1) from exc
+
+    table = Table(title="Eval plots")
+    table.add_column("File")
+    for path in paths:
+        table.add_row(str(path))
+    console.print(table)
 
 
 @app.command()
@@ -296,7 +358,9 @@ def recall(
         console.print("[yellow]No memories yet. Add one with `atelier remember`.[/]")
         return
     table = Table(title=f"Recalled for: {query}")
-    table.add_column("score"); table.add_column("memory"); table.add_column("tags", style="dim")
+    table.add_column("score")
+    table.add_column("memory")
+    table.add_column("tags", style="dim")
     for m in memories:
         table.add_row(f"{m.score}", m.text, ", ".join(m.tags))
     console.print(table)
@@ -312,7 +376,9 @@ def memory() -> None:
         console.print("[yellow]Memory is empty.[/]")
         return
     table = Table(title=f"Long-term memory ({len(mems)} facts)")
-    table.add_column("id", style="dim"); table.add_column("memory"); table.add_column("tags", style="dim")
+    table.add_column("id", style="dim")
+    table.add_column("memory")
+    table.add_column("tags", style="dim")
     for m in mems:
         table.add_row(m.id, m.text, ", ".join(m.tags))
     console.print(table)

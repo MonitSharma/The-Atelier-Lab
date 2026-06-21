@@ -18,7 +18,7 @@ from __future__ import annotations
 import json
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from agent.brain import chat
@@ -47,7 +47,9 @@ Final answer:
 Rules:
 - Use `search_notes` for anything about the user's own notes, decisions, or documents.
 - For coding tasks: call `repo_map` first to understand the layout, `read_file` to \
-inspect, `write_file`/`edit_file` to change code, and `test_runner` to PROVE it works.
+inspect, `write_file`/`edit_file`/`ast_edit` to change code, and `test_runner` to PROVE it works.
+- If a Python fix changes more than one line inside a function body, use `ast_edit`, \
+not `edit_file`. `ast_edit` replaces a function body safely and compile-checks before writing.
 - NEVER claim a code change works unless `test_runner` returned passed_clean = true.
 - After `write_file`/`edit_file` on a .py file, if the result has syntax_ok = false, \
 your edit broke the file — fix the syntax (mind indentation) before anything else.
@@ -136,7 +138,7 @@ class ReActAgent:
         if not self.log:
             return None
         settings.ensure_dirs()
-        ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+        ts = datetime.now(UTC).strftime("%Y%m%dT%H%M%S")
         path = settings.traces_dir / f"{ts}.json"
         path.write_text(json.dumps({"goal": goal, "trace": trace}, indent=2, default=str))
         return str(path)

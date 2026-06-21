@@ -1,54 +1,157 @@
 {
-  "_comment": "FROZEN knowledge-mode eval suite. Do not edit casually — changing the ruler invalidates comparisons (PROJECT.md §9). Questions are answerable only from the indexed corpus (Project.md, myNotes.md, README.md).",
-  "corpus": ["Project.md", "myNotes.md", "README.md"],
+  "_comment": "FROZEN knowledge-mode eval suite. Do not edit casually — changing the ruler invalidates comparisons (PROJECT.md §9). Add new tasks instead of mutating existing ones whenever possible.",
+  "corpus": [
+    "Project.md",
+    "myNotes.md",
+    "README.md",
+    "docs/ARCHITECTURE.md",
+    "docs/EVAL.md",
+    "docs/TESTING.md"
+  ],
   "tasks": [
     {
       "id": "binding-limit",
+      "category": "constraints",
+      "difficulty": "easy",
       "question": "According to my notes, what is the binding limit of the project — is it the 36 GB of RAM?",
       "expected_contains": ["reasoning ceiling", "error compounding"],
       "expected_source": "Project.md"
     },
     {
       "id": "hard-constraints",
+      "category": "constraints",
+      "difficulty": "easy",
       "question": "What are the hard, non-negotiable constraints of Atelier?",
       "expected_contains": ["local", "$0"],
       "expected_source": "Project.md"
     },
     {
       "id": "two-modes",
+      "category": "architecture",
+      "difficulty": "easy",
       "question": "What are the two capability modes the agent has, and what verifies each?",
       "expected_contains": ["knowledge", "build", "test"],
       "expected_source": "Project.md"
     },
     {
       "id": "non-goals",
+      "category": "constraints",
+      "difficulty": "easy",
       "question": "Name two explicit non-goals of the project.",
       "expected_contains": ["frontier"],
       "expected_source": "Project.md"
     },
     {
       "id": "embedding-choice",
+      "category": "rag",
+      "difficulty": "easy",
       "question": "Which embedding model does Atelier use and on what device?",
       "expected_contains": ["bge-base", "mps"],
       "expected_source": "README.md"
     },
     {
       "id": "memory-table",
+      "category": "hardware",
+      "difficulty": "easy",
       "question": "Roughly how much memory does a 13B-14B parameter model need according to my notes table?",
       "expected_contains": ["10 gb", "12 gb"],
       "expected_source": "myNotes.md"
     },
     {
       "id": "router-role",
+      "category": "routing",
+      "difficulty": "easy",
       "question": "What is the role of the fine-tuned small model in the project?",
       "expected_contains": ["worker"],
       "expected_source": "Project.md"
     },
     {
       "id": "privacy-feature",
+      "category": "constraints",
+      "difficulty": "easy",
       "question": "Why is running everything locally treated as a feature, not just a constraint?",
       "expected_contains": ["never leave"],
       "expected_source": "Project.md"
+    },
+    {
+      "id": "react-reliability-properties",
+      "category": "agent",
+      "difficulty": "medium",
+      "question": "What reliability properties does the ReAct engine use to avoid crashing or bloating context?",
+      "expected_contains": ["json", "reflection", "observation capping"],
+      "expected_sources": ["docs/ARCHITECTURE.md", "README.md"]
+    },
+    {
+      "id": "hybrid-retrieval-pipeline",
+      "category": "rag",
+      "difficulty": "medium",
+      "question": "How does Atelier retrieve context at query time?",
+      "expected_contains": ["dense", "bm25", "rrf"],
+      "expected_sources": ["docs/ARCHITECTURE.md", "README.md"]
+    },
+    {
+      "id": "build-task-arc",
+      "category": "agent",
+      "difficulty": "medium",
+      "question": "What is the typical tool sequence for fixing a failing test in build mode?",
+      "expected_contains": ["repo_map", "read_file", "edit_file", "test_runner"],
+      "expected_sources": ["docs/ARCHITECTURE.md", "docs/TESTING.md", "README.md"]
+    },
+    {
+      "id": "eval-report-location",
+      "category": "evaluation",
+      "difficulty": "easy",
+      "question": "Where does the eval command write its JSON reports?",
+      "expected_contains": ["data/eval_reports"],
+      "expected_sources": ["docs/EVAL.md", "README.md"]
+    },
+    {
+      "id": "regression-gate",
+      "category": "evaluation",
+      "difficulty": "medium",
+      "question": "What does the eval regression gate check for?",
+      "expected_contains": ["regressed", "last report"],
+      "expected_source": "README.md"
+    },
+    {
+      "id": "code-exec-sandbox",
+      "category": "tools",
+      "difficulty": "medium",
+      "question": "How is the code execution tool sandboxed?",
+      "expected_contains": ["subprocess", "timeout", "network"],
+      "expected_sources": ["docs/TESTING.md", "docs/ARCHITECTURE.md", "README.md"]
+    },
+    {
+      "id": "model-roles",
+      "category": "models",
+      "difficulty": "easy",
+      "question": "What are the default local model roles and which model backs each role?",
+      "expected_contains": ["brain", "qwen3:14b", "worker", "qwen3:4b", "heavy", "gemma4:26b"],
+      "expected_sources": ["docs/ARCHITECTURE.md", "README.md", "Project.md"]
+    },
+    {
+      "id": "median-failure-finding",
+      "category": "evaluation",
+      "difficulty": "medium",
+      "question": "What did the median_bug eval reveal about the local 14B model?",
+      "expected_contains": ["single-line", "multi-line", "structural"],
+      "expected_sources": ["docs/EVAL.md", "README.md", "docs/WRITEUP.md"]
+    },
+    {
+      "id": "syntax-check-mitigation",
+      "category": "tools",
+      "difficulty": "medium",
+      "question": "What mitigation was added after the multi-line edit failure finding?",
+      "expected_contains": ["compile", "syntax_ok"],
+      "expected_source": "README.md"
+    },
+    {
+      "id": "reproduce-target",
+      "category": "usage",
+      "difficulty": "easy",
+      "question": "What does the make reproduce target do at a high level?",
+      "expected_contains": ["setup", "test", "eval", "train"],
+      "expected_source": "README.md"
     }
   ]
 }

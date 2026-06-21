@@ -11,6 +11,7 @@ import ast
 from pathlib import Path
 from typing import Any
 
+from tools import files as file_tools
 from tools.base import Tool
 from tools.files import _resolve_workspace_path
 
@@ -57,7 +58,7 @@ def run_repo_map(arguments: dict[str, Any]) -> dict[str, Any]:
         if count > _MAX_FILES:
             lines.append("... (truncated)")
             break
-        rel = p.relative_to(root)
+        rel = p.relative_to(file_tools.PROJECT_ROOT)
         lines.append(str(rel))
         if p.suffix == ".py":
             for sym in _py_outline(p):

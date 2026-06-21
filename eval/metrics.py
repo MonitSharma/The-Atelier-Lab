@@ -32,11 +32,12 @@ def keyword_score(answer: str, expected_contains: list[str]) -> float:
     return hits / len(expected_contains)
 
 
-def retrieval_hit(retrieved_sources: list[str], expected_source: str | None) -> bool:
+def retrieval_hit(retrieved_sources: list[str], expected_source: str | list[str] | None) -> bool:
     """Did the expected source file appear among the retrieved chunks?"""
     if not expected_source:
         return True
-    return any(expected_source.lower() in s.lower() for s in retrieved_sources)
+    expected = [expected_source] if isinstance(expected_source, str) else expected_source
+    return any(exp.lower() in s.lower() for exp in expected for s in retrieved_sources)
 
 
 def cites_sources(answer: str) -> bool:
@@ -81,3 +82,14 @@ def aggregate(rows: list[dict[str, Any]], keys: list[str]) -> dict[str, float]:
     for k in keys:
         out[k] = round(sum(float(r.get(k, 0)) for r in rows) / n, 3)
     return out
+
+
+def aggregate_by(rows: list[dict[str, Any]], group_key: str, metric_keys: list[str]) -> dict[str, dict[str, float]]:
+    """Aggregate numeric metrics for each value of a metadata field."""
+    groups: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        value = row.get(group_key)
+        if value is None:
+            continue
+        groups.setdefault(str(value), []).append(row)
+    return {value: aggregate(group_rows, metric_keys) for value, group_rows in sorted(groups.items())}

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="556" viewBox="0 0 920 556" role="img">
+<style>text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}.title{font-size:22px;font-weight:700;fill:#0f172a;}.label{font-size:13px;fill:#334155;}.small{font-size:12px;fill:#64748b;}</style>
+<rect width="920" height="556" fill="white"/>
+<text x="32" y="38" class="title">Knowledge Mode: Correctness by Category</text>
+<text x="32" y="94" class="label">agent</text>
+<rect x="260" y="72" width="590" height="24" rx="4" fill="#e2e8f0"/>
+<rect x="260" y="72" width="590.0" height="24" rx="4" fill="#2563eb"/>
+<text x="862" y="90" class="small">100%</text>
+<text x="32" y="138" class="label">architecture</text>
+<rect x="260" y="116" width="590" height="24" rx="4" fill="#e2e8f0"/>
+<rect x="260" y="116" width="590.0" height="24" rx="4" fill="#2563eb"/>
+<text x="862" y="134" class="small">100%</text>
+<text x="32" y="182" class="label">constraints</text>
+<rect x="260" y="160" width="590" height="24" rx="4" fill="#e2e8f0"/>
+<rect x="260" y="160" width="590.0" height="24" rx="4" fill="#2563eb"/>
+<text x="862" y="178" class="small">100%</text>
+<text x="32" y="226" class="label">evaluation</text>
+<rect x="260" y="204" width="590" height="24" rx="4" fill="#e2e8f0"/>
+<rect x="260" y="204" width="590.0" height="24" rx="4" fill="#2563eb"/>
+<text x="862" y="222" class="small">100%</text>
+<text x="32" y="270" class="label">hardware</text>
+<rect x="260" y="248" width="590" height="24" rx="4" fill="#e2e8f0"/>
+<rect x="260" y="248" width="590.0" height="24" rx="4" fill="#2563eb"/>
+<text x="862" y="266" class="small">100%</text>
+<text x="32" y="314" class="label">models</text>
+<rect x="260" y="292" width="590" height="24" rx="4" fill="#e2e8f0"/>
+<rect x="260" y="292" width="590.0" height="24" rx="4" fill="#2563eb"/>
+<text x="862" y="310" class="small">100%</text>
+<text x="32" y="358" class="label">rag</text>
+<rect x="260" y="336" width="590" height="24" rx="4" fill="#e2e8f0"/>
+<rect x="260" y="336" width="295.0" height="24" rx="4" fill="#2563eb"/>
+<text x="862" y="354" class="small">50%</text>
+<text x="32" y="402" class="label">routing</text>
+<rect x="260" y="380" width="590" height="24" rx="4" fill="#e2e8f0"/>
+<rect x="260" y="380" width="590.0" height="24" rx="4" fill="#2563eb"/>
+<text x="862" y="398" class="small">100%</text>
+<text x="32" y="446" class="label">tools</text>
+<rect x="260" y="424" width="590" height="24" rx="4" fill="#e2e8f0"/>
+<rect x="260" y="424" width="590.0" height="24" rx="4" fill="#2563eb"/>
+<text x="862" y="442" class="small">100%</text>
+<text x="32" y="490" class="label">usage</text>
+<rect x="260" y="468" width="590" height="24" rx="4" fill="#e2e8f0"/>
+<rect x="260" y="468" width="590.0" height="24" rx="4" fill="#2563eb"/>
+<text x="862" y="486" class="small">100%</text>
+</svg>

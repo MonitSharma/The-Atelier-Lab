@@ -1,5 +1,6 @@
 """Tests for the build-mode tools (no model required)."""
 
+from tools.ast_edit import run_ast_edit
 from tools.code_exec import run_python
 from tools.files import run_edit_file, run_read_file, run_write_file
 from tools.repo_map import run_repo_map
@@ -65,6 +66,48 @@ def test_edit_reports_broken_syntax(tmp_path, monkeypatch) -> None:
     assert r["syntax_ok"] is False
 
 
+def test_ast_edit_replaces_multiline_function_body(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr("tools.files.PROJECT_ROOT", tmp_path.resolve())
+    path = tmp_path / "statsutils.py"
+    path.write_text(
+        "def median(xs):\n"
+        "    xs = sorted(xs)\n"
+        "    n = len(xs)\n"
+        "    return xs[n // 2]\n"
+    )
+
+    r = run_ast_edit({
+        "path": "statsutils.py",
+        "function_name": "median",
+        "new_body": (
+            "xs = sorted(xs)\n"
+            "n = len(xs)\n"
+            "if n % 2:\n"
+            "    return xs[n // 2]\n"
+            "return (xs[n // 2 - 1] + xs[n // 2]) / 2"
+        ),
+    })
+
+    assert r["status"] == "success"
+    assert r["syntax_ok"] is True
+    namespace = {}
+    exec(path.read_text(), namespace)
+    assert namespace["median"]([1, 2, 3, 4]) == 2.5
+
+
+def test_ast_edit_rejects_invalid_body_without_writing(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr("tools.files.PROJECT_ROOT", tmp_path.resolve())
+    path = tmp_path / "m.py"
+    original = "def f():\n    return 1\n"
+    path.write_text(original)
+
+    r = run_ast_edit({"path": "m.py", "function_name": "f", "new_body": "if True\n    return 2"})
+
+    assert r["status"] == "error"
+    assert r["error_type"] == "syntax_error"
+    assert path.read_text() == original
+
+
 def test_write_rejects_path_escape(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr("tools.files.PROJECT_ROOT", tmp_path.resolve())
     r = run_write_file({"path": "../evil.txt", "content": "nope"})
@@ -79,6 +122,18 @@ def test_repo_map_outlines_python(tmp_path, monkeypatch) -> None:
     assert r["status"] == "success"
     assert "def foo()" in r["map"]
     assert "class Bar(baz)" in r["map"]
+
+
+def test_repo_map_uses_workspace_relative_paths_for_subdirs(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr("tools.files.PROJECT_ROOT", tmp_path.resolve())
+    subdir = tmp_path / "task"
+    subdir.mkdir()
+    (subdir / "m.py").write_text("def foo():\n    pass\n")
+
+    r = run_repo_map({"path": "task"})
+
+    assert r["status"] == "success"
+    assert "task/m.py" in r["map"]
 
 
 def test_search_finds_pattern(tmp_path, monkeypatch) -> None:

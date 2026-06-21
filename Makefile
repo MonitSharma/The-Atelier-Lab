@@ -4,7 +4,7 @@ SHELL := /bin/bash
 PY := .venv/bin/python
 export ATELIER_NO_BANNER := 1
 
-.PHONY: help setup test ingest eval route-eval train-router demo mcp reproduce clean
+.PHONY: help setup test ingest eval eval-plots planner-data route-eval train-router demo mcp reproduce clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -21,6 +21,12 @@ ingest: ## Index the sample corpus
 
 eval: ## Run the reliability eval (both modes)
 	$(PY) -m atelier.cli eval --mode all
+
+eval-plots: ## Generate SVG plots from the latest eval report
+	$(PY) -m atelier.cli eval-plots
+
+planner-data: ## Build planner-router SFT data from eval metadata
+	$(PY) models/router/make_planner_dataset.py
 
 route-eval: ## Measure routing savings on the doc-QA suite
 	$(PY) -m eval.route_eval
