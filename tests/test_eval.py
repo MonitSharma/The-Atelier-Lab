@@ -144,6 +144,16 @@ def test_code_task_unsolved_when_agent_does_nothing() -> None:
     assert res["solved"] == 0
 
 
+def test_code_task_records_agent_crash() -> None:
+    def crashing_runner(prompt: str):
+        raise RuntimeError("model disconnected")
+
+    res = run_code_task(CODE_DIR / "add_bug", agent_runner=crashing_runner)
+    assert res["solved"] == 0
+    assert res["agent_finished"] == 0
+    assert "model disconnected" in res["runner_error"]
+
+
 def test_code_report_includes_metadata_breakdowns() -> None:
     res = run_code(agent_runner=lambda p: SimpleNamespace(steps=1, success=False, trace=[]))
     assert len(res["rows"]) >= 10
@@ -151,3 +161,18 @@ def test_code_report_includes_metadata_breakdowns() -> None:
     assert "medium" in res["by_difficulty"]
     assert "single_line" in res["by_edit_scope"]
     assert "multi_line" in res["by_edit_scope"]
+
+
+def test_combined_task_records_agent_crash() -> None:
+    def crashing_runner(prompt: str):
+        raise RuntimeError("model disconnected")
+
+    res = run_combined_task(
+        COMBINED_DIR / "license_preference",
+        agent_runner=crashing_runner,
+        ingest=False,
+    )
+    assert res["solved"] == 0
+    assert res["tests_passed"] == 0
+    assert res["used_search_notes"] == 0
+    assert "model disconnected" in res["runner_error"]

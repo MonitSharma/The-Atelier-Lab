@@ -26,9 +26,9 @@ Plots are written to `data/eval_reports/plots/<report-name>/`.
 | Embeddings | `BAAI/bge-base-en-v1.5` (768-dim, MPS) |
 | Retrieval k | 6 |
 | Hardware | MacBook M3 Pro, 36 GB |
-| Suites | `eval/tasks_docqa/` (18 Qs), `eval/tasks_code/` (13 tasks), `eval/tasks_combined/` (3 tasks) |
+| Suites | `eval/tasks_docqa/` (18 Qs), `eval/tasks_code/` (13 tasks), `eval/tasks_combined/` (10 tasks) |
 
-## Latest expanded run — 2026-06-21 UTC (18 doc-QA + 13 code)
+## Latest expanded runs — 2026-06-21/22 UTC
 
 | Metric | Score |
 |---|---|
@@ -36,8 +36,8 @@ Plots are written to `data/eval_reports/plots/<report-name>/`.
 | Knowledge retrieval hit@k | **83%** (15/18) |
 | Knowledge citations | **100%** (18/18) |
 | Code solved after path fix | **100%** (13/13) |
-| Combined solved | **100%** (3/3) |
-| Combined used `search_notes` | **100%** (3/3) |
+| Combined solved | **100%** (10/10) |
+| Combined used `search_notes` | **100%** (10/10) |
 | Average code steps after path fix | **6.1** |
 | Average tool errors after path fix | **0.0** |
 
@@ -98,26 +98,34 @@ data/eval_reports/report_20260621T173650.json
 
 ### Combined mode
 
-The first combined knowledge→build suite passed:
+The combined knowledge→build suite passed on the full 10-task run:
 
-| Task | Knowledge needed | Result |
-|---|---|---:|
-| `license_preference` | user license preference | passed |
-| `testing_preference` | user testing framework preference | passed |
-| `locality_constraint` | local-only / no-cloud constraint | passed |
-| **Overall** | tests + `search_notes` required | **100%** (3/3) |
+| Metric | Score |
+|---|---:|
+| Solved | **100%** (10/10) |
+| Tests passed | **100%** (10/10) |
+| Used `search_notes` | **100%** (10/10) |
+| Average steps | **6.7** |
+| Average tool errors | **0.0** |
 
 Report:
 
 ```text
-data/eval_reports/report_20260621T174453.json
+data/eval_reports/report_20260622T011056.json
 ```
 
 Plots:
 
 ```text
-docs/assets/eval/report_20260621T174453/
+docs/assets/eval/report_20260622T011056/
 ```
+
+The first 10-task run scored 9/10 because `router_policy` exposed a
+mixed-indentation edge case in `ast_edit`. The model proposed reasonable logic,
+but the function body it sent had one extra indentation level on later sibling
+lines. `ast_edit` now tries safe normalizations and writes only a candidate that
+keeps the whole Python file compile-valid. After that fix, `router_policy`
+passed in a targeted rerun and the full combined suite passed 10/10.
 
 ## Smaller baseline — 2026-06-21 (8 doc-QA + 3 code)
 
@@ -142,7 +150,7 @@ The current frozen suite is larger than the recorded baseline:
 |---|---:|---|
 | Doc-QA | 18 | constraints, architecture, RAG, tools, models, usage, evaluation |
 | Code repair | 13 | arithmetic, off-by-one, normalization, mutation, order preservation, structural logic |
-| Combined | 3 | retrieve a project/user decision, then make a verified code change |
+| Combined | 10 | retrieve a project/user decision, then make a verified code change |
 
 The code tasks now include task metadata:
 
@@ -189,13 +197,12 @@ Reproduce: `make train-router && make route-eval`.
 
 ## Honest caveats (read these)
 
-These are **strong baseline numbers on a small, deliberately tractable suite** —
-they are a starting point, not a claim of general reliability:
+These are **strong baseline numbers on deliberately tractable suites** — they
+are a starting point, not a claim of general reliability:
 
-- **The recorded baseline is small** (8 + 3). 100% on doc-QA means "no obvious
-  failures on easy cases," not "reliable on hard ones." The expanded suite is in
-  place now, but its live model results should be reported separately after a
-  fresh run.
+- **The current suites are still modest** (18 doc-QA + 13 code + 10 combined).
+  100% on a slice means "no failures on this frozen suite," not "reliable on
+  hard open-ended tasks."
 - **doc-QA "correct" is keyword-based** — a coarse proxy. Run `--judge` to add
   the local LLM-as-judge (correctness + groundedness); treat the judge as
   advisory, since a small local judge is itself fallible.
@@ -210,11 +217,15 @@ A fully local, $0, laptop-sized agent **reliably**:
 1. answers questions grounded in the user's own documents, with correct
    retrieval and citations; and
 2. fixes a failing test across a multi-step tool-using run, **proving** the fix
-   with a green test — with zero tool errors on these tasks.
+   with a green test — with zero tool errors on these tasks; and
+3. composes those modes by retrieving a project decision, editing code from that
+   decision, and proving the result with tests.
 
 ## Next on the eval roadmap
 
-- Run the expanded 18 + 13 suite and plot success vs. difficulty / edit scope
-  (the "one clear figure" of PROJECT.md §10).
-- Add combined knowledge→build tasks (retrieve from notes, then make a verified
-  code change) to the code suite.
+- Train and evaluate the planner-router adapter from the 41-row eval-derived
+  dataset.
+- Add harder multi-file combined tasks where retrieved notes affect more than
+  one module.
+- Track repeated-run variance for the live local model, not only one successful
+  report.

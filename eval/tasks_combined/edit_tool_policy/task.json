@@ -1,0 +1,10 @@
+{
+  "id": "edit_tool_policy",
+  "category": "knowledge_to_tool_policy",
+  "difficulty": "medium",
+  "edit_scope": "multi_line",
+  "expected_tools": ["search_notes", "repo_map", "read_file", "ast_edit", "test_runner"],
+  "corpus": ["Project.md", "README.md", "myNotes.md", "docs/ARCHITECTURE.md"],
+  "prompt": "This is a combined knowledge-to-build task in `{path}`. First use search_notes to find which edit tool Atelier should use for multi-line Python function body changes. Then use repo_map and read_file with the workspace-relative paths shown by repo_map, update the function logic, and run test_runner on `{path}`. Use ast_edit for the multi-line function body rewrite. Finish only when tests pass cleanly.",
+  "verify_path": "."
+}

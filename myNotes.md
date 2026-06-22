@@ -706,7 +706,7 @@ New combined eval shape:
 search_notes -> retrieve a project/user decision -> edit code -> run tests
 ```
 
-I added three combined tasks:
+I first added three combined tasks:
 
 | Task | Knowledge needed | Code change |
 | :--- | :--- | :--- |
@@ -725,6 +725,24 @@ Combined task only counts as solved if:
 This matters because otherwise the agent could accidentally pass by treating the
 task like a normal code task. The combined suite forces actual knowledge use.
 
+Then I broadened the suite to 10 combined tasks:
+
+| Task | Knowledge needed | Code behavior checked |
+| :--- | :--- | :--- |
+| `license_preference` | Preferred license | Return Apache-2.0 |
+| `testing_preference` | Preferred test framework | Return pytest |
+| `locality_constraint` | No cloud APIs | Return cloud disabled |
+| `brain_model_policy` | Default brain model | Return qwen3:14b |
+| `embedding_model_policy` | Embedding model choice | Return BAAI/bge-base-en-v1.5 |
+| `vector_store_policy` | Vector store choice | Return ChromaDB |
+| `trace_path_policy` | Trace output location | Return data/traces |
+| `report_path_policy` | Eval report location | Return data/eval_reports |
+| `edit_tool_policy` | Multi-line edit tool policy | Return ast_edit for multi-line edits |
+| `router_policy` | Planner-router policy | Route easy/single-line to worker, medium/multi-line to brain, combined to brain |
+
+The first 3-task smoke run passed. Then I ran the full 10-task suite and used
+that result as the real combined benchmark.
+
 ### Planner-router fine-tuning data created
 
 I also created planner-router data from the real eval metadata.
@@ -742,16 +760,27 @@ models/router/data/planner_router.jsonl
 models/router/data/planner_train.jsonl
 models/router/data/planner_valid.jsonl
 models/router/data/planner_test.jsonl
+models/router/planner_data/train.jsonl
+models/router/planner_data/valid.jsonl
+models/router/planner_data/test.jsonl
 ```
 
-Dataset size:
+Dataset size after broadening combined eval:
 
 | Source | Rows |
 | :--- | ---: |
 | Doc-QA tasks | 18 |
 | Code tasks | 13 |
-| Combined tasks | 3 |
-| Total | 34 |
+| Combined tasks | 10 |
+| Total | 41 |
+
+MLX LoRA split:
+
+| Split | Rows |
+| :--- | ---: |
+| train | 32 |
+| valid | 4 |
+| test | 5 |
 
 Each row teaches:
 
@@ -775,23 +804,48 @@ This is the right fine-tuning target because it teaches the small model how to
 route and plan inside Atelier. It does not ask the small model to write complete
 patches yet.
 
+Fine-tune command:
+
+```bash
+make train-planner-router
+```
+
+This uses `models/router/planner_data/` and writes a separate adapter to:
+
+```text
+models/router/planner_adapter/
+```
+
 ### Combined eval live result
 
 I ran:
 
 ```bash
 atelier eval --mode combined
-atelier eval-plots --report data/eval_reports/report_20260621T174453.json
+atelier eval-plots --report data/eval_reports/report_20260622T011056.json
 ```
 
-Result:
+The latest report is:
+
+```text
+data/eval_reports/report_20260622T011056.json
+```
+
+The full 10-task combined suite passed:
 
 | Task | Knowledge retrieved | Code change | Result |
 | :--- | :--- | :--- | :--- |
 | `license_preference` | User prefers Apache-2.0 | Change license value | Passed |
 | `testing_preference` | User prefers pytest | Change test framework value | Passed |
 | `locality_constraint` | Cloud APIs are not allowed | Change runtime policy value | Passed |
-| **Overall** | `search_notes` required | pytest required | **100% (3/3)** |
+| `brain_model_policy` | Default brain model is qwen3:14b | Change model policy value | Passed |
+| `embedding_model_policy` | Embedding model is BAAI/bge-base-en-v1.5 | Change embedding policy value | Passed |
+| `vector_store_policy` | Vector store is ChromaDB | Change vector store value | Passed |
+| `trace_path_policy` | Traces are written to data/traces | Change trace path value | Passed |
+| `report_path_policy` | Eval reports are written to data/eval_reports | Change report path value | Passed |
+| `edit_tool_policy` | Multi-line edits should use ast_edit | Change edit tool logic | Passed |
+| `router_policy` | Combined and medium multi-line work routes to brain | Change routing logic | Passed |
+| **Overall** | `search_notes` required | pytest required | **100% (10/10)** |
 
 Aggregate:
 
@@ -800,14 +854,14 @@ Aggregate:
 | Combined solved | 100% |
 | Tests passed | 100% |
 | Used `search_notes` | 100% |
-| Average steps | 6.0 |
+| Average steps | 6.7 |
 | Tool errors | 0.0 |
 
 Plots:
 
-![Combined overview](docs/assets/eval/report_20260621T174453/combined_overview.svg)
+![Combined overview](docs/assets/eval/report_20260622T011056/combined_overview.svg)
 
-![Combined by category](docs/assets/eval/report_20260621T174453/combined_by_category.svg)
+![Combined by category](docs/assets/eval/report_20260622T011056/combined_by_category.svg)
 
 This is important because it proves the two parts of Atelier compose:
 
@@ -815,6 +869,37 @@ This is important because it proves the two parts of Atelier compose:
 knowledge retrieval + code editing + test verification
 ```
 
-The combined suite is still small, but it is the right direction. The next
-version should add harder combined tasks where the retrieved note changes the
-implementation logic, not just a config constant.
+The useful story from this run is the before -> fix -> after:
+
+| Stage | Result | What happened | What I changed |
+| :--- | :--- | :--- | :--- |
+| 3-task smoke run | 100% (3/3) | Basic knowledge -> config edits worked | Added confidence that the two modes compose |
+| First 10-task run | 90% (9/10) | `router_policy` failed; trace showed repeated `ast_edit` syntax errors from mixed indentation | Improved `ast_edit` body normalization |
+| Targeted rerun | `router_policy` passed | The same task passed in 8 steps with 0 tool errors | Verified the exact failure was fixed |
+| Full 10-task rerun | 100% (10/10) | Every task passed, every task used `search_notes`, tool errors stayed 0.0 | This is the current combined benchmark |
+
+The `router_policy` failure was valuable because it showed another local-model
+interface issue. The model's intended logic was mostly right, but it supplied a
+function body with this shape:
+
+```text
+first line: no indentation
+later sibling lines: still carrying one function-body indent
+```
+
+Plain `textwrap.dedent()` cannot fix that pattern because the first line has
+zero indentation. I changed `ast_edit` so it tries safe body normalizations and
+writes only the first candidate that makes the whole Python file compile.
+
+This keeps the same safety rule:
+
+```text
+No compile check, no write.
+```
+
+Current conclusion:
+
+```text
+Atelier now passes the current doc-QA, code, and combined benchmark slices well
+enough to move to planner-router fine-tuning.
+```

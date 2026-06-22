@@ -1,0 +1,10 @@
+{
+  "id": "router_policy",
+  "category": "knowledge_to_routing_policy",
+  "difficulty": "medium",
+  "edit_scope": "multi_line",
+  "expected_tools": ["search_notes", "repo_map", "read_file", "ast_edit", "test_runner"],
+  "corpus": ["Project.md", "README.md", "myNotes.md"],
+  "prompt": "This is a combined knowledge-to-build task in `{path}`. First use search_notes to find the planner-router policy for easy tasks, multi-line medium tasks, and combined tasks. Then use repo_map and read_file with the workspace-relative paths shown by repo_map, update the function logic, and run test_runner on `{path}`. Use ast_edit for the multi-line function body rewrite. Finish only when tests pass cleanly.",
+  "verify_path": "."
+}

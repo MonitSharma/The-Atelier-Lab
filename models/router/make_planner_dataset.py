@@ -18,6 +18,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "models" / "router" / "data"
+PLANNER_DATA = ROOT / "models" / "router" / "planner_data"
 
 PROMPT = """\
 You are Atelier's planner-router. Given a user task, return a compact JSON plan.
@@ -122,6 +123,7 @@ def build(seed: int = 7) -> dict[str, Any]:
     random.Random(seed).shuffle(rows)
 
     DATA.mkdir(parents=True, exist_ok=True)
+    PLANNER_DATA.mkdir(parents=True, exist_ok=True)
     out = DATA / "planner_router.jsonl"
     out.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
 
@@ -135,6 +137,10 @@ def build(seed: int = 7) -> dict[str, Any]:
         ("planner_test", test),
     ):
         (DATA / f"{name}.jsonl").write_text("\n".join(json.dumps(r) for r in split) + "\n")
+    for name, split in (("train", train), ("valid", valid), ("test", test)):
+        (PLANNER_DATA / f"{name}.jsonl").write_text(
+            "\n".join(json.dumps(r) for r in split) + "\n"
+        )
 
     summary = {
         "rows": n,
@@ -142,6 +148,7 @@ def build(seed: int = 7) -> dict[str, Any]:
         "code": len(_code_rows()),
         "combined": len(_combined_rows()),
         "path": str(out),
+        "mlx_lora_data_dir": str(PLANNER_DATA),
     }
     print(json.dumps(summary, indent=2))
     return summary

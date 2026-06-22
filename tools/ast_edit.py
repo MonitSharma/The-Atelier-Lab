@@ -10,6 +10,7 @@ function and compile-check the result before writing it.
 from __future__ import annotations
 
 import ast
+import textwrap
 from typing import Any
 
 from tools.base import Tool
@@ -42,12 +43,38 @@ def _find_function(tree: ast.AST, function_name: str) -> ast.FunctionDef | ast.A
     return matches[0]
 
 
-def _indent_body(body: str, indent: str) -> list[str]:
-    """Indent a raw function body while preserving relative indentation."""
-    cleaned = body.strip("\n")
+def _body_candidates(body: str) -> list[str]:
+    """Return likely normalizations for a model-provided function body."""
+    cleaned = textwrap.dedent(body).strip("\n")
     if not cleaned.strip():
         cleaned = "pass"
-    return [indent + line if line.strip() else "" for line in cleaned.splitlines()]
+    candidates = [cleaned]
+
+    lines = cleaned.splitlines()
+    if lines and not lines[0].startswith((" ", "\t")):
+        positive_indents = [
+            len(line) - len(line.lstrip(" "))
+            for line in lines[1:]
+            if line.strip() and line.startswith(" ")
+        ]
+        if positive_indents:
+            shift = min(positive_indents)
+            shifted_lines = [lines[0]]
+            for line in lines[1:]:
+                if line.startswith(" " * shift):
+                    shifted_lines.append(line[shift:])
+                else:
+                    shifted_lines.append(line)
+            shifted = "\n".join(shifted_lines)
+            if shifted not in candidates:
+                candidates.append(shifted)
+
+    return candidates
+
+
+def _indent_body(body: str, indent: str) -> list[str]:
+    """Indent a normalized function body while preserving relative indentation."""
+    return [indent + line if line.strip() else "" for line in body.splitlines()]
 
 
 def run_ast_edit(arguments: dict[str, Any]) -> dict[str, Any]:
@@ -110,12 +137,19 @@ def run_ast_edit(arguments: dict[str, Any]) -> dict[str, Any]:
     body_start = node.body[0].lineno - 1
     body_end = node.end_lineno
     body_indent = " " * (node.col_offset + 4)
-    replacement = _indent_body(new_body, body_indent)
-    new_lines = lines[:body_start] + replacement + lines[body_end:]
-    new_text = "\n".join(new_lines) + ("\n" if text.endswith("\n") else "")
-
-    syntax = _py_syntax_report(resolved_path, new_text)
-    if syntax.get("syntax_ok") is False:
+    syntax: dict[str, Any] = {"syntax_ok": False, "syntax_error": "Replacement did not compile."}
+    new_text = ""
+    replaced_body = ""
+    for candidate in _body_candidates(new_body):
+        replacement = _indent_body(candidate, body_indent)
+        new_lines = lines[:body_start] + replacement + lines[body_end:]
+        candidate_text = "\n".join(new_lines) + ("\n" if text.endswith("\n") else "")
+        syntax = _py_syntax_report(resolved_path, candidate_text)
+        if syntax.get("syntax_ok") is True:
+            new_text = candidate_text
+            replaced_body = candidate
+            break
+    else:
         return {
             "status": "error",
             "error_type": "syntax_error",
@@ -134,6 +168,7 @@ def run_ast_edit(arguments: dict[str, Any]) -> dict[str, Any]:
         "path": path,
         "function_name": function_name,
         "replaced_lines": body_end - body_start,
+        "normalized_body": replaced_body != new_body.strip("\n"),
         **syntax,
     }
 

@@ -1,0 +1,10 @@
+{
+  "id": "vector_store_policy",
+  "category": "knowledge_to_rag_policy",
+  "difficulty": "easy",
+  "edit_scope": "single_line",
+  "expected_tools": ["search_notes", "repo_map", "read_file", "edit_file", "test_runner"],
+  "corpus": ["Project.md", "README.md", "docs/ARCHITECTURE.md"],
+  "prompt": "This is a combined knowledge-to-build task in `{path}`. First use search_notes to find which vector store Atelier uses. Then use repo_map and read_file with the workspace-relative paths shown by repo_map, update the code to match that project decision, and run test_runner on `{path}`. Finish only when tests pass cleanly.",
+  "verify_path": "."
+}

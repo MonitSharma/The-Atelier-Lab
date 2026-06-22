@@ -334,6 +334,15 @@ make planner-data
 **Expect:** JSONL files under `models/router/data/` that map task prompts to
 `category`, `difficulty`, `edit_scope`, `tool_plan`, and `model_route`.
 
+For the actual LoRA run:
+
+```bash
+make train-planner-router
+```
+
+This writes a separate adapter under `models/router/planner_adapter/`, leaving
+the existing easy/hard router adapter untouched.
+
 ## 7. One-command sanity sweep
 
 ```bash

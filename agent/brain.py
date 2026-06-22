@@ -14,9 +14,11 @@ Nothing here leaves the machine — it talks only to ``localhost:11434``.
 from __future__ import annotations
 
 import re
+import time
 from collections.abc import Iterator
 from typing import Any, Literal
 
+import httpx
 import ollama
 
 from atelier.config import settings
@@ -87,19 +89,29 @@ def chat(
     if json_mode:
         kwargs["format"] = "json"
 
-    try:
-        # ``think`` is supported by newer ollama clients; degrade gracefully.
+    last_transport_error: Exception | None = None
+    for attempt in range(2):
         try:
-            resp = _client.chat(think=think, **kwargs)
-        except TypeError:
-            resp = _client.chat(**kwargs)
-    except ollama.ResponseError as exc:  # model not pulled, bad request, etc.
-        raise BrainError(f"Ollama rejected the request ({name}): {exc}") from exc
-    except ConnectionError as exc:
-        raise BrainError(
-            "Could not reach Ollama at "
-            f"{settings.ollama_url}. Is it running?  (try: `ollama serve`)"
-        ) from exc
+            # ``think`` is supported by newer ollama clients; degrade gracefully.
+            try:
+                resp = _client.chat(think=think, **kwargs)
+            except TypeError:
+                resp = _client.chat(**kwargs)
+            break
+        except ollama.ResponseError as exc:  # model not pulled, bad request, etc.
+            raise BrainError(f"Ollama rejected the request ({name}): {exc}") from exc
+        except (ConnectionError, httpx.TransportError) as exc:
+            last_transport_error = exc
+            if attempt == 0:
+                time.sleep(2)
+                continue
+            raise BrainError(
+                "Could not reach Ollama at "
+                f"{settings.ollama_url}. Is it running?  (try: `ollama serve`) "
+                f"Last error: {exc}"
+            ) from exc
+    else:  # defensive; the loop either breaks or raises
+        raise BrainError(f"Ollama request failed: {last_transport_error}")
 
     content = resp.get("message", {}).get("content", "")
     if not content:

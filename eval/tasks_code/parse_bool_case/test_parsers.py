@@ -1,9 +1,8 @@
 import pytest
-
 from parsers import parse_bool, parse_int
 
 
-def test_parse_bool_accepts_case_and_spaces:
+def test_parse_bool_accepts_case_and_spaces():
     assert parse_bool(" TRUE ") is True
     assert parse_bool("False") is False
 

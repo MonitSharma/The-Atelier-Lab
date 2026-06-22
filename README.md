@@ -29,8 +29,9 @@ its own reliability — and reports where it fails.
 **Current state:** Phases 0-7 are complete. The project now has an installable
 CLI, a local RAG system, an autonomous build-mode agent, durable memory, MCP
 tool serving, hybrid retrieval, a fine-tuned router, trace logging, and an
-expanded reliability suite: **18 doc-QA tasks** and **13 code-repair tasks**
-stratified by category, difficulty, and edit scope.
+expanded reliability suite: **18 doc-QA tasks**, **13 code-repair tasks**, and
+**10 combined knowledge → build tasks** stratified by category, difficulty, and
+edit scope.
 
 ---
 
@@ -73,7 +74,7 @@ stratified by category, difficulty, and edit scope.
 | 🧩 | **Persistent memory** | Remembers facts/preferences across sessions (semantic recall) |
 | 🛰️ | **MCP server** | Exposes its toolbox to Claude Desktop/Code or any MCP host |
 | ⚡ | **Fine-tuned router** | A 1-min LoRA fine-tune of a 0.5B model cuts brain calls ~50% with no accuracy loss |
-| 📊 | **Self-evaluation** | 18 doc-QA tasks + 13 code tasks, grouped metrics, regression gate, honest reliability numbers |
+| 📊 | **Self-evaluation** | 18 doc-QA tasks + 13 code tasks + 10 combined tasks, grouped metrics, regression gate, honest reliability numbers |
 | 🔒 | **100% local & free** | Only network use: the local Ollama endpoint + one-time model downloads |
 
 ---
@@ -303,10 +304,10 @@ atelier eval-plots            # generate SVG plots from the latest saved report
 Reports are saved to `data/eval_reports/`. The suites in `eval/tasks_docqa/` and
 `eval/tasks_code/` are **frozen on purpose** — add new tasks, don't edit existing
 ones, or you invalidate comparisons. The current suite has **18 knowledge-mode
-questions** and **13 build-mode code tasks**; report rows include `category`,
-`difficulty`, and code `edit_scope` so you can plot success rate by task type.
-The combined suite counts a task as solved only if tests pass and the trace used
-`search_notes`.
+questions**, **13 build-mode code tasks**, and **10 combined knowledge → build
+tasks**; report rows include `category`, `difficulty`, and code `edit_scope` so
+you can plot success rate by task type. The combined suite counts a task as
+solved only if tests pass and the trace used `search_notes`.
 
 `atelier eval-plots` writes dependency-free SVG charts under
 `data/eval_reports/plots/<report-name>/`, including overall doc-QA scores,
@@ -401,8 +402,8 @@ update.
 | Knowledge retrieval hit@k | **83%** (15/18) |
 | Knowledge citation rate | **100%** (18/18) |
 | Code tasks solved | **100%** (13/13) |
-| Combined tasks solved | **100%** (3/3) |
-| Combined tasks using `search_notes` | **100%** (3/3) |
+| Combined tasks solved | **100%** (10/10) |
+| Combined tasks using `search_notes` | **100%** (10/10) |
 | Single-line code fixes | **100%** (8/8) |
 | Multi-line code fixes | **100%** (5/5) |
 | Average code steps | **6.1** |
@@ -437,17 +438,26 @@ safer compile-checked option for future structural Python edits.
 
 The combined suite tests the actual composition goal: retrieve a project/user
 decision from notes, edit code based on that decision, and prove it with tests.
+The current 10-task run passed every task and every row used `search_notes`, so
+the score is not just accidental code repair.
 
-| Task | Result |
+| Metric | Result |
 |---|---:|
-| `license_preference` | passed |
-| `testing_preference` | passed |
-| `locality_constraint` | passed |
-| **Overall** | **100%** (3/3) |
+| Combined solved | **100%** (10/10) |
+| Tests passed | **100%** (10/10) |
+| Used `search_notes` | **100%** (10/10) |
+| Average steps | **6.7** |
+| Average tool errors | **0.0** |
 
-![Combined overview](docs/assets/eval/report_20260621T174453/combined_overview.svg)
+![Combined overview](docs/assets/eval/report_20260622T011056/combined_overview.svg)
 
-![Combined by category](docs/assets/eval/report_20260621T174453/combined_by_category.svg)
+![Combined by category](docs/assets/eval/report_20260622T011056/combined_by_category.svg)
+
+The first 10-task combined run briefly scored 9/10 because `router_policy`
+triggered a mixed-indentation `ast_edit` input. `ast_edit` now normalizes
+common model indentation variants and still compile-checks the whole file before
+writing. After that fix, `router_policy` passed in a targeted rerun and the full
+combined suite passed at 10/10.
 
 **Knowledge-mode breakdown**
 
@@ -463,7 +473,7 @@ expected sources where the same fact appears in several project docs.
 |---|---:|---|
 | Doc-QA | 18 tasks | constraints, architecture, RAG, tools, models, usage, evaluation |
 | Code repair | 13 tasks | arithmetic, off-by-one, normalization, mutation, order preservation, structural logic |
-| Combined | 3 tasks | retrieve a project/user decision, then make a verified code change |
+| Combined | 10 tasks | retrieve a project/user decision, then make a verified code change |
 
 Earlier baseline on the smaller 8+3 suite was 100% doc-QA correctness and 67%
 code solved. The expanded run is more informative: it shows build mode is now
@@ -495,6 +505,7 @@ make ingest           # index the sample corpus
 make eval             # reliability eval
 make eval-plots       # SVG charts for the latest eval report
 make planner-data     # build task -> plan/router SFT data from eval metadata
+make train-planner-router # fine-tune planner-router adapter from planner_data
 make train-router     # LoRA fine-tune + evaluate the router (~1 min)
 make route-eval       # measure routing savings
 make demo             # quick end-to-end build-mode demo
@@ -579,7 +590,7 @@ atelier/
 │   └── adapter/              #   the trained LoRA adapter (~6 MB)
 │
 ├── scripts/reproduce.sh      # one-command reproduction
-├── tests/                    # 54 fast unit tests (no model)
+├── tests/                    # fast unit tests (no model)
 └── docs/
     ├── ARCHITECTURE.md       # how the pieces fit
     ├── TESTING.md            # ability-by-ability test playbook
@@ -613,10 +624,12 @@ This project values honest limits over optimism:
 
 - **It will not beat cloud coding agents** (Claude Code, Cursor). A local small
   model can't, and that's an explicit non-goal.
-- **Multi-line structural code edits are the reliability ceiling** for the 14B
-  brain — measured, not hidden (see [results](#reliability-results)).
-- **The eval suites are small** (8 + 3). 100% on knowledge means "no obvious
-  failures on a modest corpus," not "robust at scale."
+- **Multi-line structural code edits are still the risk boundary** for the 14B
+  brain. The current suite passes, but the project handles this by using
+  compile-checked tools like `ast_edit`, not by assuming the model is perfect.
+- **The eval suites are still modest** (18 doc-QA + 13 code + 10 combined).
+  100% on a slice means "no failures on this frozen suite," not "robust at
+  scale."
 - **The router's held-out test is in-distribution** (templated). It generalizes
   well in spot-checks but isn't a generalization benchmark.
 - **Correctness scoring is keyword-based** by default; the optional local

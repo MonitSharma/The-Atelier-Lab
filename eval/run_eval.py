@@ -129,11 +129,17 @@ def run_code_task(task_dir: Path, agent_runner: Callable[[str], Any] | None = No
 
     runner = agent_runner or _default_agent_runner
     t0 = time.time()
-    result = runner(prompt)
+    runner_error = ""
+    try:
+        result = runner(prompt)
+    except Exception as exc:  # noqa: BLE001 - eval should report failures, not crash
+        result = None
+        runner_error = str(exc)
     elapsed = round(time.time() - t0, 1)
 
     verify = run_tests({"path": rel})
     solved = bool(verify.get("passed_clean"))
+    trace = getattr(result, "trace", []) or []
 
     return {
         "id": spec["id"],
@@ -141,9 +147,10 @@ def run_code_task(task_dir: Path, agent_runner: Callable[[str], Any] | None = No
         "difficulty": spec.get("difficulty", "easy"),
         "edit_scope": spec.get("edit_scope", "single_file"),
         "solved": int(solved),
-        "steps": getattr(result, "steps", None),
-        "tool_errors": _tool_errors(getattr(result, "trace", []) or []),
-        "agent_finished": int(getattr(result, "success", False)),
+        "steps": getattr(result, "steps", None) if result else None,
+        "tool_errors": _tool_errors(trace),
+        "agent_finished": int(getattr(result, "success", False)) if result else 0,
+        "runner_error": runner_error,
         "latency_s": elapsed,
         "test_summary": verify.get("summary", ""),
     }
@@ -191,10 +198,15 @@ def run_combined_task(
 
     runner = agent_runner or _default_agent_runner
     t0 = time.time()
-    result = runner(prompt)
+    runner_error = ""
+    try:
+        result = runner(prompt)
+    except Exception as exc:  # noqa: BLE001 - eval should report failures, not crash
+        result = None
+        runner_error = str(exc)
     elapsed = round(time.time() - t0, 1)
 
-    trace = getattr(result, "trace", []) or []
+    trace = getattr(result, "trace", []) or [] if result is not None else []
     tools_used = _tools_used(trace)
     verify = run_tests({"path": rel})
     tests_passed = bool(verify.get("passed_clean"))
@@ -212,7 +224,8 @@ def run_combined_task(
         "steps": getattr(result, "steps", None),
         "tool_errors": _tool_errors(trace),
         "tools_used": tools_used,
-        "agent_finished": int(getattr(result, "success", False)),
+        "agent_finished": int(getattr(result, "success", False)) if result else 0,
+        "runner_error": runner_error,
         "latency_s": elapsed,
         "test_summary": verify.get("summary", ""),
     }

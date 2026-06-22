@@ -95,6 +95,67 @@ def test_ast_edit_replaces_multiline_function_body(tmp_path, monkeypatch) -> Non
     assert namespace["median"]([1, 2, 3, 4]) == 2.5
 
 
+def test_ast_edit_accepts_preindented_body(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr("tools.files.PROJECT_ROOT", tmp_path.resolve())
+    path = tmp_path / "router_policy.py"
+    path.write_text(
+        "def model_route(difficulty, edit_scope, combined=False):\n"
+        "    if difficulty == 'easy':\n"
+        "        return 'worker'\n"
+        "    return 'worker'\n"
+    )
+
+    r = run_ast_edit({
+        "path": "router_policy.py",
+        "function_name": "model_route",
+        "new_body": (
+            "    if combined:\n"
+            "        return 'brain'\n"
+            "    if difficulty == 'medium' and edit_scope == 'multi_line':\n"
+            "        return 'brain'\n"
+            "    return 'worker'"
+        ),
+    })
+
+    assert r["status"] == "success"
+    assert r["syntax_ok"] is True
+    namespace = {}
+    exec(path.read_text(), namespace)
+    assert namespace["model_route"]("medium", "multi_line") == "brain"
+    assert namespace["model_route"]("easy", "single_line", combined=True) == "brain"
+
+
+def test_ast_edit_accepts_body_with_mixed_function_indent(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr("tools.files.PROJECT_ROOT", tmp_path.resolve())
+    path = tmp_path / "router_policy.py"
+    path.write_text(
+        "def model_route(difficulty, edit_scope, combined=False):\n"
+        "    if difficulty == 'easy':\n"
+        "        return 'worker'\n"
+        "    return 'worker'\n"
+    )
+
+    r = run_ast_edit({
+        "path": "router_policy.py",
+        "function_name": "model_route",
+        "new_body": (
+            "if difficulty == 'easy' and edit_scope == 'single_line':\n"
+            "        return 'worker'\n"
+            "    elif difficulty == 'medium' and edit_scope == 'multi_line':\n"
+            "        return 'brain'\n"
+            "    elif combined:\n"
+            "        return 'brain'\n"
+            "    return 'worker'"
+        ),
+    })
+
+    assert r["status"] == "success"
+    assert r["syntax_ok"] is True
+    namespace = {}
+    exec(path.read_text(), namespace)
+    assert namespace["model_route"]("medium", "multi_line") == "brain"
+
+
 def test_ast_edit_rejects_invalid_body_without_writing(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr("tools.files.PROJECT_ROOT", tmp_path.resolve())
     path = tmp_path / "m.py"
