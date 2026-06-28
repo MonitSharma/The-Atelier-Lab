@@ -1,0 +1,15 @@
+{
+  "filters": {
+    "min_chars": 100,
+    "min_devanagari_ratio": 0.75,
+    "max_digit_ratio": 0.10,
+    "max_punctuation_ratio": 0.15,
+    "quality_threshold": 80,
+    "remove_duplicate_lines": true,
+    "remove_duplicate_paragraphs": true,
+    "normalize_unicode": true,
+    "remove_headers": true,
+    "remove_footers": true
+  },
+  "vocab_size": 8192
+}

@@ -1,0 +1,14 @@
+{
+  "version": "SanskritPile-v1",
+  "created_at": "2026-06-28T09:41:35.681201Z",
+  "total_documents": 46654,
+  "total_train_documents": 44321,
+  "total_val_documents": 2333,
+  "total_characters": 20151392,
+  "total_bytes": 53612699,
+  "duplicate_rate": 0.0425,
+  "sources": {
+    "saucam/sans_data": 7000208,
+    "Henil1/sanskrit": 46519185
+  }
+}
