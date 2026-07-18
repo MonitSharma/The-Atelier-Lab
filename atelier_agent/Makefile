@@ -38,11 +38,12 @@ train-router: ## Generate data + LoRA-fine-tune the router model
 	  --mask-prompt --adapter-path models/router/adapter
 	$(PY) -m models.router.evaluate
 
-train-planner-router: ## LoRA-fine-tune planner-router JSON planner
+train-planner-router: ## Fine-tune + evaluate the planner-router JSON planner
 	$(PY) models/router/make_planner_dataset.py
 	$(PY) -m mlx_lm lora --model mlx-community/Qwen2.5-0.5B-Instruct-4bit --train \
 	  --data models/router/planner_data --iters 200 --batch-size 4 --num-layers 8 \
 	  --mask-prompt --adapter-path models/router/planner_adapter
+	$(PY) -m models.router.evaluate_planner
 
 demo: ## A quick end-to-end build-mode demo
 	$(PY) -m atelier.cli agent "Fix the failing test in sample_task/ and prove it passes"

@@ -1,0 +1,81 @@
+{
+  "timestamp": "2026-07-06T15:29:45+00:00",
+  "host": "Apple M3 Pro / 36GB / macOS",
+  "backend": "ollama",
+  "num_predict": 128,
+  "repeats": 3,
+  "results": [
+    {
+      "prompt_len": "short",
+      "prompt_tokens": 52,
+      "decode_tok_s": 39.3,
+      "prefill_tok_s": 453.35,
+      "ttft_ms": 113.97,
+      "repeats": 3,
+      "size_bytes": 7530799431,
+      "size_vram_bytes": 7530799431,
+      "model": "qwen3:4b",
+      "wall_s": 16.3
+    },
+    {
+      "prompt_len": "long",
+      "prompt_tokens": 1492,
+      "decode_tok_s": 37.42,
+      "prefill_tok_s": 591.01,
+      "ttft_ms": 2522.81,
+      "repeats": 3,
+      "size_bytes": 7530799431,
+      "size_vram_bytes": 7530799431,
+      "model": "qwen3:4b",
+      "wall_s": 22.0
+    },
+    {
+      "prompt_len": "short",
+      "prompt_tokens": 50,
+      "decode_tok_s": 11.51,
+      "prefill_tok_s": 127.31,
+      "ttft_ms": 382.25,
+      "repeats": 3,
+      "size_bytes": 14362848787,
+      "size_vram_bytes": 14362848787,
+      "model": "qwen3:14b",
+      "wall_s": 51.1
+    },
+    {
+      "prompt_len": "long",
+      "prompt_tokens": 1490,
+      "decode_tok_s": 11.29,
+      "prefill_tok_s": 153.26,
+      "ttft_ms": 9884.8,
+      "repeats": 3,
+      "size_bytes": 14362848787,
+      "size_vram_bytes": 14362848787,
+      "model": "qwen3:14b",
+      "wall_s": 75.7
+    },
+    {
+      "prompt_len": "short",
+      "prompt_tokens": 53,
+      "decode_tok_s": 27.86,
+      "prefill_tok_s": 140.31,
+      "ttft_ms": 400.51,
+      "repeats": 3,
+      "size_bytes": 17394638518,
+      "size_vram_bytes": 17394638518,
+      "model": "gemma4:26b",
+      "wall_s": 31.4
+    },
+    {
+      "prompt_len": "long",
+      "prompt_tokens": 1575,
+      "decode_tok_s": 27.88,
+      "prefill_tok_s": 362.05,
+      "ttft_ms": 4376.68,
+      "repeats": 3,
+      "size_bytes": 17394638518,
+      "size_vram_bytes": 17394638518,
+      "model": "gemma4:26b",
+      "wall_s": 33.1
+    }
+  ]
+}

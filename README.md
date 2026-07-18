@@ -84,6 +84,40 @@ Where possible, implementations, benchmarks, documentation, and experimental fin
 
 ---
 
+# Results at a Glance
+
+A selection of measured findings from the lab so far — every number below comes from a committed experiment artifact, run entirely on a single MacBook Pro (M3 Pro, 36 GB) at zero cloud cost.
+
+### Foundation — training from scratch on Apple Silicon
+
+Baseline `nanochat` runs at two scales. Throughput scales almost linearly with parameter count on the MPS backend, and the larger model reaches a lower validation loss at matched steps.
+
+![Foundation scaling: throughput and validation loss vs model size](assets/foundation_scaling.png)
+
+A controlled three-way pretraining pilot shows Devanagari Sanskrit is far more predictable at the byte level than English under matched `nanochat` configurations — a combined effect of language structure and BPE merge behaviour.
+
+![Sanskrit vs English validation loss](assets/sanskrit_vs_english.png)
+
+### Deployment — local inference benchmark
+
+Decode throughput is memory-bandwidth-bound, not parameter-bound: a 26B model can decode **2.4× faster** than a 14B one on the same machine. Param count is not a proxy for speed.
+
+![Local inference decode speed by model](assets/inference_decode_speed.png)
+
+### Agents — the local Atelier agent
+
+A fully local, dual-mode (knowledge + build) agent evaluated on frozen task suites. It saturates retrieval-augmented Q&A and single-line code fixes, while honestly hitting a reasoning ceiling on multi-line structural code edits.
+
+![Agent reliability scorecard](assets/agent_reliability.png)
+
+A 1-minute LoRA fine-tune takes a 0.5B difficulty router from worse-than-chance to perfect in-distribution routing — the "small model as a cheap component" pattern at the smallest possible scale.
+
+![Router fine-tune lift](assets/router_finetune_lift.png)
+
+> Full methodology and honest limitations: [`atelier_agent/docs/WRITEUP.md`](atelier_agent/docs/WRITEUP.md) and the per-experiment reports under [`foundation/experiments/`](foundation/experiments/).
+
+---
+
 # Laboratory Structure
 
 ```
