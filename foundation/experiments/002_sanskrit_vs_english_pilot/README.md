@@ -1,5 +1,7 @@
 # Experiment 002: Sanskrit vs. English Pilot Study
 
+> Registry: `foundation-002` · status: `completed` · raw artifacts: this directory · reproduction: see “How to Run the Training” below. Missing seed fields are not inferred.
+
 This experiment investigates how Sanskrit and English differ in tokenizer efficiency, pretraining convergence rates, and generation quality under matched compute and architecture.
 
 ## Research Question

@@ -14,24 +14,17 @@ Nothing here leaves the machine — it talks only to ``localhost:11434``.
 from __future__ import annotations
 
 import re
-import time
 from collections.abc import Iterator
-from typing import Any, Literal
-
-import httpx
-import ollama
+from typing import Any
 
 from atelier.config import settings
+from models.registry import provider_for, specs_from_settings
+from models.types import ModelSpec, Role
 
-Role = Literal["brain", "worker", "heavy"]
-
-_MODEL_BY_ROLE: dict[str, str] = {
-    "brain": settings.brain_model,
-    "worker": settings.worker_model,
-    "heavy": settings.heavy_model,
-}
-
-_client = ollama.Client(host=settings.ollama_url)
+_SPECS = specs_from_settings(settings)
+_SPECS["heavy"] = _SPECS["expert"]
+_SPECS["heavy"] = _SPECS["heavy"].__class__("heavy", settings.model_provider, settings.heavy_model, "heavy")
+_provider = provider_for(settings)
 
 _THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
 
@@ -43,7 +36,7 @@ class BrainError(RuntimeError):
 def _resolve_model(model: str | None, role: Role) -> str:
     if model:
         return model
-    return _MODEL_BY_ROLE.get(role, settings.brain_model)
+    return _SPECS.get(role, _SPECS["brain"]).model_id
 
 
 def strip_thinking(text: str) -> str:
@@ -80,43 +73,14 @@ def chat(
     ``think`` toggles qwen3 reasoning traces; off by default for clean output.
     """
     name = _resolve_model(model, role)
-    kwargs: dict[str, Any] = {
-        "model": name,
-        "messages": messages,
-        "options": _options(temperature),
-        "stream": False,
-    }
-    if json_mode:
-        kwargs["format"] = "json"
-
-    last_transport_error: Exception | None = None
-    for attempt in range(2):
-        try:
-            # ``think`` is supported by newer ollama clients; degrade gracefully.
-            try:
-                resp = _client.chat(think=think, **kwargs)
-            except TypeError:
-                resp = _client.chat(**kwargs)
-            break
-        except ollama.ResponseError as exc:  # model not pulled, bad request, etc.
-            raise BrainError(f"Ollama rejected the request ({name}): {exc}") from exc
-        except (ConnectionError, httpx.TransportError) as exc:
-            last_transport_error = exc
-            if attempt == 0:
-                time.sleep(2)
-                continue
-            raise BrainError(
-                "Could not reach Ollama at "
-                f"{settings.ollama_url}. Is it running?  (try: `ollama serve`) "
-                f"Last error: {exc}"
-            ) from exc
-    else:  # defensive; the loop either breaks or raises
-        raise BrainError(f"Ollama request failed: {last_transport_error}")
-
-    content = resp.get("message", {}).get("content", "")
-    if not content:
-        raise BrainError(f"Empty response from model {name}: {resp}")
-    return strip_thinking(content)
+    try:
+        spec = _SPECS.get(role, _SPECS["brain"])
+        if model:
+            spec = ModelSpec(spec.name, spec.provider, model, spec.role, spec.quantization, spec.max_context, spec.supports_tools, spec.supports_json)
+        result = _provider.generate(messages, spec, temperature=settings.temperature if temperature is None else temperature, json_mode=json_mode, think=think)
+        return strip_thinking(result.text)
+    except Exception as exc:  # provider-specific errors become stable public errors
+        raise BrainError(f"Local provider request failed for {name}: {exc}") from exc
 
 
 def stream(
@@ -129,32 +93,27 @@ def stream(
     """Yield response chunks for interactive display."""
     name = _resolve_model(model, role)
     try:
-        for part in _client.chat(
-            model=name,
-            messages=messages,
-            options=_options(temperature),
-            stream=True,
-        ):
-            piece = part.get("message", {}).get("content", "")
-            if piece:
-                yield piece
-    except ConnectionError as exc:
-        raise BrainError(
-            f"Could not reach Ollama at {settings.ollama_url}. Is it running?"
-        ) from exc
+        spec = _SPECS.get(role, _SPECS["brain"])
+        if model:
+            spec = ModelSpec(spec.name, spec.provider, model, spec.role, spec.quantization, spec.max_context, spec.supports_tools, spec.supports_json)
+        yield from _provider.stream(messages, spec, temperature=settings.temperature if temperature is None else temperature)
+    except Exception as exc:
+        raise BrainError(f"Local provider stream failed for {name}: {exc}") from exc
 
 
 def health() -> dict[str, Any]:
     """Return which configured models are actually pulled locally."""
     try:
-        listed = _client.list().get("models", [])
+        import ollama
+        listed = ollama.Client(host=settings.ollama_url).list().get("models", [])
     except Exception as exc:  # noqa: BLE001 - surfaced to the user verbatim
         return {"ok": False, "error": str(exc), "models": []}
     available = {m.get("model", m.get("name", "")) for m in listed}
     roles = {
         "brain": settings.brain_model,
         "worker": settings.worker_model,
-        "heavy": settings.heavy_model,
+        "expert": settings.expert_model,
+        "router": settings.router_model,
     }
     return {
         "ok": True,

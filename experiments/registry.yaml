@@ -1,0 +1,55 @@
+experiments:
+  - id: foundation-000
+    name: M3 Pro nanochat baseline
+    track: foundations
+    status: completed
+    location: foundation/experiments/000_m3pro_nanochat_baseline
+    primary_question: How does local MPS training throughput change with model scale?
+    main_result: 73.5M and 286.2M runs recorded approximately 18700 and 4470 tok/s.
+    reproduction_command: See the experiment README; it depends on the external nanochat checkout.
+    current: true
+  - id: foundation-001
+    name: 73M longer training
+    track: foundations
+    status: planned
+    location: foundation/experiments/001_73m_longer_training
+    primary_question: Is repetition caused by undertraining or capacity?
+    main_result: Not run; no result is claimed.
+    reproduction_command: See the experiment README.
+    current: true
+  - id: foundation-002
+    name: Sanskrit versus English pilot
+    track: foundations
+    status: completed
+    location: foundation/experiments/002_sanskrit_vs_english_pilot
+    primary_question: How do language and tokenization affect small-model training?
+    main_result: See committed results and tokenizer reports.
+    reproduction_command: See the experiment README.
+    current: true
+  - id: foundation-003
+    name: Local inference benchmark
+    track: local_ai_systems
+    status: completed
+    location: foundation/experiments/003_local_inference_benchmark
+    primary_question: How do prefill and decode differ across local models?
+    main_result: Decode speed is not predicted by parameter count alone.
+    reproduction_command: python benchmark.py (requires locally served Ollama models)
+    current: true
+  - id: agent-reliability-2026-06
+    name: Atelier reliability suites
+    track: reliable_agents
+    status: completed
+    location: atelier_agent/docs/EVAL.md
+    primary_question: How reliably can a local agent retrieve, edit, and verify?
+    main_result: Latest expanded report records 17/18 knowledge, 13/13 code, and 10/10 combined.
+    reproduction_command: make -C atelier_agent eval
+    current: true
+  - id: agent-router-2026-07
+    name: Difficulty router fine-tune
+    track: reliable_agents
+    status: completed
+    location: atelier_agent/models/router/adapter
+    primary_question: Can a small local model route easy work cheaply?
+    main_result: 43.8% base versus 100% in-distribution held-out accuracy after LoRA.
+    reproduction_command: make -C atelier_agent train-router
+    current: true

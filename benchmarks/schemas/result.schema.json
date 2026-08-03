@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["experiment_id", "timestamp", "seed"],
+  "properties": {
+    "experiment_id": {"type": "string"}, "timestamp": {"type": "string"}, "git_commit": {"type": "string"},
+    "hardware": {"type": "string"}, "operating_system": {"type": "string"}, "backend": {"type": "string"},
+    "model_name": {"type": "string"}, "parameter_count": {"type": "number"}, "quantization": {"type": "string"},
+    "seed": {"type": "integer"}, "prompt_tokens": {"type": "integer"}, "generated_tokens": {"type": "integer"},
+    "training_steps": {"type": "integer"}, "training_loss": {"type": "number"}, "validation_loss": {"type": "number"},
+    "time_to_first_token_s": {"type": "number"}, "prefill_tokens_per_s": {"type": "number"}, "decode_tokens_per_s": {"type": "number"},
+    "peak_memory_gb": {"type": "number"}, "task_success": {"type": "boolean"}, "tool_errors": {"type": "integer"},
+    "structured_output_valid": {"type": "boolean"}, "notes": {"type": "string"}
+  }, "additionalProperties": true
+}

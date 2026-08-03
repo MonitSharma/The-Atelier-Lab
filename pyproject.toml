@@ -1,0 +1,8 @@
+[project]
+name = "the-atelier-lab"
+version = "0.1.0"
+description = "Local-first AI research laboratory"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["foundation/minillm/tests", "atelier_agent/tests", "foundation/datasets/tests"]

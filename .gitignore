@@ -22,6 +22,11 @@ data/traces/
 data/memory/
 data/eval_reports/
 .eval_workspace/
+atelier_agent/data/vectorstore/
+atelier_agent/data/traces/
+atelier_agent/data/memory/
+atelier_agent/data/eval_reports/
+atelier_agent/.eval_workspace/
 *.log
 
 # Environment / secrets

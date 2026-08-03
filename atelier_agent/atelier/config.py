@@ -36,12 +36,17 @@ class Settings(BaseSettings):
 
     # --- Local model serving (Ollama) -------------------------------------
     ollama_url: str = "http://localhost:11434"
+    model_provider: str = "ollama"
+    mlx_model_path: str | None = None
     #: Hard reasoning + build mode. Fits comfortably in 36 GB.
     brain_model: str = "qwen3:14b"
     #: Fast, cheap subtasks / routing.
     worker_model: str = "qwen3:4b"
     #: Optional heavy reasoner for the hardest steps (~17 GB resident).
     heavy_model: str = "gemma4:26b"
+    #: Generic future expert slot; no unreleased model is assumed.
+    expert_model: str = ""
+    router_model: str = "qwen3:4b"
     temperature: float = 0.1
     #: Generous: a 14B local model on first load can be slow to first token.
     request_timeout: int = 600

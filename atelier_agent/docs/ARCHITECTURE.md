@@ -49,7 +49,7 @@ the why, `docs/TESTING.md` is the how-to-verify.
 
 ## The layers
 
-### 1. Models — `agent/brain.py`
+### 1. Models — `models/` and `agent/brain.py`
 A thin client over local **Ollama**. Three *roles*, chosen by task size rather
 than hard-coded names:
 
@@ -61,6 +61,8 @@ than hard-coded names:
 
 Features: JSON-only mode (reliable tool calls), streaming, and qwen3
 `<think>`-trace stripping. `health()` powers `atelier doctor`.
+
+The compatibility-facing `chat()` and `stream()` functions remain in `agent/brain.py`, while `models/base.py`, `types.py`, `registry.py`, and the Ollama/MLX adapters provide a provider-neutral seam. Roles are configuration-driven: worker, brain, expert, and router.
 
 ### 2. Tools — `tools/`
 Every capability is a `Tool` (name, description, JSON input schema, function

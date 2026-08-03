@@ -169,7 +169,7 @@ atelier recall "what license do I like?"
 
 Atelier was built in eight phases (0–7); **all are complete**. Each shipped a
 working capability and is verified by tests and/or the eval harness. The
-authoritative log lives in [`PROJECT.md`](PROJECT.md) (Decision Log + Changelog).
+authoritative log lives in [`Project.md`](Project.md) (Decision Log + Changelog).
 
 | Phase | Title | What it delivered | Where |
 |---|---|---|---|
@@ -639,7 +639,7 @@ This project values honest limits over optimism:
 
 ## Further reading
 
-- [`PROJECT.md`](PROJECT.md) — the source of truth: scope, hard constraints, the
+- [`Project.md`](Project.md) — the source of truth: scope, hard constraints, the
   full roadmap, the Decision Log, and the Changelog.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — how every layer fits together.
 - [`docs/TESTING.md`](docs/TESTING.md) — verify each capability yourself.

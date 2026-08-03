@@ -99,7 +99,7 @@ User goal ──────────────▶│      loop.py         
 | :--- | :--- | :--- | :--- |
 | **1. Request** | User | You ask the agent a math question. | *"What is 3817 * 94?"* |
 | **2. Reasoning** | **LLM (Brain)** | The model reads the question and realizes: *"I cannot do this math reliably. I should use my `calculator` tool."* | Emits: `CALCULATE: 3817 * 94` |
-| **3. Execution** | **Python (Hand)** | The `loop.py` script intercepts the model's text, extracts `3817 * 94`, and runs it through [calculator.py](file:///Users/monitsharma/code_projects/atelier/agent/calculator.py). | Evaluates and returns: `358798` |
+| **3. Execution** | **Python (Hand)** | The `loop.py` script intercepts the model's text, extracts `3817 * 94`, and runs it through the local calculator tool. | Evaluates and returns: `358798` |
 | **4. Observation** | **Python (Hand)** | The execution result is appended to the chat history as a new message. | Added to chat: `Observation: 358798` |
 | **5. Synthesis** | **LLM (Brain)** | The model reads the observation and formulates a conversational final answer. | Emits: *"3817 * 94 is 358798."* |
 
@@ -151,7 +151,7 @@ The architecture for Phase 1 becomes:
 Now we have to add a function of `read_file`, so that our AI agent can read the file too but the model must not be allowed to read arbitrary files from the system, like
 
 ```
-/Users/monitsharma/.ssh/id_rsa
+<local-private-key-path>
 ```
 
 This bad ,but

@@ -16,5 +16,5 @@ This configuration specifies the parameters used for the English Character-Match
     *   `warmdown_ratio`: 0.65
     *   `optimizer`: Muon (matrix parameters) + AdamW (embeddings)
 *   **Data and Tokenizer Configuration**:
-    *   `NANOCHAT_DATA_DIR`: `/Users/monitsharma/.cache/nanochat/english_data_char`
-    *   `NANOCHAT_TOKENIZER_DIR`: `/Users/monitsharma/.cache/nanochat/tokenizer_english_char`
+    *   `NANOCHAT_DATA_DIR`: `<local-cache>/nanochat/english_data_char`
+    *   `NANOCHAT_TOKENIZER_DIR`: `<local-cache>/nanochat/tokenizer_english_char`

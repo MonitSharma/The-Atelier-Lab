@@ -1,0 +1,2 @@
+the small model learns one next token at a time.
+the test stays offline and reproducible.

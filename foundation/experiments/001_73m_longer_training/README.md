@@ -1,5 +1,7 @@
 # Experiment 001: 73M Longer Training Run
 
+> Registry: `foundation-001` · status: `planned` · hypothesis, controls, metrics, and reproduction are described below. No result or raw artifact is claimed.
+
 The objective of this experiment is to determine whether the generation repetition issue observed in Experiment 000 is primarily a result of undertraining or if it is constrained by the parameter capacity of the 73M model.
 
 ## Objective
