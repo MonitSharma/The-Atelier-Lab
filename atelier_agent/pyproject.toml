@@ -10,14 +10,15 @@ authors = [{ name = "Monit" }]
 # Pinned, reproducible runtime deps live in requirements.txt (uv pip install -r).
 # The list here is the human-readable top-level surface; the lockfile is the source of truth.
 dependencies = [
-    "mlx",
-    "mlx-lm",
+    "mlx; platform_system == 'Darwin' and platform_machine == 'arm64'",
+    "mlx-lm; platform_system == 'Darwin' and platform_machine == 'arm64'",
     "ollama>=0.6",
     "pydantic>=2.10",
     "pydantic-settings>=2.10",
     "jinja2>=3.1",
     "numpy>=2",
     "pymupdf>=1.27",
+    "pymupdf4llm>=0.0.17",
     "pypdf>=6",
     "sentence-transformers>=5",
     "torch>=2.6",

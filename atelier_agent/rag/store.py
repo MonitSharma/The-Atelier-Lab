@@ -4,13 +4,14 @@ We supply our own embeddings rather than letting Chroma call an embedding
 function, so the store never needs network access and stays in lockstep with
 :mod:`rag.embed`. Cosine space matches our normalized vectors.
 
-IDs are derived from ``source:chunk_index`` and written with ``upsert`` so that
-re-ingesting a changed file refreshes its chunks instead of duplicating them.
+Chunk IDs are derived from ``document_id:chunk_index`` when available, so a
+path is a locator and content identity remains stable across renames.
 """
 
 from __future__ import annotations
 
 import hashlib
+from pathlib import Path
 from typing import Any
 
 import chromadb
@@ -20,14 +21,16 @@ from rag.chunk import Chunk
 
 
 def _chunk_id(chunk: Chunk) -> str:
-    raw = f"{chunk.source}:{chunk.chunk_index}".encode()
+    document_id = chunk.metadata.get("document_id", chunk.source)
+    raw = f"{document_id}:{chunk.chunk_index}".encode()
     return hashlib.sha1(raw).hexdigest()
 
 
 class VectorStore:
     def __init__(self, path: str | None = None, collection: str | None = None) -> None:
         settings.ensure_dirs()
-        self._client = chromadb.PersistentClient(path=path or str(settings.vector_dir))
+        self.path = path or str(settings.vector_dir)
+        self._client = chromadb.PersistentClient(path=self.path)
         self._collection = self._client.get_or_create_collection(
             name=collection or settings.collection_name,
             metadata={"hnsw:space": "cosine"},
@@ -50,6 +53,20 @@ class VectorStore:
             ids=ids, documents=documents, embeddings=embeddings, metadatas=metadatas
         )
         return len(ids)
+
+    def replace_document(self, document_id: str, chunks: list[Chunk], embeddings: list[list[float]]) -> int:
+        """Upsert the replacement first, then remove stale tail chunks."""
+        if len(chunks) != len(embeddings):
+            raise ValueError("chunks and embeddings length mismatch")
+        new_ids = {_chunk_id(chunk) for chunk in chunks}
+        self.add(chunks, embeddings)
+        if self.count():
+            found = self._collection.get(
+                where={"document_id": document_id}, include=["metadatas"]
+            )
+            stale = [doc_id for doc_id in found.get("ids", []) if doc_id not in new_ids]
+            self.delete(stale)
+        return len(chunks)
 
     def query(self, embedding: list[float], k: int | None = None) -> list[dict[str, Any]]:
         k = k or settings.retrieval_k
@@ -91,11 +108,57 @@ class VectorStore:
         if ids:
             self._collection.delete(ids=ids)
 
+    def delete_source(self, source: str) -> int:
+        """Remove all chunks belonging to one source before replacement."""
+        if self.count() == 0:
+            return 0
+        found = self._collection.get(where={"source": source}, include=["metadatas"])
+        ids = found.get("ids", [])
+        self.delete(ids)
+        return len(ids)
+
+    def delete_document(self, document_id: str) -> int:
+        if self.count() == 0:
+            return 0
+        found = self._collection.get(
+            where={"document_id": document_id}, include=["metadatas"]
+        )
+        ids = found.get("ids", [])
+        self.delete(ids)
+        return len(ids)
+
+    def relocate_document(self, document_id: str, source: str) -> int:
+        """Update the filesystem locator without touching embeddings."""
+        if self.count() == 0:
+            return 0
+        found = self._collection.get(
+            where={"document_id": document_id}, include=["metadatas"]
+        )
+        ids = found.get("ids", [])
+        metadatas = []
+        for metadata in found.get("metadatas", []):
+            updated = dict(metadata or {})
+            updated["source"] = source
+            updated["filename"] = Path(source).name
+            metadatas.append(updated)
+        if ids:
+            self._collection.update(ids=ids, metadatas=metadatas)
+        return len(ids)
+
     def get_all(self) -> dict[str, Any]:
         return self._collection.get(include=["documents", "metadatas"])
 
     def count(self) -> int:
         return self._collection.count()
+
+    def embedding_dimension(self) -> int | None:
+        if self.count() == 0:
+            return None
+        got = self._collection.get(limit=1, include=["embeddings"])
+        embeddings = got.get("embeddings")
+        if embeddings is None or len(embeddings) == 0:
+            return None
+        return len(embeddings[0])
 
     def reset(self) -> None:
         """Drop and recreate the collection (start the index over)."""

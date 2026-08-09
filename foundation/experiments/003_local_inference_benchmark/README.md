@@ -1,5 +1,7 @@
 # Experiment 003: Local Inference Benchmark (Apple M3 Pro)
 
+> Registry: `foundation-003` · status: `completed` · metrics: TTFT, prefill/decode throughput, and resident memory · raw results: `results/` · reproduction: see “Reproduce” below.
+
 **Question:** What is the real inference cost of the local models Atelier depends
 on — and where does the time actually go? This is the deployment/serving
 counterpart to Experiment 000 (which measured *training* throughput).

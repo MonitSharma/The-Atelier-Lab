@@ -1,6 +1,7 @@
 import os
 import re
 from collections import Counter
+from pathlib import Path
 import pyarrow as pa
 import pyarrow.parquet as pq
 import torch
@@ -10,7 +11,8 @@ from nanochat.tokenizer import RustBPETokenizer
 TARGET_BYTES = 52_428_800 # 50 MB in bytes
 
 # Cache directories
-DATA_ROOT = "/Users/monitsharma/.cache/nanochat"
+DATA_ROOT = os.environ.get("NANOCHAT_CACHE_DIR", str(Path.home() / ".cache" / "nanochat"))
+REPORT_DIR = Path(__file__).resolve().parents[3] / "experiments" / "002_sanskrit_vs_english_pilot"
 SANSKRIT_DATA_DIR = os.path.join(DATA_ROOT, "sanskrit_data")
 ENGLISH_BYTE_DATA_DIR = os.path.join(DATA_ROOT, "english_data_byte")
 ENGLISH_CHAR_DATA_DIR = os.path.join(DATA_ROOT, "english_data_char")
@@ -331,7 +333,7 @@ Because the dataset sizes are relatively small (19.3MB–50MB), some BPE vocabul
 | **Top 50% Token Mass** | {eng_byte_tok_stats['mass_50']:,} tokens | {sans_tok_stats['mass_50']:,} tokens | {eng_char_tok_stats['mass_50']:,} tokens |
 """
 
-with open("/Users/monitsharma/code_projects/The-Atelier-Lab/foundation/experiments/002_sanskrit_vs_english_pilot/tokenizer_report.md", "w") as f:
+with open(REPORT_DIR / "tokenizer_report.md", "w") as f:
     f.write(tok_report)
 
 data_sources_report = f"""# Data Sources and Quality Report
@@ -352,7 +354,7 @@ This document reports the quality diagnostics of the Sanskrit and English corpor
 {chr(10).join([f"- **{count} times**: `{line}`" for line, count in sans_qual['top_repeated']])}
 """
 
-with open("/Users/monitsharma/code_projects/The-Atelier-Lab/foundation/experiments/002_sanskrit_vs_english_pilot/data_sources.md", "w") as f:
+with open(REPORT_DIR / "data_sources.md", "w") as f:
     f.write(data_sources_report)
 
 print("Pre-processing reports successfully written.")

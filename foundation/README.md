@@ -7,13 +7,13 @@ The goal of this layer is to implement, evaluate, and scale local architectures 
 ---
 
 *   **`datasets/`**: Active dataset sharding pipelines, curation rules, and BPE tokenization.
-    *   [**`sanskritpile/`**](file:///Users/monitsharma/code_projects/The-Atelier-Lab/foundation/datasets/sanskritpile/): Multi-version curated Sanskrit corpora and tokenizer reporting.
-    *   [**`english/`**](file:///Users/monitsharma/code_projects/The-Atelier-Lab/foundation/datasets/english/): Character-matched and byte-matched English baseline dataset metadata.
+    *   [**`sanskritpile/`**](datasets/sanskritpile/): Multi-version curated Sanskrit corpora and tokenizer reporting.
+    *   [**`english/`**](datasets/english/): Character-matched and byte-matched English baseline dataset metadata.
 *   **`experiments/`**: Systematic empirical runs, log archives, configuration files, and analytical reports.
-    *   [**`000_m3pro_nanochat_baseline/`**](file:///Users/monitsharma/code_projects/The-Atelier-Lab/foundation/experiments/000_m3pro_nanochat_baseline/): Initial baseline benchmark measuring hardware capabilities and model capacity scaling of `nanochat` on an Apple M3 Pro.
-    *   [**`001_73m_longer_training/`**](file:///Users/monitsharma/code_projects/The-Atelier-Lab/foundation/experiments/001_73m_longer_training/): Ongoing/planned run to isolate whether generation repetition in small networks is an undertraining issue or a capacity constraint.
-    *   [**`002_sanskrit_vs_english_pilot/`**](file:///Users/monitsharma/code_projects/The-Atelier-Lab/foundation/experiments/002_sanskrit_vs_english_pilot/): Sanskrit vs. English comparison study (character-matched vs. byte-matched pretraining).
-    *   [**`003_local_inference_benchmark/`**](file:///Users/monitsharma/code_projects/The-Atelier-Lab/foundation/experiments/003_local_inference_benchmark/): Inference/serving benchmark — prefill vs. decode throughput, TTFT, and memory for Qwen3 4B/14B on Ollama. The deployment counterpart to Experiment 000.
+    *   [**`000_m3pro_nanochat_baseline/`**](experiments/000_m3pro_nanochat_baseline/): Initial baseline benchmark measuring hardware capabilities and model capacity scaling of `nanochat` on an Apple M3 Pro.
+    *   [**`001_73m_longer_training/`**](experiments/001_73m_longer_training/): Ongoing/planned run to isolate whether generation repetition in small networks is an undertraining issue or a capacity constraint.
+    *   [**`002_sanskrit_vs_english_pilot/`**](experiments/002_sanskrit_vs_english_pilot/): Sanskrit vs. English comparison study (character-matched vs. byte-matched pretraining).
+    *   [**`003_local_inference_benchmark/`**](experiments/003_local_inference_benchmark/): Inference/serving benchmark — prefill vs. decode throughput, TTFT, and memory for Qwen3 4B/14B on Ollama. The deployment counterpart to Experiment 000.
 *   *Future Implementation Layers (Planned)*:
     *   `tokenizers/`: Custom Byte Pair Encoding (BPE) definitions and vocab training scripts.
     *   `models/`: Autoregressive transformer block architecture definitions.

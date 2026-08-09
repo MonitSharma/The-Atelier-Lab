@@ -16,5 +16,5 @@ This configuration specifies the parameters used for the Sanskrit pretraining ru
     *   `warmdown_ratio`: 0.65
     *   `optimizer`: Muon (matrix parameters) + AdamW (embeddings)
 *   **Data and Tokenizer Configuration**:
-    *   `NANOCHAT_DATA_DIR`: `/Users/monitsharma/.cache/nanochat/sanskrit_data`
-    *   `NANOCHAT_TOKENIZER_DIR`: `/Users/monitsharma/.cache/nanochat/tokenizer_sanskrit`
+    *   `NANOCHAT_DATA_DIR`: `<local-cache>/nanochat/sanskrit_data`
+    *   `NANOCHAT_TOKENIZER_DIR`: `<local-cache>/nanochat/tokenizer_sanskrit`

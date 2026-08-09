@@ -1,9 +1,9 @@
 # Atelier Project Dependencies (macOS / Apple Silicon)
 
 # --- Core Inference & Client ---
-mlx==0.31.2
-mlx-lm==0.31.3
-mlx-metal==0.31.2
+mlx==0.31.2; platform_system == "Darwin" and platform_machine == "arm64"
+mlx-lm==0.31.3; platform_system == "Darwin" and platform_machine == "arm64"
+mlx-metal==0.31.2; platform_system == "Darwin" and platform_machine == "arm64"
 ollama==0.6.2
 
 # --- Validation, Prompts & Serialization ---
@@ -15,6 +15,7 @@ jinja2==3.1.6
 # --- Knowledge & RAG ---
 numpy==2.4.6
 pymupdf==1.27.2.3
+pymupdf4llm>=0.0.17
 pypdf==6.13.2
 sentence-transformers==5.5.1
 chromadb==1.5.9

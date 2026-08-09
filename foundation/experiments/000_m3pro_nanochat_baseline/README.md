@@ -1,5 +1,7 @@
 # M3 Pro Nanochat Baseline Experiment Report
 
+> Registry: `foundation-000` · status: `completed` · raw artifacts: this directory · reproduction: see “How to Test the Trained Models” below. Unrecorded seed fields remain unclaimed.
+
 This experiment documents the baseline training speed and validation performance of Karpathy's [`nanochat`](https://github.com/karpathy/nanochat) on an Apple M3 Pro CPU/GPU (MPS backend) across two model scales.
 
 ---

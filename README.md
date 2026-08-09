@@ -1,350 +1,133 @@
-<div align="center">
-
 # The Atelier Lab
 
+The Atelier Lab is a local-first AI research laboratory for learning language models, measuring Apple Silicon systems, and building reliable agents under a fixed 36 GB unified-memory budget.
 
-### Building Foundation Models. Developing AI Agents. Advancing Local AI.
+## Central question
 
-*A long-term open research laboratory dedicated to understanding, reproducing, and advancing modern Artificial Intelligence—entirely from first principles.*
+> How much reliable AI capability can a single researcher obtain from local models under fixed memory, latency, privacy, and compute constraints?
 
----
+## Three tracks
 
-**Current Focus**
+- **Foundations:** tokenization, language modelling, attention, transformers, training, and autoregressive inference.
+- **Local AI systems:** Apple Silicon benchmarking, quantization, KV caching, memory, serving, and routing.
+- **Reliable agents:** RAG, tools, code modification, verification, memory, routing, and evaluation.
 
- Foundation Models •  AI Agents •  Research Reproductions •  Efficient Training •  Apple Silicon •  Local AI
+## Verified results
 
-</div>
+The current expanded Atelier suites record 17/18 knowledge answers, 13/13 code tasks, and 10/10 combined tasks solved. The suites are modest and mostly single-file; see [current results](docs/CURRENT_RESULTS.md) and [limitations](docs/LIMITATIONS.md). The local inference benchmark found that parameter count alone does not predict decode speed.
 
----
+## Start here
 
-## Vision
+- [Learning path](docs/START_HERE.md)
+- [Run the local agent](atelier_agent/README.md)
+- [Experiment registry](experiments/registry.yaml)
+- [Repository map](docs/REPOSITORY_MAP.md)
+- [Atelier Workbench plan](docs/ATELIER_WORKBENCH_PLAN.md)
 
-The Atelier Lab is an open research laboratory exploring a simple but ambitious question:
+## Quick start
 
-> **How far can modern AI be reproduced, understood, and advanced by a single researcher using only consumer hardware?**
-
-Over the last decade, state-of-the-art AI has become increasingly associated with trillion-token datasets, massive GPU clusters, and proprietary infrastructure. While these resources enable frontier-scale models, they often obscure the underlying ideas behind them.
-
-The Atelier Lab takes the opposite approach.
-
-Rather than treating modern AI systems as black boxes, every component is studied, implemented, benchmarked, and documented from first principles.
-
-The objective is not simply to train language models.
-
-The objective is to understand **why** they work, reproduce important advances from the literature, and develop new ideas through careful experimentation.
-
----
-
-# Mission
-
-The laboratory is built around four long-term goals.
-
-- **Understand** every major component involved in modern AI systems.
-- **Reproduce** influential research with clean and reproducible implementations.
-- **Improve** existing methods through systematic experimentation.
-- **Build** complete local AI systems capable of running on consumer hardware.
-
-Every project inside this repository contributes toward one or more of these goals.
-
----
-
-# Research Philosophy
-
-The Atelier Lab is guided by several core principles.
-
-## First Principles
-
-Every important algorithm should be understood mathematically before it is optimized.
-
----
-
-## Reproducibility
-
-Every experiment should be reproducible from code, documentation, and configuration files.
-
----
-
-## Engineering Excellence
-
-Research code should remain modular, maintainable, and production-quality.
-
----
-
-## Scientific Evaluation
-
-Every proposed improvement should be supported by controlled experiments rather than anecdotal observations.
-
----
-
-## Open Research
-
-Knowledge becomes significantly more valuable when it is shared.
-
-Where possible, implementations, benchmarks, documentation, and experimental findings will remain openly available.
-
----
-
-# Results at a Glance
-
-A selection of measured findings from the lab so far — every number below comes from a committed experiment artifact, run entirely on a single MacBook Pro (M3 Pro, 36 GB) at zero cloud cost.
-
-### Foundation — training from scratch on Apple Silicon
-
-Baseline `nanochat` runs at two scales. Throughput scales almost linearly with parameter count on the MPS backend, and the larger model reaches a lower validation loss at matched steps.
-
-![Foundation scaling: throughput and validation loss vs model size](assets/foundation_scaling.png)
-
-A controlled three-way pretraining pilot shows Devanagari Sanskrit is far more predictable at the byte level than English under matched `nanochat` configurations — a combined effect of language structure and BPE merge behaviour.
-
-![Sanskrit vs English validation loss](assets/sanskrit_vs_english.png)
-
-### Deployment — local inference benchmark
-
-Decode throughput is memory-bandwidth-bound, not parameter-bound: a 26B model can decode **2.4× faster** than a 14B one on the same machine. Param count is not a proxy for speed.
-
-![Local inference decode speed by model](assets/inference_decode_speed.png)
-
-### Agents — the local Atelier agent
-
-A fully local, dual-mode (knowledge + build) agent evaluated on frozen task suites. It saturates retrieval-augmented Q&A and single-line code fixes, while honestly hitting a reasoning ceiling on multi-line structural code edits.
-
-![Agent reliability scorecard](assets/agent_reliability.png)
-
-A 1-minute LoRA fine-tune takes a 0.5B difficulty router from worse-than-chance to perfect in-distribution routing — the "small model as a cheap component" pattern at the smallest possible scale.
-
-![Router fine-tune lift](assets/router_finetune_lift.png)
-
-> Full methodology and honest limitations: [`atelier_agent/docs/WRITEUP.md`](atelier_agent/docs/WRITEUP.md) and the per-experiment reports under [`foundation/experiments/`](foundation/experiments/).
-
----
-
-# Laboratory Structure
-
-```
-The Atelier Lab
-│
-├── foundation/
-│   ├── tokenizers/
-│   ├── datasets/
-│   ├── models/
-│   ├── training/
-│   ├── inference/
-│   ├── evaluation/
-│   └── experiments/
-│
-├── atelier_agent/
-│   ├── atelier/              # CLI, configuration, banner, MCP server
-│   ├── agent/                # ReAct loop, brain client, router, memory
-│   ├── tools/                # Tool registry and agent tools
-│   ├── rag/                  # Ingestion, retrieval, embeddings, answer synthesis
-│   ├── eval/                 # Evaluation runners, metrics, and task suites
-│   │   ├── tasks_code/
-│   │   ├── tasks_combined/
-│   │   └── tasks_docqa/
-│   ├── models/
-│   │   └── router/           # Router datasets, training scripts, adapter artifacts
-│   ├── data/                 # Local runtime data: memory, traces, reports, vector store
-│   ├── docs/                 # Architecture, testing, eval, and writeup docs
-│   ├── scripts/              # Reproduction scripts
-│   ├── sample_task/          # Small test target for build-mode demos
-│   ├── tests/                # Fast unit tests
-│   ├── Makefile
-│   ├── pyproject.toml
-│   ├── requirements.txt
-│   ├── Project.md
-│   └── README.md
-│
-├── research/
-│   ├── reproductions/
-│   ├── original_ideas/
-│   └── reports/
-│
-├── benchmarks/
-│
-├── datasets/
-│
-├── docs/
-│
-├── papers/
-│
-└── blog/
+```bash
+python3 scripts/check_repo.py
+python3 scripts/validate_experiments.py
+make -C atelier_agent test       # requires the project's .venv
 ```
 
-Each module represents an independent research direction while sharing a common philosophy and engineering foundation.
+The educational `foundation/minillm` package is CPU-friendly and has no dataset download step. The agent remains self-contained under `atelier_agent/`; existing CLI, RAG, tools, evaluation, router, MCP, and reproduction commands are preserved.
 
----
+## Active phase
 
-# Projects
+The current phase closes the foundation learning loop: understand the primitives in `learning/`, run the offline `minillm` exercises, then deepen quantization and serving measurements without weakening reproducibility.
 
-## Foundation
+## Phase 2 — Create the four-tier model stack
 
-The Foundation project investigates how modern language models are built from scratch.
+The Atelier Lab should maintain four capability tiers rather than ten overlapping general-purpose models. Each tier has a distinct job in the orchestration system.
 
-Topics include:
+### Tier A — Tiny worker
 
-- Tokenization
-- Dataset preparation
-- Transformer architectures
-- Attention mechanisms
-- Positional embeddings
-- Optimization
-- Scaling laws
-- Efficient training
-- Evaluation
-- Inference
+Target approximately the 2–4B parameter range. LFM2.5-2.6B is an interesting candidate for evaluation.
 
-The long-term objective is to build a complete, transparent, and reproducible foundation-model training stack.
+Primary responsibilities:
 
----
+- routing and classification
+- metadata extraction
+- query rewriting
+- tool selection
+- structured JSON generation
+- RAG processing
+- cheap, repetitive reasoning
 
-## Atelier
+This model is not intended to write research papers. Its job is to decide: **“What needs to happen next?”**
 
-Atelier is an autonomous AI agent built on top of the Foundation project.
+### Tier B — Small coding agent
 
-Rather than focusing on model training, Atelier explores higher-level intelligence through:
+Target approximately the 7–10B parameter range. Benchmark Ornith-9B or whichever strong agentic coding model is current when the evaluation begins.
 
-- Tool use
-- Planning
-- Long-term memory
-- Retrieval-Augmented Generation (RAG)
-- Multi-step reasoning
-- Workflow automation
-- Local-first AI
+Responsibilities:
 
-Foundation builds the models.
+- small bug fixes
+- scripts and tests
+- boilerplate
+- data manipulation
+- simple refactoring
+- repository exploration
 
-Atelier uses them.
+### Tier C — Main local intelligence
 
----
+Reserve this position for a Qwen3.8-27B Q4-class quantization when it is ready for adoption.
 
-## Research
+This is the primary local model for:
 
-The Research module serves as the laboratory's experimental workspace.
+- mathematical reasoning
+- paper analysis
+- optimization formulation
+- quantum-algorithm reasoning
+- private documents
+- larger coding jobs
+- research synthesis
 
-Every reproduction and original investigation is documented with:
+On the 36 GiB M3 Pro, the approximately 25–30B Q4 class is the upper range targeted for regular use.
 
-- Literature review
-- Implementation
-- Experimental setup
-- Benchmarks
-- Analysis
-- Discussion
+### Tier D — Frontier models
 
-Representative topics include:
+Keep all three subscriptions, but assign them different responsibilities instead of asking them to perform the same work.
 
-- Modern attention mechanisms
-- Efficient optimizers
-- Reinforcement learning for language models
-- Scaling studies
-- Apple Silicon optimization
-- Efficient inference
-- Emerging model architectures
+#### Claude — architect and critic
 
----
+- architecture
+- critique and review
+- mathematical reasoning partnership
+- research planning
+- difficult debugging
 
-## Benchmarks
+#### Codex — implementation engineer
 
-Every model and experiment should be evaluated using a consistent methodology.
+- repository modification
+- test execution
+- refactoring
+- bug fixing
+- experiment implementation
 
-Metrics include:
+#### Gemini — large-context and multimodal specialist
 
-- Training loss
-- Validation loss
-- Perplexity
-- Throughput
-- Memory usage
-- Energy consumption
-- Tokens per second
-- Inference latency
-- Benchmark performance
+- very large context
+- multimodal material
+- large document sets
+- figures and screenshots
+- independent second opinions
+- Google ecosystem workflows
 
-The objective is to make every comparison scientifically meaningful.
+This division of labor keeps the frontier models complementary and makes the local stack responsible for the work that benefits most from privacy, low latency, and predictable cost.
 
----
+### First-generation local download roster
 
-# Current Roadmap
+Install only these four models initially; reserve the fifth slot for the official Qwen3.8-27B release:
 
-### Phase I — Foundations
+| Role | Model | Quantization | Approx. size | Purpose |
+|---|---|---|---:|---|
+| Tiny worker/router | `LFM2.5-2.6B` | `Q6_K` | 2.22 GB | Routing, extraction, JSON, tool selection, query rewriting, and cheap repetitive work |
+| Embeddings/search | `qwen3-embedding:4b` | `Q4_K_M` | ~2.5 GB | 2,560-dimensional semantic search over papers, notes, code, and experiments |
+| Coding specialist | `Ornith-1.0-9B` | `Q5_K_M` | 6.47 GB | Repository exploration, coding, debugging, tests, and refactoring |
+| Vision/document | `Qwen3-VL-8B-Instruct` | `Q4_K_M` | 6.1 GB | Figures, tables, screenshots, diagrams, scanned pages, and OCR fallback |
+| Main local reasoner | `Qwen3.8-27B` | probably Q4-class | reserve 25 GB | Mathematics, research synthesis, quantum reasoning, private documents, and hard coding |
 
-- Learn every component involved in modern LLM training.
-- Build an annotated implementation from first principles.
-- Understand the mathematics behind every architectural decision.
-
----
-
-### Phase II — Reproduction
-
-Faithfully reproduce influential techniques from contemporary AI research.
-
-Examples include:
-
-- Rotary Position Embeddings (RoPE)
-- FlashAttention
-- Grouped Query Attention
-- Modern optimizers
-- Efficient training methods
-- Post-training alignment techniques
-
----
-
-### Phase III — Experimental Research
-
-Conduct controlled investigations into questions such as:
-
-- Which techniques most improve small language models?
-- How does data quality compare with parameter count?
-- Which optimizers perform best under limited compute?
-- How efficiently can Apple Silicon train modern language models?
-
----
-
-### Phase IV — Scaling
-
-Progressively scale the complete training pipeline while preserving reproducibility and engineering quality.
-
-The emphasis is understanding scaling behaviour rather than simply increasing parameter count.
-
----
-
-### Phase V — Local AI Systems
-
-Integrate foundation models into capable autonomous agents featuring:
-
-- Tool use
-- Planning
-- Memory
-- Retrieval
-- Multi-agent collaboration
-- Reinforcement learning
-
----
-
-# Hardware Philosophy
-
-The Atelier Lab intentionally embraces hardware constraints.
-
-Current primary development platform:
-
-- Apple MacBook Pro (M3 Pro)
-- 36 GB Unified Memory
-- Apple Silicon GPU (Metal/MPS)
-
-Rather than viewing limited compute as a disadvantage, the laboratory treats it as a research constraint.
-
-One of the central research questions is:
-
-> **How far can modern AI be pushed using hardware available to independent researchers?**
-
----
-
-# Long-Term Vision
-
-The Atelier Lab is intended to grow into a comprehensive open research platform for efficient AI.
-
-The long-term ambition is not to compete with industrial laboratories in scale.
-
-Instead, the goal is to demonstrate that careful engineering, rigorous experimentation, and a deep understanding of first principles can enable meaningful contributions to modern AI research—even from a single machine.
-
----
-
-> *Understand everything. Reproduce faithfully. Experiment rigorously. Build openly.*
+The four immediate downloads total approximately 15.43 GB. Download and benchmark them one at a time. The Qwen3.8-27B slot stays empty until official weights are available; then compare GGUF Q4, MLX 4-bit, and possibly Q5 on the M3 Pro. Do not keep all large models loaded simultaneously: unified memory is the limiting resource.
