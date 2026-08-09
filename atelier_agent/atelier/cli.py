@@ -47,6 +47,8 @@ finder_app = typer.Typer(help="Opt-in Finder/Shortcuts action plans.")
 app.add_typer(finder_app, name="finder")
 handoff_app = typer.Typer(help="Create explicit frontier-model handoff bundles.")
 app.add_typer(handoff_app, name="handoff")
+package_app = typer.Typer(help="Packaging and release-readiness checks.")
+app.add_typer(package_app, name="package")
 console = Console()
 INGEST_PATHS_ARG = typer.Argument(None, help="Files or folders to index. Defaults to data/corpus.")
 EVAL_PLOT_REPORT_OPT = typer.Option(None, "--report", help="Specific report JSON to plot.")
@@ -1242,6 +1244,46 @@ def handoff_create(
         console.print(f"[red]{exc}[/]")
         raise typer.Exit(code=2) from exc
     console.print(f"[green]Handoff bundle written:[/] {path}")
+
+
+@app.command("reliability")
+def reliability_report(
+    input_path: Path | None = typer.Option(None, "--input", exists=True, readable=True, help="JSON list of trial rows."),
+    suite: str = typer.Option("manual", "--suite"),
+) -> None:
+    """Summarize trial outcomes with Wilson confidence intervals and failure taxonomy."""
+    from atelier.reliability import summarize_trials
+
+    try:
+        rows = json.loads(input_path.read_text(encoding="utf-8")) if input_path else []
+        if not isinstance(rows, list):
+            raise ValueError("input must be a JSON list")
+        console.print_json(json.dumps(summarize_trials(rows, suite=suite)))
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+
+
+@app.command("performance")
+def performance_report() -> None:
+    """Measure baseline latency for shared local service operations."""
+    from atelier.performance import service_baseline
+    from atelier.service import AtelierService
+
+    console.print_json(json.dumps(service_baseline(AtelierService()), default=str))
+
+
+@package_app.command("check")
+def package_check_command(
+    root: Path = typer.Option(Path(__file__).resolve().parent.parent, "--root", exists=True, file_okay=False),
+) -> None:
+    """Check package files and Python syntax without building or mutating state."""
+    from atelier.package import package_check
+
+    result = package_check(root)
+    console.print_json(json.dumps(result))
+    if not result["valid"]:
+        raise typer.Exit(code=1)
 
 
 def main() -> None:

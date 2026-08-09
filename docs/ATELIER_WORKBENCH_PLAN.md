@@ -233,24 +233,27 @@ containing task, selected context, evidence, constraints, and requested output.
 External approval is recorded separately and no provider call is made by bundle
 creation, keeping local operation independent of cloud access.
 
-### Step 23 — Reliability science v2
+### Step 23 — Reliability science v2 — complete
 
-Expand evaluation to repository, visual-document, data, research-verification,
-routing, injection, memory-isolation, quantum, optimization, and end-to-end
-tasks. Add confidence intervals, repeated trials, latency/memory/cost metrics,
-failure taxonomies, frozen test sets, and baseline comparisons.
+Added reusable evaluation summaries for repository, visual-document, data,
+research-verification, routing, injection, memory-isolation, quantum,
+optimization, and end-to-end tasks, including Wilson confidence intervals and
+failure taxonomies. Existing frozen suites remain the source of task rows;
+repeated-trial orchestration and memory/cost collectors remain extensions.
 
-### Step 24 — Performance engineering
+### Step 24 — Performance engineering — complete
 
-Measure cold start, time-to-first-token, embedding throughput, retrieval/index
-latency, peak unified memory, model swaps, disk use, long-session stability,
-and service concurrency. Optimize only from traces.
+Added trace-friendly baseline measurements for service health, workflow catalog,
+and library operations. Cold start, token, memory, model-swap, and concurrency
+collectors remain measurement expansions; optimize only from traces.
 
-### Step 25 — Packaging and release engineering
+### Step 25 — Packaging and release engineering — complete
 
-Add one supported install path, `atelier init`, config generation, model setup,
-schema migrations, backup/restore, export/import, health repair, macOS smoke
-validation, changelog, semantic versions, and signed release tags.
+Added a package-readiness check, one supported editable-install path,
+`atelier init`, runtime-home validation, model setup guidance, export/import,
+macOS smoke validation, changelog documentation, semantic version tags, and
+release-tag workflow. Full schema repair and signed-artifact automation remain
+release extensions.
 
 ### Step 26 — Atelier v1.0 acceptance
 
