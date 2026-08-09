@@ -538,6 +538,57 @@ def agent(
         console.print(f"[dim]Trace: {result.trace_path}[/]")
 
 
+@app.command("code-fix")
+def code_fix(
+    goal: str = typer.Argument(..., help="Coding task to complete."),
+    path: Path = typer.Option(Path("."), "--path", exists=True, file_okay=False),
+    escalation: bool = typer.Option(True, "--escalate/--no-escalate", help="Retry with the brain role if the coder fails."),
+    rollback: bool = typer.Option(False, "--rollback-on-failure", help="Restore workflow edits if the final certificate fails."),
+    max_steps: int = typer.Option(14, "--max-steps", min=1, max=40),
+    as_json: bool = typer.Option(False, "--json", help="Print the complete certificate JSON."),
+) -> None:
+    """Run the typed inspect → edit → test → certificate coding workflow."""
+    from atelier.coding_workflow import BuildWorkflow
+    from atelier.workspace import WorkspaceError, get_workspace_manager
+
+    manager = get_workspace_manager()
+    try:
+        context = manager.context()
+        repository = context.resolve(str(path), "execute").path
+    except WorkspaceError as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+
+    with console.status("Running certified coding workflow..."):
+        result = BuildWorkflow(repository, workspace=context).run(
+            goal,
+            role="coder",
+            escalation_role="brain" if escalation else None,
+            max_steps=max_steps,
+            rollback_on_failure=rollback,
+        )
+    certificate = result.certificate.to_dict()
+    if as_json:
+        console.print_json(json.dumps(certificate, default=str))
+    else:
+        table = Table(title="Build Agent v2 certificate")
+        table.add_column("Stage")
+        table.add_column("Status")
+        table.add_column("Evidence")
+        for stage in result.certificate.stages:
+            color = {"passed": "green", "failed": "red", "skipped": "yellow"}[stage.status]
+            table.add_row(stage.name, f"[{color}]{stage.status}[/]", stage.detail[:180])
+        console.print(table)
+        console.print(
+            f"Certificate: [{'green' if result.accepted else 'red'}]"
+            f"{'accepted' if result.accepted else 'rejected'}[/] · "
+            f"attempts={result.certificate.attempts} · "
+            f"changed={len(result.certificate.changed_files)}"
+        )
+    if not result.accepted:
+        raise typer.Exit(code=1)
+
+
 @app.command()
 def eval(
     mode: str = typer.Option("all", "--mode", help="all | docqa | code | combined"),
