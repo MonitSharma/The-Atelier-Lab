@@ -1,4 +1,4 @@
-"""Compact Atelier terminal identity."""
+"""Compact, decorative Atelier terminal identity."""
 
 from __future__ import annotations
 
@@ -6,16 +6,23 @@ import os
 
 from rich.console import Console
 
-_HAT = r"""
-          ✦
-      ╭─────────╮
-      │  ━━━━━  │
-   ╭──┴─────────┴──╮
-   ╰───────────────╯
+_LOGO = r"""
+               ✦
+              ╱╲
+             ╱░░╲
+            ╱░✧░░╲
+           ╱░░◇░░░╲
+          ╱░░░░░░░░░╲
+         ╱░░░░░░░░░░░╲
+        ╱──────────────╲
+       ╭────────────────╮
+       │  ✦  ◇  A  ◇  ✦ │
+       ╰────────────────╯
 """
 
-_WORDMARK = "       A T E L I E R"
-_TAGLINE = "    local research workbench"
+_WORDMARK = "       A T E L I E R  ·  L A B"
+_RULE = "       ──────── ◈ ────────"
+_TAGLINE = "       local research workbench"
 
 
 def print_banner(console: Console | None = None) -> None:
@@ -23,7 +30,8 @@ def print_banner(console: Console | None = None) -> None:
         return
 
     console = console or Console()
-    console.print(_HAT, style="magenta", highlight=False)
+    console.print(_LOGO, style="magenta", highlight=False)
     console.print(_WORDMARK, style="bold cyan", highlight=False)
+    console.print(_RULE, style="dim magenta", highlight=False)
     console.print(_TAGLINE, style="dim", highlight=False)
     console.print()

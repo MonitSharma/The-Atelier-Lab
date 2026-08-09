@@ -3,6 +3,21 @@ name = "the-atelier-lab"
 version = "0.1.0"
 description = "Local-first AI research laboratory"
 requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+test = [
+    "pytest==9.0.3",
+    "pyarrow==25.0.0",
+    "torch==2.12.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["foundation*"]
 
 [tool.pytest.ini_options]
 testpaths = ["foundation/minillm/tests", "atelier_agent/tests", "foundation/datasets/tests"]

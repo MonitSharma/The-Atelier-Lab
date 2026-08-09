@@ -362,8 +362,9 @@ metadata     ok          3
 extraction   ok          3
 ```
 
-No model was downloaded. The missing brain model intentionally blocked the
-optional grounded `atelier ask` smoke test.
+No model was downloaded. The default `qwen3:14b` brain remains intentionally
+absent; the grounded smoke test below uses the already-installed
+`gemma4:26b` through the supported `ATELIER_BRAIN_MODEL` override.
 
 ## 18. CLI changes
 
@@ -457,7 +458,26 @@ cd atelier_agent && ../.venv/bin/python -m pytest -q
 ../.venv/bin/atelier sources
 ```
 
-## 23. Known limitations
+## 23. End-to-end Gemma RAG smoke test
+
+Command:
+
+```bash
+ATELIER_BRAIN_MODEL=gemma4:26b \
+atelier ask --show-context \
+  "How do the quantum papers in my library connect tail-risk estimation error to decision quality?"
+```
+
+Measured result: **PASS**. The real local run retrieved relevant passages from
+`qshield.pdf` and `tail_risk.pdf`, synthesized a grounded answer explaining
+the difference between objective-estimation accuracy and decision quality,
+connected common versus candidate-dependent error to ranking reversals,
+described risk-threshold and close-candidate effects, and attributed the
+answer to both source PDFs. Rich rendered both the context and answer without
+interpreting scientific brackets or Markdown as terminal markup. No model was
+downloaded for this test.
+
+## 24. Known limitations
 
 - The three-paper benchmark is a small local regression suite, not a general
   information-retrieval benchmark.
@@ -465,14 +485,36 @@ cd atelier_agent && ../.venv/bin/python -m pytest -q
   understanding remain deferred.
 - The LFM worker is not trusted for difficult mathematical verification or
   novel scientific conclusions.
-- `qwen3:14b` is configured as the brain but is not installed locally, so the
-  grounded answer smoke test was not run.
+- `qwen3:14b` is configured as the default brain but is not installed locally;
+  the grounded smoke test was run successfully with `gemma4:26b`.
 - ArXiv/DOI sanitization is conservative validation, not external identifier
   verification.
 - The section heuristic is deterministic and title-based; ambiguous headings
   resolve to `other`.
 
-## 24. Explicitly deferred work
+## 25. Step 04.1 — clean-clone reproducibility and CI
+
+The root test surface now declares its test dependencies in
+`pyproject.toml` under the `test` extra: pytest, PyArrow, and PyTorch. Atelier
+declares its runtime and development dependencies in its own `pyproject.toml`.
+MLX and MLX-LM are restricted to Apple Silicon through platform markers, so a
+Linux CI worker does not attempt to install macOS-only packages.
+
+The GitHub Actions workflow at `.github/workflows/test.yml` installs both
+declared project surfaces and runs the complete root pytest configuration plus
+the repository validation scripts. The reproducibility command is:
+
+```bash
+python -m pip install -e ".[test]"
+python -m pip install -e "atelier_agent[dev]"
+python -m pytest -q
+```
+
+A fresh temporary clone was used to validate this installation path before
+publication. It completed the full suite and repository checks without a
+manual PyArrow installation.
+
+## 26. Explicitly deferred work
 
 Deferred after this milestone: coding-specialist/Ornith integration, vision
 models and OCR, Qwen3.8-27B, automatic model routing, LangGraph, Open WebUI,
@@ -480,7 +522,7 @@ cloud routing, LiteLLM, quantum/optimization domain tools, large repository
 semantic indexing, fine-tuning, LoRA changes, and autonomous multi-agent
 orchestration.
 
-## 25. Freeze criteria
+## 27. Freeze criteria
 
 The local implementation satisfies the freeze criteria:
 
@@ -500,10 +542,11 @@ The local implementation satisfies the freeze criteria:
 - doctor reports model/index/memory state;
 - documentation matches the implementation.
 
-## 26. Final PASS/FAIL assessment
+## 28. Final PASS/FAIL assessment
 
 **PASS. Scientific Library v1.0 is locally freezeable.**
 
 The only recorded non-green status is intentional model availability:
 `qwen3:14b` and the optional `qwen3:4b` router are not installed. No model was
-downloaded to obtain this result, and no GitHub push or merge was performed.
+downloaded to obtain this result. The implementation is published from the
+refactor branch; the formal v1.0 tag and merge are tracked in Git history.
