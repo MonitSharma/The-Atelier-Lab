@@ -17,7 +17,7 @@ def render_index() -> str:
 <section class="card"><h2>Library</h2><pre id="library">Loading…</pre></section>
 <section class="card"><h2>Workflows</h2><pre id="workflows">Loading…</pre></section>
 <section class="card"><h2>Recent traces</h2><pre id="tasks">Loading…</pre></section>
-<section class="card"><h2>Approvals</h2><pre id="approvals">No pending approvals.</pre></section>
+<section class="card"><h2>Approvals</h2><pre id="approvals">No pending approvals.</pre><div id="approval-actions"></div></section>
 <section class="card wide"><h2>Route a task</h2><div class="row"><input id="route-input" size="70" placeholder="e.g. inspect this repository and run tests"><button onclick="routeTask()">Route</button></div><pre id="route-result"></pre></section>
 <section class="card wide"><h2>Chat / task input</h2><div class="row"><input id="chat-input" size="70" placeholder="ask Atelier to inspect, analyze, or explain"><label><input id="chat-start" type="checkbox"> start workflow</label><button onclick="submitChat()">Send</button></div><pre id="chat-result"></pre></section>
 <section class="card wide"><h2>Search local research library</h2><div class="row"><input id="search-input" size="70" placeholder="search your indexed papers and notes"><button onclick="searchLibrary()">Search</button></div><pre id="search-result"></pre></section>
@@ -29,7 +29,7 @@ def render_index() -> str:
 <script>
 const get=async path=>(await fetch(path)).json();
 const show=(id,value)=>document.getElementById(id).textContent=JSON.stringify(value,null,2);
-async function refresh(){for(const [id,path] of [['health','/health'],['models','/models'],['library','/library'],['workflows','/workflows'],['tasks','/tasks'],['approvals','/approvals']]){try{show(id,await get(path))}catch(e){show(id,{error:String(e)})}}}
+async function refresh(){for(const [id,path] of [['health','/health'],['models','/models'],['library','/library'],['workflows','/workflows'],['tasks','/tasks']]){try{show(id,await get(path))}catch(e){show(id,{error:String(e)})}}try{const value=await get('/approvals');show('approvals',value);const actions=document.getElementById('approval-actions');actions.replaceChildren();for(const item of (value.approvals||[])){const row=document.createElement('div');const button=document.createElement('button');button.textContent='Approve '+item.run_id.slice(0,8);button.onclick=async()=>{show('approvals',await (await fetch('/workflow_approve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({run_id:item.run_id,approved:true})})).json());refresh()};row.appendChild(button);actions.appendChild(row)}}catch(e){show('approvals',{error:String(e)})}}
 async function routeTask(){const task=document.getElementById('route-input').value;show('route-result',await (await fetch('/route',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task})})).json())}
 async function searchLibrary(){const query=document.getElementById('search-input').value;show('search-result',await (await fetch('/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query})})).json())}
 async function submitChat(){const task=document.getElementById('chat-input').value;show('chat-result',await (await fetch('/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task,start:document.getElementById('chat-start').checked})})).json());refresh()}

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import base64
+import shutil
 import tempfile
 from dataclasses import dataclass, asdict
 from pathlib import Path
@@ -15,6 +17,8 @@ from atelier.security import validate_shell_command
 from atelier.service import AtelierService
 from atelier.web import render_index
 from atelier.workflows import list_workflows
+from atelier.workflow_engine import WorkflowEngine
+from atelier.workspace import WorkspaceManager, workspace_scope
 from agent.project_memory import ProjectMemoryStore
 from tools.registry import create_default_registry
 from tools.research import lookup_research
@@ -61,3 +65,101 @@ def run_acceptance(root: str | Path) -> dict[str, Any]:
         checks.append(_check("runtime-recovery", lambda: str(layout.validate())))
     return {"status": "passed" if all(check.passed for check in checks) else "failed",
             "checks": [check.to_dict() for check in checks]}
+
+
+def run_clean_acceptance(root: str | Path) -> dict[str, Any]:
+    """Exercise a fresh runtime home through deterministic service workflows.
+
+    This is deliberately model-free and network-free. It proves the clean
+    install, workspace, artifact, paper-characterization, approval, restart,
+    memory, quantum, optimization, and local-only policy paths. Live model
+    answer quality and embedding ingestion remain separate acceptance strata.
+    """
+    base = Path(root).expanduser().resolve()
+    checks: list[AcceptanceCheck] = []
+    with tempfile.TemporaryDirectory(prefix="atelier_clean_acceptance_") as raw_temp:
+        temp = Path(raw_temp)
+        home = runtime_layout(temp / "Atelier").initialize()
+        workspace_root = temp / "workspace"
+        workspace_root.mkdir()
+        (workspace_root / "README.md").write_text("# clean acceptance\n", encoding="utf-8")
+        (workspace_root / "sample.csv").write_text("x,y\n1,2\n3,4\n", encoding="utf-8")
+        (workspace_root / "circuit.qasm").write_text(
+            "OPENQASM 2.0; qreg q[2]; h q[0]; cx q[0],q[1];\n", encoding="utf-8"
+        )
+        source_pdf = base / "data" / "corpus" / "papers" / "qshield.pdf"
+        if not source_pdf.is_file():
+            raise FileNotFoundError(f"clean acceptance fixture is missing: {source_pdf}")
+        shutil.copy2(source_pdf, workspace_root / "paper.pdf")
+
+        registry = home.workspaces / "registry.json"
+        manager = WorkspaceManager(registry)
+        if "atelier" in {item.name for item in manager.list()}:
+            manager.close("atelier")
+        manager.add(workspace_root, name="clean", capabilities={"read", "write", "execute"})
+        manager.open("clean")
+        memory_path = home.databases / "project_memory.sqlite3"
+        memory = ProjectMemoryStore(memory_path)
+        engine = WorkflowEngine(manager=manager, storage_dir=home.logs / "workflows")
+        service = AtelierService(manager=manager, workflow_engine=engine, project_memory=memory)
+
+        checks.extend([
+            _check("clean-runtime", lambda: str(home.validate())),
+            _check("clean-service", lambda: str(service.health())),
+            _check("clean-source", lambda: str(service.source("README.md"))),
+            _check("clean-upload", lambda: str(service.upload({
+                "filename": "uploaded.txt",
+                "content_base64": base64.b64encode(b"uploaded").decode(),
+            }))),
+            _check("clean-repo-inspect", lambda: str(service.repo_action("inspect", "."))),
+            _check("clean-data-profile", lambda: str(service.profile("sample.csv"))),
+        ])
+
+        paper_run = service.paper_action("deep_read", "paper.pdf", project="clean")
+        checks.append(_check(
+            "clean-paper-approval",
+            lambda: "waiting_approval" if paper_run["status"] == "waiting_approval" else paper_run["status"],
+        ))
+        run_id = str(paper_run["run_id"])
+
+        # Rebuild the service objects from their persisted runtime files before
+        # approving. This is the restart/recovery proof for durable state.
+        manager_after_restart = WorkspaceManager(registry)
+        engine_after_restart = WorkflowEngine(manager=manager_after_restart, storage_dir=home.logs / "workflows")
+        memory_after_restart = ProjectMemoryStore(memory_path)
+        restarted = AtelierService(
+            manager=manager_after_restart,
+            workflow_engine=engine_after_restart,
+            project_memory=memory_after_restart,
+        )
+        checks.append(_check("clean-restart-state", lambda: str(restarted.workflow_get(run_id))))
+        approved = restarted.workflow_approve(run_id)
+        checks.append(_check(
+            "clean-paper-complete",
+            lambda: "completed" if approved["status"] == "completed" else approved["status"],
+        ))
+
+        checks.extend([
+            _check("clean-quantum", lambda: str(restarted.workflow_start(
+                "quantum_analyze",
+                {"qasm": (workspace_root / "circuit.qasm").read_text(encoding="utf-8")},
+            ))),
+            _check("clean-optimization", lambda: str(restarted.workflow_start(
+                "optimization_validate",
+                {"type": "qubo", "variables": ["x"], "linear": {"x": -1}},
+            ))),
+        ])
+        memory_after_restart.remember("clean", "preserve acceptance evidence", kind="decision", session_id="clean-session")
+        checks.append(_check("clean-project-memory", lambda: f"{len(memory_after_restart.list('clean'))} durable item(s)"))
+        def local_only_check() -> str:
+            result = lookup_research({"query": "clean acceptance"})
+            if result.get("status") != "denied":
+                raise AssertionError(f"LOCAL_ONLY unexpectedly permitted research: {result}")
+            return str(result)
+
+        with workspace_scope(manager_after_restart.context()):
+            checks.append(_check("clean-local-only", local_only_check))
+        checks.append(_check("clean-handoff", lambda: str(create_handoff("codex", "clean acceptance", constraints=["local review"]))))
+    return {"status": "passed" if all(check.passed for check in checks) else "failed",
+            "mode": "clean_model_free", "checks": [check.to_dict() for check in checks],
+            "notes": ["Live model answer quality, embeddings, and external research are separate acceptance strata."]}

@@ -1444,6 +1444,18 @@ def state_rollback(record: Path = typer.Argument(..., exists=True, readable=True
     console.print_json(json.dumps(rollback_migration(record)))
 
 
+@state_app.command("repair")
+def state_repair(home: Path | None = typer.Option(None, "--home")) -> None:
+    """Create missing runtime directories and revalidate the active home."""
+    from atelier.runtime import runtime_layout
+
+    layout = runtime_layout(home).initialize()
+    result = layout.validate()
+    console.print_json(json.dumps({"status": "repaired" if result["valid"] else "failed", **result}))
+    if not result["valid"]:
+        raise typer.Exit(code=1)
+
+
 @finder_app.command("plan")
 def finder_plan(
     action: str = typer.Argument(..., help="send_to_atelier, add_to_library, characterize_paper, or explain_file"),
@@ -1509,11 +1521,17 @@ def handoff_create(
 def reliability_report(
     input_path: Path | None = typer.Option(None, "--input", exists=True, readable=True, help="JSON list of trial rows."),
     suite: str = typer.Option("manual", "--suite"),
+    repetitions: int = typer.Option(3, "--repetitions", min=1, max=20),
 ) -> None:
     """Summarize trial outcomes with Wilson confidence intervals and failure taxonomy."""
     from atelier.reliability import summarize_trials
 
     try:
+        if suite == "v2":
+            from eval.reliability_v2 import run_reliability_v2
+
+            console.print_json(json.dumps(run_reliability_v2(repetitions=repetitions), default=str))
+            return
         rows = json.loads(input_path.read_text(encoding="utf-8")) if input_path else []
         if not isinstance(rows, list):
             raise ValueError("input must be a JSON list")
@@ -1545,12 +1563,46 @@ def package_check_command(
         raise typer.Exit(code=1)
 
 
-@app.command("acceptance")
-def acceptance_command() -> None:
-    """Run the deterministic offline acceptance smoke without model or network calls."""
-    from atelier.acceptance import run_acceptance
+@package_app.command("export")
+def package_export(
+    output: Path = typer.Option(..., "--output"),
+    home: Path | None = typer.Option(None, "--home"),
+) -> None:
+    """Export external runtime state to a portable ZIP backup."""
+    from atelier.package import export_runtime
+    from atelier.runtime import default_home
 
-    result = run_acceptance(Path(__file__).resolve().parent.parent)
+    try:
+        result = export_runtime(home or default_home(), output)
+    except (OSError, ValueError) as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    console.print_json(json.dumps(result, default=str))
+
+
+@package_app.command("restore")
+def package_restore(
+    archive: Path = typer.Option(..., "--archive", exists=True, readable=True),
+    home: Path = typer.Option(..., "--home"),
+    overwrite: bool = typer.Option(False, "--overwrite"),
+) -> None:
+    """Restore an explicit runtime ZIP backup after path-safety validation."""
+    from atelier.package import restore_runtime
+
+    try:
+        result = restore_runtime(archive, home, overwrite=overwrite)
+    except (OSError, ValueError) as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    console.print_json(json.dumps(result, default=str))
+
+
+@app.command("acceptance")
+def acceptance_command(clean: bool = typer.Option(False, "--clean", help="Run the fresh-runtime end-to-end acceptance scenario.")) -> None:
+    """Run deterministic offline acceptance checks without model or network calls."""
+    from atelier.acceptance import run_acceptance, run_clean_acceptance
+
+    result = (run_clean_acceptance if clean else run_acceptance)(Path(__file__).resolve().parent.parent)
     console.print_json(json.dumps(result, default=str))
     if result["status"] != "passed":
         raise typer.Exit(code=1)

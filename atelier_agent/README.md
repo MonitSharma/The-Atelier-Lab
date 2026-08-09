@@ -2,10 +2,10 @@
 
 # Project Atelier
 
-**A fully local, zero-cost, dual-mode AI agent that runs on a single MacBook.**
+**A local-first, dual-mode AI research workbench that runs on a single MacBook.**
 
 *Answer questions over your own notes. Read and fix your code with test-verified changes.
-No cloud, no API keys, no subscriptions — your data never leaves the machine.*
+Local-first by default; optional network research and frontier handoffs are explicit and permission-gated.*
 
 </div>
 
@@ -22,16 +22,16 @@ tools can use its toolbox, **hybrid retrieval**, a **LoRA-fine-tuned router** th
 sends easy work to a cheap model, and a **self-evaluation harness** that measures
 its own reliability — and reports where it fails.
 
-> **Why local-only?** The research question this project answers is *"how far can a
-> fully local, $0 agent go on one laptop?"* The constraints are the point, not a
-> limitation. Privacy is a free side effect: nothing is ever sent to a third party.
+> **Why local-first?** The default path is private and offline-capable. Network
+> research and frontier-model handoffs are separate, explicit, permission-gated
+> operations with provenance and redaction rather than implicit data transfer.
 
-**Current state:** Phases 0-7 are complete. The project now has an installable
-CLI, a local RAG system, an autonomous build-mode agent, durable memory, MCP
-tool serving, hybrid retrieval, a fine-tuned router, trace logging, and an
-expanded reliability suite: **18 doc-QA tasks**, **13 code-repair tasks**, and
-**10 combined knowledge → build tasks** stratified by category, difficulty, and
-edit scope.
+**Current state:** the deterministic foundation is implemented and the product
+roadmap is in progress. The project has an installable CLI, local RAG, approved
+workspaces, repository intelligence, coding workflows, durable tasks and
+project memory, research/quantum/optimization tools, a shared service/API, a
+replaceable web UI, and model-free reliability evidence. Final clean-Mac Step
+26 acceptance is still pending.
 
 ---
 
@@ -75,7 +75,7 @@ edit scope.
 | 🛰️ | **MCP server** | Exposes its toolbox to Claude Desktop/Code or any MCP host |
 | ⚡ | **Fine-tuned router** | A 1-min LoRA fine-tune of a 0.5B model cuts brain calls ~50% with no accuracy loss |
 | 📊 | **Self-evaluation** | 18 doc-QA tasks + 13 code tasks + 10 combined tasks, grouped metrics, regression gate, honest reliability numbers |
-| 🔒 | **100% local & free** | Only network use: the local Ollama endpoint + one-time model downloads |
+| 🔒 | **Local-first privacy** | `LOCAL_ONLY` is default; network research and handoffs require explicit policy |
 
 ---
 
@@ -102,7 +102,9 @@ edit scope.
                                  agent.router ──▶ fine-tuned 0.5B picks model size
 ```
 
-Everything above runs on-device. Full design notes: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+The default workbench path runs on-device; explicitly networked research and
+frontier handoffs are separate policy-controlled paths. Full design notes:
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ---
 
@@ -117,13 +119,16 @@ Everything above runs on-device. Full design notes: [`docs/ARCHITECTURE.md`](doc
 The local models Atelier uses by role:
 
 ```bash
-ollama pull qwen3:14b    # "brain"  — reasoning + build mode (default)
 ollama pull hf.co/LiquidAI/LFM2.5-2.6B-GGUF:Q6_K  # "worker" — fast subtasks + characterization
 ollama pull gemma4:26b   # "heavy"  — optional, for the hardest reasoning (--heavy)
+# The coder and embedding roles are selected from the current benchmark/configuration.
+# Do not download placeholder models just to make doctor green.
 ```
 
 The embedding model is served locally by Ollama (`qwen3-embedding:4b`, about
-2.5 GB). The optional reranker still downloads about 80 MB on first use.
+2.5 GB). The optional reranker still downloads about 80 MB on first use. The
+coder and main-reasoner roles are registry/configuration entries until their
+benchmarks justify downloading them.
 
 ---
 
@@ -139,8 +144,9 @@ uv pip install -e .                     # installs the `atelier` command
 atelier doctor                          # verify models + vector store + embeddings
 ```
 
-`atelier doctor` should show all three models green. If one is red, run the
-`ollama pull` it prints.
+`atelier doctor` reports which configured roles are installed. A missing
+placeholder model is intentional until its role has a benchmark and a clear
+workflow consumer.
 
 > **No banner in scripts?** Set `ATELIER_NO_BANNER=1` to suppress the ASCII banner.
 
@@ -173,9 +179,10 @@ atelier recall "what license do I like?"
 
 ## What's been built — the phases
 
-Atelier was built in eight phases (0–7); **all are complete**. Each shipped a
-working capability and is verified by tests and/or the eval harness. The
-authoritative log lives in [`Project.md`](Project.md) (Decision Log + Changelog).
+The earlier phases (0–7) document the historical foundation. Current product
+milestones and their evidence live in
+[`docs/ATELIER_WORKBENCH_PLAN.md`](../docs/ATELIER_WORKBENCH_PLAN.md); final
+clean-Mac Step 26 acceptance is not yet claimed complete.
 
 | Phase | Title | What it delivered | Where |
 |---|---|---|---|
@@ -236,13 +243,14 @@ Flags:
 
 | Flag | Effect |
 |---|---|
-| `--heavy` | Use `gemma4:26b` instead of `qwen3:14b` |
+| `--heavy` | Use the configured heavy reasoner instead of the main brain |
 | `--memory` | Recall relevant long-term memories into context first |
 | `--shell` | Enable the powerful (lightly guarded) `shell` tool |
 | `--max-steps N` | Bound the reasoning loop (default 10) |
 | `--quiet` | Don't stream each step |
 
-Every run streams its steps and writes a full JSON **trace** to `data/traces/`,
+Every run streams its steps and writes a full JSON **trace** to
+`~/Atelier/logs/traces/` by default,
 so you can inspect exactly what the agent did.
 
 > **Safety:** file/test tools are pinned to explicitly approved Atelier
@@ -272,7 +280,7 @@ ones (the "small model as a cheap component" pattern).
 
 ```bash
 atelier route "what is 47 * 89?"                    # easy → qwen3:4b
-atelier route "refactor auth across the codebase"   # hard → qwen3:14b
+atelier route "refactor auth across the codebase"   # hard → configured brain
 atelier route --backend heuristic "..."             # no model, keyword heuristic
 
 make train-router                                   # reproduce the fine-tune (~1 min)
@@ -308,7 +316,7 @@ atelier eval --gate           # FAIL (exit 1) if any metric regressed vs the las
 atelier eval-plots            # generate SVG plots from the latest saved report
 ```
 
-Reports are saved to `data/eval_reports/`. The suites in `eval/tasks_docqa/` and
+Reports are saved under the configured runtime home. The suites in `eval/tasks_docqa/` and
 `eval/tasks_code/` are **frozen on purpose** — add new tasks, don't edit existing
 ones, or you invalidate comparisons. The current suite has **18 knowledge-mode
 questions**, **13 build-mode code tasks**, and **10 combined knowledge → build
@@ -316,8 +324,8 @@ tasks**; report rows include `category`, `difficulty`, and code `edit_scope` so
 you can plot success rate by task type. The combined suite counts a task as
 solved only if tests pass and the trace used `search_notes`.
 
-`atelier eval-plots` writes dependency-free SVG charts under
-`data/eval_reports/plots/<report-name>/`, including overall doc-QA scores,
+`atelier eval-plots` writes dependency-free SVG charts under the runtime home,
+including overall doc-QA scores,
 correctness by doc-QA category, build solved-rate by difficulty/edit scope, and
 steps-by-task.
 
@@ -352,6 +360,13 @@ steps-by-task.
 | `atelier mcp` | Serve the toolbox over MCP (stdio) |
 | `atelier eval` | Run the reliability suites (`--mode/--judge/--gate`) |
 | `atelier eval-plots` | Generate SVG charts from the latest or selected eval report |
+| `atelier workflow run NAME` | Start a durable typed workflow with checkpoints |
+| `atelier workflow status RUN_ID` | Inspect persisted workflow evidence |
+| `atelier workflow approve RUN_ID` | Continue a workflow past an approval gate |
+| `atelier project context NAME` | Show project-scoped memory and task context |
+| `atelier research graph QUERY` | Query related/cited-by research with provenance |
+| `atelier reliability --suite v2 --repetitions N` | Run the frozen model-free reliability suite |
+| `atelier performance` | Measure service baseline and system snapshot |
 
 Run `atelier --help` or `atelier <command> --help` for full options.
 
@@ -364,6 +379,7 @@ Everything is overridable via environment variables (prefix `ATELIER_`) or a
 
 | Variable | Default | Meaning |
 |---|---|---|
+| `ATELIER_HOME` | `~/Atelier` | External runtime home for library, databases, caches, logs, and backups |
 | `ATELIER_OLLAMA_URL` | `http://localhost:11434` | Local Ollama endpoint |
 | `ATELIER_BRAIN_MODEL` | `qwen3:14b` | Main reasoning / build model |
 | `ATELIER_WORKER_MODEL` | `hf.co/LiquidAI/LFM2.5-2.6B-GGUF:Q6_K` | Cheap subtasks, routing, paper characterization |
@@ -396,16 +412,16 @@ export ATELIER_RERANK=1
 
 | Role | Default model | Resident RAM (approx.) | Notes |
 |---|---|---|---|
-| Brain | `qwen3:14b` (4-bit) | ~9 GB | Comfortable on 36 GB alongside the rest |
+| Brain | configured `qwen3:14b` | benchmark-dependent | Main reasoning role; not downloaded automatically |
 | Worker | `hf.co/LiquidAI/LFM2.5-2.6B-GGUF:Q6_K` | ~2.2 GB | Fast iteration, routing, extraction, and strict paper JSON |
 | Router target | `qwen3:4b` | optional | Historical router target; doctor reports it missing if not installed |
 | Heavy (optional) | `gemma4:26b` | ~17 GB | For the hardest reasoning only |
 | Embeddings | `qwen3-embedding:4b` | ~2.5 GB | 2,560-dimensional local semantic retrieval |
 | Router | `Qwen2.5-0.5B` + LoRA | ~1.5 GB (train) | Fine-tune is ~1 min on M3 Pro |
 
-**Rule of thumb:** keep the brain ≤ ~14B so the embedding model, vector store,
-tools, and OS all breathe within 36 GB. Don't run the brain and a heavy
-fine-tune simultaneously — serialize them.
+**Rule of thumb:** add a model only after freezing its workflow role, benchmark,
+and memory budget. On a 36 GiB machine, serialize large model loads and keep
+the embedding model, vector store, tools, and OS within the memory budget.
 
 ---
 
@@ -531,7 +547,7 @@ make demo             # quick end-to-end build-mode demo
 ```
 
 Artifacts produced: the trained adapter (`models/router/adapter/`), JSON reports
-(`data/eval_reports/`), and per-run traces (`data/traces/`).
+under the runtime home, and per-run traces (`~/Atelier/logs/traces/` by default).
 
 ---
 
@@ -617,8 +633,10 @@ atelier/
     └── WRITEUP.md            # the public writeup + figure
 ```
 
-Runtime data (the vector store, traces, eval reports, memory) lives under `data/`
-and is gitignored — it's local and regenerable.
+Runtime data (the vector store, traces, eval reports, memory, workflows, and
+backups) lives under `~/Atelier/` by default and is gitignored when generated in
+the repository. Set `ATELIER_HOME` to relocate it; `atelier state validate` and
+`atelier state repair` verify or recreate the layout.
 
 ---
 
@@ -671,4 +689,4 @@ This project values honest limits over optimism:
 
 [Apache-2.0](LICENSE).
 
-<div align="center"><sub>Built to run entirely on one laptop, at $0. Your notes and code never leave the machine.</sub></div>
+<div align="center"><sub>Built to run local-first on one laptop. Network access and frontier handoffs are explicit.</sub></div>

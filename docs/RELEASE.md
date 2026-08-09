@@ -1,8 +1,8 @@
 # Atelier release status
 
-The current `master` line contains the deterministic foundation and acceptance
-smoke through the initial v1.0 baseline. It has not yet completed the full
-roadmap through Step 26. Incremental foundation tags include:
+The current development line contains the deterministic foundation and
+acceptance smoke through the initial v1.0 baseline. It has not yet completed
+the full roadmap through Step 26. Incremental foundation tags include:
 
 - `atelier-core-v1.0`
 - `atelier-workspace-v1.0`
@@ -23,13 +23,16 @@ Run the final deterministic check from `atelier_agent/`:
 
 ```bash
 ../.venv/bin/python -m atelier.cli acceptance
+../.venv/bin/python -m atelier.cli acceptance --clean
 ../.venv/bin/python -m pytest -q
 ../.venv/bin/python -m atelier.cli package check
+../.venv/bin/python -m atelier.cli reliability --suite v2 --repetitions 3
+../.venv/bin/python -m atelier.cli performance
 ```
 
-The acceptance command deliberately avoids model inference, network calls,
-external handoff, and destructive operations. It is a deterministic foundation
-smoke, not full Step 26 release evidence. Qiskit simulation, solver-backed
-optimization, durable workflow execution, expanded reliability/performance
-evaluation, signed artifacts, and a richer Finder bundle remain explicit
-roadmap work rather than hidden release claims.
+The acceptance commands deliberately avoid model inference, network calls,
+external handoff, and destructive operations. They are deterministic foundation
+and clean-state evidence, not full Step 26 release evidence. Qiskit provider
+transpilation/backend comparison, external solver integrations, hardened OS
+isolation, signed artifacts, and live frontier handoffs remain explicit release
+extensions rather than hidden claims.

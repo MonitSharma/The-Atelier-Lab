@@ -44,7 +44,7 @@ Status: **foundation acceptance baseline; roadmap implementation in progress**
 - Typed workflow specifications now have a durable JSON execution engine with
   per-step checkpoints, approval pauses, recovery, cancellation, and shared
   service/API task operations. Project/session memory integration and
-  expiration enforcement remain in progress.
+  expiration enforcement are covered by the project-memory store.
 - Project memory now enforces expiry, records structured provenance, and stores
   isolated session/task/artifact entities; workflow tasks are mirrored into
   that project state.
@@ -55,8 +55,8 @@ Status: **foundation acceptance baseline; roadmap implementation in progress**
   routing, source viewing, bounded uploads, paper/repository actions, and
   workflow approvals.
 - The loopback web workbench exposes workspace/privacy, library, models,
-  workflows, chat, search, source viewing, uploads, paper actions, and
-  repository actions through that service.
+  workflows, chat, search, source viewing, uploads, paper actions, repository
+  actions, and approval buttons through that service.
 - A versioned external runtime-home layout is active by default under
   `~/Atelier`; state migration is copy-first, source-preserving, and
   record-scoped for rollback. The migrated three-paper index is currently
@@ -71,18 +71,18 @@ models through frozen evaluations rather than by accumulating downloads.
 
 ## Remaining roadmap work
 
-- richer web search integration and broader research-source coverage beyond
-  the current Crossref/arXiv/Semantic Scholar operations;
+- broader research-source coverage beyond the current Crossref/arXiv/Semantic
+  Scholar operations;
 - richer quantum transpilation/backend comparison and external solver
   integration;
 - broader hardened security isolation beyond the current capability boundary,
   prompt-injection markers, secret redaction, one-use destructive confirmations,
   and audit logging;
-- polished web trace/source rendering and approval controls;
-- actual macOS Quick Actions/Shortcuts and richer selected-context frontier
-  handoffs;
-- expanded reliability/performance evaluation, packaging, migration repair,
-  and clean-Mac Step 26 release evidence.
+- polished web trace/source rendering and richer selected-context presentation;
+- provider-backed quantum transpilation/backend comparison and external solver
+  integrations;
+- hardened OS-level isolation, signed artifacts, protected-master verification,
+  and live model-backed clean-Mac Step 26 release evidence.
 
 The dependency-ordered roadmap for these capabilities is maintained in
 [`ATELIER_WORKBENCH_PLAN.md`](ATELIER_WORKBENCH_PLAN.md).
