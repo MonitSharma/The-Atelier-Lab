@@ -40,6 +40,7 @@ required by the scientific-library runtime on Linux.
 |---|---|---|---|
 | `worker` | `hf.co/LiquidAI/LFM2.5-2.6B-GGUF:Q6_K` | installed | fast extraction, classification, structured subtasks |
 | `brain` | `qwen3:14b` | configuration placeholder | general reasoning and build mode |
+| `coder` | `qwen3:8b` | installed and benchmarked | repository edits, tests, and small coding tasks |
 | `heavy` | `gemma4:26b` | installed | hard reasoning and end-to-end local synthesis |
 | `expert` | empty | intentionally unconfigured | reserved capability slot |
 | `router` | `qwen3:4b` | configuration placeholder | future routing experiment |
@@ -47,7 +48,8 @@ required by the scientific-library runtime on Linux.
 
 The code does not assume that every configured model is installed. `doctor`
 reports `ok`, `missing`, or `unconfigured` explicitly. No model is downloaded
-merely to make a placeholder green.
+merely to make a placeholder green. The coder selection is backed by the
+frozen multi-file benchmark in `docs/steps/STEP_07_CODING_SPECIALIST_BENCHMARK.md`.
 
 ## Knowledge library
 

@@ -34,6 +34,8 @@ atelier_agent/data/traces/
 atelier_agent/data/memory/
 atelier_agent/data/eval_reports/
 atelier_agent/.eval_workspace/
+atelier_agent/.coding_benchmark_workspace/
+atelier_agent/data/coding_benchmark_reports/
 *.log
 
 # Environment / secrets

@@ -1,6 +1,6 @@
 # Current Atelier Architecture
 
-Status: **post-Scientific Library v1.0; workspace permissions implemented**
+Status: **post-Scientific Library v1.0; coder benchmark frozen**
 
 ## Shipped baseline
 
@@ -20,6 +20,9 @@ Status: **post-Scientific Library v1.0; workspace permissions implemented**
 - Agent, MCP, and CLI tool dispatch receive an explicit workspace context.
 - Deterministic repository inspection reports Git, languages, environments,
   tests, entry points, symbols, imports, test links, and important files.
+- A dedicated `coder` role uses `qwen3:8b`, selected through a frozen
+  multi-file benchmark with test-pass, tool-use, latency, memory, and token
+  measurements.
 
 ## Deliberate placeholders
 
@@ -30,7 +33,6 @@ models through frozen evaluations rather than by accumulating downloads.
 
 ## Not shipped yet
 
-- a dedicated `coder` role and coding-model benchmark;
 - plan/edit/verify transactions and rollback;
 - domain-aware routing and model lifecycle management;
 - multimodal documents, general-file adapters, network research tools;

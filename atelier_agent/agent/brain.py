@@ -14,7 +14,7 @@ Nothing here leaves the machine — it talks only to ``localhost:11434``.
 from __future__ import annotations
 
 import re
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from typing import Any
 
 from atelier.config import settings
@@ -22,8 +22,8 @@ from models.registry import provider_for, specs_from_settings
 from models.types import ModelSpec, Role
 
 _SPECS = specs_from_settings(settings)
-_SPECS["heavy"] = _SPECS["expert"]
-_SPECS["heavy"] = _SPECS["heavy"].__class__("heavy", settings.model_provider, settings.heavy_model, "heavy")
+if "heavy" not in _SPECS:
+    _SPECS["heavy"] = ModelSpec("heavy", settings.model_provider, settings.heavy_model, "heavy")
 _provider = provider_for(settings)
 
 _THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
@@ -66,6 +66,7 @@ def chat(
     json_mode: bool = False,
     json_schema: dict[str, Any] | None = None,
     think: bool = False,
+    on_result: Callable[[Any], None] | None = None,
 ) -> str:
     """Send a conversation and return the assistant's text.
 
@@ -86,6 +87,8 @@ def chat(
         if json_schema is not None:
             kwargs["json_schema"] = json_schema
         result = _provider.generate(messages, spec, **kwargs)
+        if on_result is not None:
+            on_result(result)
         return strip_thinking(result.text)
     except Exception as exc:  # provider-specific errors become stable public errors
         raise BrainError(f"Local provider request failed for {name}: {exc}") from exc
@@ -119,7 +122,9 @@ def health() -> dict[str, Any]:
     available = {m.get("model", m.get("name", "")) for m in listed}
     configured_roles = {
         "brain": settings.brain_model,
+        "coder": settings.coder_model,
         "worker": settings.worker_model,
+        "heavy": settings.heavy_model,
         "expert": settings.expert_model,
         "router": settings.router_model,
     }

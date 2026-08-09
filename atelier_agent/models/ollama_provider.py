@@ -30,7 +30,20 @@ class OllamaProvider:
         content = response.get("message", {}).get("content", "")
         if not content:
             raise RuntimeError(f"Ollama returned an empty response for {spec.model_id}")
-        return GenerationResult(text=content, model_name=spec.model_id, total_latency_s=time.perf_counter() - started)
+        def seconds(key: str) -> float | None:
+            value = response.get(key)
+            return float(value) / 1_000_000_000 if isinstance(value, (int, float)) else None
+
+        return GenerationResult(
+            text=content,
+            model_name=spec.model_id,
+            prompt_tokens=response.get("prompt_eval_count"),
+            completion_tokens=response.get("eval_count"),
+            total_latency_s=time.perf_counter() - started,
+            load_duration_s=seconds("load_duration"),
+            prompt_eval_duration_s=seconds("prompt_eval_duration"),
+            completion_eval_duration_s=seconds("eval_duration"),
+        )
 
     def stream(self, messages: list[dict[str, Any]], spec: ModelSpec, *, temperature: float) -> Iterator[str]:
         for part in self.client.chat(model=spec.model_id, messages=messages, options={"temperature": temperature}, stream=True):

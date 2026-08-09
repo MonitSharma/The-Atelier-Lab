@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     mlx_model_path: str | None = None
     #: Hard reasoning + build mode. Fits comfortably in 36 GB.
     brain_model: str = "qwen3:14b"
+    #: Coding specialist selected by the Step 07 frozen benchmark.
+    coder_model: str = "qwen3:8b"
     #: Fast, cheap subtasks / routing.
     worker_model: str = "hf.co/LiquidAI/LFM2.5-2.6B-GGUF:Q6_K"
     #: Optional heavy reasoner for the hardest steps (~17 GB resident).

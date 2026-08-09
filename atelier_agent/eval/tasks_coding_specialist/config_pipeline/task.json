@@ -1,0 +1,8 @@
+{
+  "id": "config_pipeline",
+  "category": "multi_file_contract",
+  "difficulty": "medium",
+  "edit_scope": "multi_file",
+  "relevant_files": ["config.py", "render.py", "test_config_pipeline.py"],
+  "prompt": "There are failing tests in the directory `{path}`. Treat this as a real multi-file coding task: inspect the repository first with repo_map, read the relevant source and tests, fix the implementation in all files needed, and run test_runner on `{path}`. Preserve the public function names and do not weaken or delete tests. Finish only when the full test suite passes cleanly. The intended behavior is specified by the tests, not by the bug comments."
+}

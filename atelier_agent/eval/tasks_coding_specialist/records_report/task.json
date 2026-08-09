@@ -1,0 +1,8 @@
+{
+  "id": "records_report",
+  "category": "multi_file_edge_cases",
+  "difficulty": "medium",
+  "edit_scope": "multi_file",
+  "relevant_files": ["records.py", "report.py", "test_records_report.py"],
+  "prompt": "There are failing tests in the directory `{path}`. Solve this multi-file repository task using the tools: inspect with repo_map, read source and tests, make the smallest correct edits across modules, then run test_runner on `{path}`. Preserve the API and tests; do not hard-code the expected test output. Finish only when all tests pass cleanly."
+}

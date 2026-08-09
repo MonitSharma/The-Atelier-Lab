@@ -1,0 +1,8 @@
+{
+  "id": "query_service",
+  "category": "multi_file_api",
+  "difficulty": "medium",
+  "edit_scope": "multi_file",
+  "relevant_files": ["store.py", "service.py", "test_query_service.py"],
+  "prompt": "There are failing tests in the directory `{path}`. Complete this multi-file coding task as an agentic coder: map the repository, inspect the source and tests, make a minimal compatible fix in the appropriate modules, and run test_runner on `{path}`. Do not remove tests or change the public API. Finish only after the complete test suite passes cleanly."
+}

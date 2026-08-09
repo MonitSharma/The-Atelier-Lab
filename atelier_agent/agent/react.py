@@ -102,6 +102,7 @@ class ReActAgent:
         registry: ToolRegistry | None = None,
         *,
         role: str = "brain",
+        model: str | None = None,
         max_steps: int = 10,
         verbose: bool = False,
         log: bool = True,
@@ -110,6 +111,7 @@ class ReActAgent:
     ) -> None:
         self.registry = registry or create_default_registry()
         self.role = role
+        self.model = model
         self.max_steps = max_steps
         self.verbose = verbose
         self.log = log
@@ -156,7 +158,20 @@ class ReActAgent:
 
         for step in range(1, self.max_steps + 1):
             t0 = time.time()
-            raw = chat(messages, role=self.role, json_mode=True)
+            raw = chat(
+                messages,
+                role=self.role,
+                model=self.model,
+                json_mode=True,
+                on_result=lambda result, current_step=step: self._emit({
+                    "step": current_step,
+                    "kind": "model_result",
+                    "model": getattr(result, "model_name", None),
+                    "prompt_tokens": getattr(result, "prompt_tokens", None),
+                    "completion_tokens": getattr(result, "completion_tokens", None),
+                    "latency_s": getattr(result, "total_latency_s", None),
+                }),
+            )
             entry: dict[str, Any] = {"step": step, "raw": raw, "latency_s": round(time.time() - t0, 2)}
 
             try:
@@ -214,8 +229,9 @@ class ReActAgent:
 
 def run_task(goal: str, *, role: str = "brain", max_steps: int = 10,
              include_shell: bool = False, verbose: bool = False,
-             workspace: WorkspaceContext | None = None) -> AgentResult:
+             workspace: WorkspaceContext | None = None,
+             model: str | None = None) -> AgentResult:
     """Convenience entry point: full toolbox, one call."""
     agent = ReActAgent(create_default_registry(include_shell=include_shell, workspace=workspace),
-                       role=role, max_steps=max_steps, verbose=verbose)
+                       role=role, model=model, max_steps=max_steps, verbose=verbose)
     return agent.run(goal)
