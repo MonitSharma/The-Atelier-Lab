@@ -1,5 +1,8 @@
 # Atelier Workbench merge
 
+> Historical merge record. The current production storage choice is ChromaDB
+> plus the SQLite manifest; LanceDB is not used by Atelier.
+
 `The-Atelier-Lab/atelier_agent` is the canonical application. The standalone
 `~/atelier-workbench` remains a reference prototype; its validated ideas were
 integrated without introducing a second CLI, virtual environment, or LanceDB

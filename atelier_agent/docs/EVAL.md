@@ -1,5 +1,10 @@
 # Atelier — reliability evaluation
 
+> Historical evaluation record. Earlier embedding and worker rows describe the
+> benchmark configuration at that time; the current runtime is documented in
+> [`ARCHITECTURE.md`](ARCHITECTURE.md) and uses Qwen3-Embedding-4B plus the
+> LFM2.5 worker.
+
 This is the honest, reproducible reliability writeup the project is built around
 (PROJECT.md §9–§10). It reports how often the local agent succeeds at each mode,
 on frozen task suites, with the exact setup so the numbers can be reproduced and

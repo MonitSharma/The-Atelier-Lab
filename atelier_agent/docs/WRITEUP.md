@@ -3,6 +3,10 @@
 *A reliability study of Atelier — a dual-mode (knowledge + build) AI agent that
 runs entirely on a MacBook M3 Pro (36 GB), at $0, with no cloud APIs.*
 
+> Historical write-up. Its earlier BGE, qwen3 worker, and router descriptions
+> are retained as experiment history; they are not the current runtime
+> architecture. See [`ARCHITECTURE.md`](ARCHITECTURE.md) for current facts.
+
 ## Abstract
 
 Atelier is a single agent harness with two modes: **knowledge** (retrieval-

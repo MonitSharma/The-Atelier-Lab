@@ -23,7 +23,10 @@ ollama serve &                 # if not already running
 atelier doctor
 ```
 
-**Expect:** a table with `model:brain/worker/heavy` all green, the vector store
+**Expect:** a table with the configured `brain`/`worker`/`heavy` roles and the
+embedding/index state clearly marked `ok`, `missing`, or `unconfigured`. The
+current vector store uses
+`qwen3-embedding:4b` at 2,560 dimensions; the configured
 reachable, and the embed model listed. If a model is red, run the `ollama pull`
 it prints.
 
@@ -80,7 +83,7 @@ from agent.brain import chat
 print(chat([{"role":"user","content":"Which embedding model did Monit choose for Atelier and why?"}], role="brain"))
 PY
 ```
-**Expect:** the first answers correctly (`BAAI/bge-base-en-v1.5`, with the
+**Expect:** the first answers correctly (`qwen3-embedding:4b`, with the
 reason); the baseline either refuses or guesses. That gap *is* the value of RAG.
 
 ### 2d. Inspect what was retrieved
