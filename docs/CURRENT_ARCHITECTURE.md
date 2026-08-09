@@ -26,6 +26,9 @@ Status: **post-Scientific Library v1.0; coder benchmark frozen**
 - `atelier code-fix` wraps the ReAct primitive in a typed build workflow with
   deterministic inspection, baseline/regression tests, checkpoints, optional
   escalation to the brain, diff review, rollback, and a JSON certificate.
+- Capability-first routing and a role-aware model lifecycle registry expose
+  `atelier route`, `atelier models list`, `atelier models status`, and
+  `atelier models bench`.
 
 ## Deliberate placeholders
 
@@ -36,7 +39,6 @@ models through frozen evaluations rather than by accumulating downloads.
 
 ## Not shipped yet
 
-- domain-aware routing and model lifecycle management;
 - multimodal documents, general-file adapters, network research tools;
 - quantum/optimization tool families;
 - workflow state, project-scoped memory, hardened security boundary;
