@@ -21,3 +21,4 @@ include = ["foundation*"]
 
 [tool.pytest.ini_options]
 testpaths = ["foundation/minillm/tests", "atelier_agent/tests", "foundation/datasets/tests"]
+norecursedirs = ["fixtures"]

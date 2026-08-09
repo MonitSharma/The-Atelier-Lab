@@ -86,7 +86,7 @@ model JSON decision → one tool → bounded observation → next decision
 
 The registry is shared by the CLI, agent, and MCP server. Current tool families
 include file reads/writes, search, repository mapping, Python execution, test
-running, AST edits, semantic search, and memory. File and execution tools now
+running, AST edits, deterministic repository inspection, semantic search, and memory. File and execution tools now
 receive an explicit persisted workspace context with approved roots and
 capabilities. `LOCAL_ONLY` is the default privacy policy; this remains an
 application-level boundary until the stronger security work in Step 17.

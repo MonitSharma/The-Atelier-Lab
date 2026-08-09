@@ -18,6 +18,8 @@ Status: **post-Scientific Library v1.0; workspace permissions implemented**
 - Workspace roots are persisted with read/write/execute/network capabilities;
   `LOCAL_ONLY` is the default privacy policy.
 - Agent, MCP, and CLI tool dispatch receive an explicit workspace context.
+- Deterministic repository inspection reports Git, languages, environments,
+  tests, entry points, symbols, imports, test links, and important files.
 
 ## Deliberate placeholders
 
@@ -28,7 +30,6 @@ models through frozen evaluations rather than by accumulating downloads.
 
 ## Not shipped yet
 
-- deterministic repository intelligence at repository scale;
 - a dedicated `coder` role and coding-model benchmark;
 - plan/edit/verify transactions and rollback;
 - domain-aware routing and model lifecycle management;

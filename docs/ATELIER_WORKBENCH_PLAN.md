@@ -69,7 +69,7 @@ rejection, `LOCAL_ONLY` default privacy, and context-aware tool dispatch are
 covered by tests. Destructive-operation confirmations and the hardened trust
 boundary remain Step 17 work.
 
-### Step 06 — Repository intelligence
+### Step 06 — Repository intelligence — complete
 
 Build deterministic repository inspection before selecting a coding model:
 
@@ -80,8 +80,11 @@ Build deterministic repository inspection before selecting a coding model:
 - CLI commands: `repo inspect`, `repo status`, `repo symbols`, `repo search`,
   and `repo tests`.
 
-Use multi-file frozen fixtures and selective semantic indexing; do not embed an
-entire repository blindly.
+Implemented as a standard-library deterministic inspector with Git, language,
+environment, package, test, entry-point, symbol/import, test-link,
+important-file, and bounded-search outputs. CLI and agent-tool interfaces are
+available, and multi-file fixtures verify the structure-first behavior. Full
+semantic indexing remains selective and deferred until the coder benchmark.
 
 ### Step 07 — Coding specialist benchmark
 
