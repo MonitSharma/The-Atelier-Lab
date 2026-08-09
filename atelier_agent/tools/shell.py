@@ -12,6 +12,7 @@ from __future__ import annotations
 import subprocess
 from typing import Any
 
+from atelier.workspace import WorkspaceError, current_workspace_context
 from tools.base import Tool
 from tools.files import _resolve_workspace_path
 
@@ -20,6 +21,10 @@ DEFAULT_TIMEOUT = 60
 # Obvious destructive / exfiltration patterns we refuse outright.
 _DENY = ("rm -rf /", "rm -rf ~", ":(){", "mkfs", "dd if=", "> /dev/sd",
          "shutdown", "reboot", "curl ", "wget ", "scp ", "nc ")
+_NETWORK_MARKERS = (
+    "git clone", "git fetch", "git pull", "git push", "pip install", "uv pip install",
+    "npm install", "http://", "https://", "ssh ",
+)
 
 
 def run_shell(arguments: dict[str, Any]) -> dict[str, Any]:
@@ -36,10 +41,16 @@ def run_shell(arguments: dict[str, Any]) -> dict[str, Any]:
         timeout = DEFAULT_TIMEOUT
 
     try:
+        context = current_workspace_context()
+        if context is not None and any(marker in lowered for marker in _NETWORK_MARKERS):
+            context.require_network()
+        cwd = _resolve_workspace_path(".", "execute")
         proc = subprocess.run(
             command, shell=True, capture_output=True, text=True,
-            timeout=timeout, cwd=str(_resolve_workspace_path(".")),
+            timeout=timeout, cwd=str(cwd),
         )
+    except (ValueError, WorkspaceError) as exc:
+        return {"status": "error", "error_type": "capability_denied", "message": str(exc)}
     except subprocess.TimeoutExpired:
         return {"status": "error", "error_type": "timeout",
                 "message": f"Command exceeded {timeout}s."}

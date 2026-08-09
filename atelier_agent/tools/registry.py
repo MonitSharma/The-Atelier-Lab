@@ -11,6 +11,7 @@ from tools.repo_map import REPO_MAP_TOOL
 from tools.search import SEARCH_TOOL
 from tools.shell import SHELL_TOOL
 from tools.test_runner import TEST_RUNNER_TOOL
+from atelier.workspace import WorkspaceContext, current_workspace_context, workspace_scope
 
 
 class ToolRegistry:
@@ -18,8 +19,9 @@ class ToolRegistry:
     Store, describe and execute tools available to the agent.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, workspace: WorkspaceContext | None = None) -> None:
         self._tools: dict[str,Tool] = {}
+        self.workspace = workspace
 
     def register(self, tool:Tool) -> None:
         if tool.name in self._tools:
@@ -48,8 +50,9 @@ class ToolRegistry:
                     "available_tools" : sorted(self._tools.keys()),
                     }
 
-        try: 
-            return tool.function(arguments)
+        try:
+            with workspace_scope(self.workspace or current_workspace_context()):
+                return tool.function(arguments)
         except Exception as exc:
             return {
                     "status": "error",
@@ -78,14 +81,17 @@ class ToolRegistry:
         return "\n\n".join(sections)
 
 
-def create_default_registry(include_shell: bool = False) -> ToolRegistry:
+def create_default_registry(
+    include_shell: bool = False,
+    workspace: WorkspaceContext | None = None,
+) -> ToolRegistry:
     """Build the registry the agent uses.
 
     The full toolbox spans both modes: knowledge (``search_notes``) and build
     (``code_exec``, ``test_runner``, ``repo_map``, file read/write/edit, local
     ``search``). The blunt ``shell`` tool is opt-in via ``include_shell``.
     """
-    registry = ToolRegistry()
+    registry = ToolRegistry(workspace)
     for tool in (
         CALCULATOR_TOOL,
         READ_FILE_TOOL,

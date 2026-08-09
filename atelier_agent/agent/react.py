@@ -23,6 +23,7 @@ from typing import Any
 
 from agent.brain import chat
 from atelier.config import settings
+from atelier.workspace import WorkspaceContext
 from tools.registry import ToolRegistry, create_default_registry
 
 MAX_OBSERVATION_CHARS = 8000
@@ -212,8 +213,9 @@ class ReActAgent:
 
 
 def run_task(goal: str, *, role: str = "brain", max_steps: int = 10,
-             include_shell: bool = False, verbose: bool = False) -> AgentResult:
+             include_shell: bool = False, verbose: bool = False,
+             workspace: WorkspaceContext | None = None) -> AgentResult:
     """Convenience entry point: full toolbox, one call."""
-    agent = ReActAgent(create_default_registry(include_shell=include_shell),
+    agent = ReActAgent(create_default_registry(include_shell=include_shell, workspace=workspace),
                        role=role, max_steps=max_steps, verbose=verbose)
     return agent.run(goal)

@@ -32,7 +32,7 @@ def run_search(arguments: dict[str, Any]) -> dict[str, Any]:
     except re.error as exc:
         return {"status": "error", "error_type": "bad_pattern", "message": str(exc)}
     try:
-        root = _resolve_workspace_path(path if isinstance(path, str) else ".")
+        root = _resolve_workspace_path(path if isinstance(path, str) else ".", "read")
     except ValueError as exc:
         return {"status": "error", "error_type": "path_not_allowed", "message": str(exc)}
 
