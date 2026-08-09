@@ -86,12 +86,16 @@ important-file, and bounded-search outputs. CLI and agent-tool interfaces are
 available, and multi-file fixtures verify the structure-first behavior. Full
 semantic indexing remains selective and deferred until the coder benchmark.
 
-### Step 07 — Coding specialist benchmark
+### Step 07 — Coding specialist benchmark — complete
 
 Add a real `coder` model role. Research current local candidates at execution
 time and benchmark approximately three 7–14B candidates against Gemma and the
 worker on identical repository tasks. Record solve rate, test pass rate,
 unnecessary reads, invalid edits, tool errors, latency, memory, and tokens.
+
+Implemented with `atelier benchmark-coding`, three frozen multi-file tasks, and
+the selected `qwen3:8b` coder role. The full comparison is recorded in
+[`steps/STEP_07_CODING_SPECIALIST_BENCHMARK.md`](steps/STEP_07_CODING_SPECIALIST_BENCHMARK.md).
 
 ### Step 08 — Build Agent v2
 

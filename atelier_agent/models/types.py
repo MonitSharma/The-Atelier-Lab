@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-Role = Literal["worker", "brain", "expert", "router", "heavy"]
+Role = Literal["worker", "brain", "coder", "expert", "router", "heavy"]
 
 
 @dataclass(frozen=True)
@@ -29,3 +29,6 @@ class GenerationResult:
     time_to_first_token_s: float | None = None
     total_latency_s: float | None = None
     structured_output_valid: bool | None = None
+    load_duration_s: float | None = None
+    prompt_eval_duration_s: float | None = None
+    completion_eval_duration_s: float | None = None

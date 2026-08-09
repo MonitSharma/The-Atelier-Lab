@@ -13,10 +13,16 @@ def specs_from_settings(settings) -> dict[Role, ModelSpec]:
     configured = {
         "worker": settings.worker_model,
         "brain": settings.brain_model,
+        "coder": settings.coder_model,
         "expert": settings.expert_model,
         "router": settings.router_model,
+        "heavy": settings.heavy_model,
     }
-    return {role: ModelSpec(role, settings.model_provider, model_id, role) for role, model_id in configured.items()}
+    return {
+        role: ModelSpec(role, settings.model_provider, model_id, role)
+        for role, model_id in configured.items()
+        if model_id
+    }
 
 
 def provider_for(settings) -> ModelProvider:

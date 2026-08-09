@@ -626,6 +626,41 @@ def eval(
             console.print("[green]Gate: no regressions vs. last report.[/]")
 
 
+@app.command("benchmark-coding")
+def benchmark_coding(
+    models: list[str] | None = typer.Option(
+        None, "--model", help="Candidate model ID; repeat for multiple candidates."
+    ),
+    max_steps: int = typer.Option(14, "--max-steps", min=1, max=40),
+) -> None:
+    """Benchmark local coding candidates on frozen multi-file repositories."""
+    from eval.coding_benchmark import run, save
+
+    candidates = models or [
+        name for name in (settings.coder_model, settings.brain_model, settings.worker_model)
+        if name
+    ]
+    with console.status("Running coding benchmark; local models may take a while..."):
+        report = run(candidates, max_steps=max_steps)
+    path = save(report)
+    table = Table(title="Coding specialist benchmark")
+    table.add_column("Model")
+    table.add_column("Solve")
+    table.add_column("Unnecessary reads")
+    table.add_column("Tool errors")
+    table.add_column("Latency")
+    for model, summary in report["by_model"].items():
+        table.add_row(
+            model,
+            f"{summary['solve_rate']:.0%}",
+            f"{summary['mean_unnecessary_reads']:.1f}",
+            f"{summary['mean_tool_errors']:.1f}",
+            f"{summary['mean_latency_s']:.1f}s",
+        )
+    console.print(table)
+    console.print(f"Report: {path}")
+
+
 @app.command("eval-plots")
 def eval_plots(
     report: Path | None = EVAL_PLOT_REPORT_OPT,
