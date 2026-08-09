@@ -33,6 +33,8 @@ workspace_app = typer.Typer(help="Manage approved local workspace roots and capa
 app.add_typer(workspace_app, name="workspace")
 repo_app = typer.Typer(help="Deterministic repository inspection and verification.")
 app.add_typer(repo_app, name="repo")
+models_app = typer.Typer(help="Inspect configured models, local residency, and benchmarks.")
+app.add_typer(models_app, name="models")
 console = Console()
 INGEST_PATHS_ARG = typer.Argument(None, help="Files or folders to index. Defaults to data/corpus.")
 EVAL_PLOT_REPORT_OPT = typer.Option(None, "--report", help="Specific report JSON to plot.")
@@ -821,17 +823,71 @@ def route(
     task: str = typer.Argument(..., help="A task to classify and route."),
     backend: str = typer.Option("auto", "--backend", help="auto | finetuned | heuristic"),
 ) -> None:
-    """Classify a task easy/hard and show which model it routes to."""
-    from agent.router import Router
+    """Classify a task by capability and show the local route decision."""
+    from agent.capability_router import CapabilityRouter
 
-    r = Router(backend=backend)
+    r = CapabilityRouter(backend=backend)
     with console.status("Routing..."):
-        difficulty = r.classify(task)
-        model = r.route(task)
-    color = "green" if difficulty == "easy" else "yellow"
+        decision = r.decide(task)
+    color = "red" if decision.abstain else ("green" if decision.difficulty == "easy" else "yellow")
     console.print(Panel(
-        Text(f"difficulty: {difficulty}\nroute to: {model}\nbackend: {r.name}"),
+        Text(
+            f"domain: {decision.domain}\nworkflow: {decision.workflow}\n"
+            f"difficulty: {decision.difficulty}\nrole: {decision.role}\n"
+            f"model: {decision.model or 'abstain'}\nmodality: {decision.modality}\n"
+            f"privacy: {decision.privacy}\nnetwork: {decision.requires_network}\n"
+            f"memory: {decision.use_memory}\nreason: {decision.reason}"
+        ),
         title=Text("Router decision"), border_style=color))
+
+
+@models_app.command("list")
+def models_list() -> None:
+    """List configured roles, capabilities, install state, and memory estimates."""
+    from models.lifecycle import ModelLifecycle
+
+    table = Table(title="Atelier model lifecycle")
+    for column in ("Role", "Model", "Configured", "Installed", "Resident", "Memory est.", "Context", "Modality"):
+        table.add_column(column)
+    for record in ModelLifecycle().list():
+        table.add_row(
+            record.role, record.model_id or "—", "yes" if record.configured else "no",
+            "yes" if record.installed else "no", "yes" if record.resident else "no",
+            f"{record.memory_estimate_gb:g} GB" if record.memory_estimate_gb else "—",
+            f"{record.context_tokens:,}" if record.context_tokens else "—", record.modality,
+        )
+    console.print(table)
+
+
+@models_app.command("status")
+def models_status(as_json: bool = typer.Option(False, "--json")) -> None:
+    """Show Ollama installation and residency status for configured roles."""
+    from models.lifecycle import ModelLifecycle
+
+    payload = ModelLifecycle().status()
+    if as_json:
+        console.print_json(json.dumps(payload, default=str))
+        return
+    console.print_json(json.dumps(payload, default=str))
+
+
+@models_app.command("bench")
+def models_bench(
+    model: str = typer.Option(..., "--model", help="Ollama model ID to benchmark."),
+    max_steps: int = typer.Option(14, "--max-steps", min=1, max=40),
+) -> None:
+    """Run the frozen coding benchmark for one local model."""
+    from models.lifecycle import ModelLifecycle
+
+    with console.status(f"Benchmarking {model}..."):
+        report = ModelLifecycle().bench(model, max_steps=max_steps)
+    summary = report["by_model"][model]
+    console.print(
+        f"{model}: solve={summary['solve_rate']:.0%}, "
+        f"latency={summary['mean_latency_s']:.1f}s, "
+        f"tool_errors={summary['mean_tool_errors']:.1f}\n"
+        f"Report: {report['report_path']}"
+    )
 
 
 @app.command()

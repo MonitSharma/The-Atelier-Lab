@@ -118,19 +118,25 @@ produces a structured certificate. Checkpoints preserve clean baseline files,
 remove workflow-created files on opt-in rollback, and preserve pre-existing
 dirty paths.
 
-### Step 09 — Capability router
+### Step 09 — Capability router — complete
 
 Classify domain first—paper, code, data, vision, research, quantum,
 optimization, or general—then choose the cheapest capable workflow. Decisions
 must include modality, tools, privacy, context, difficulty, memory, abstention,
-and escalation conditions.
+and escalation conditions. Implemented with the deterministic
+`CapabilityRouter`, including LOCAL_ONLY network abstention.
 
-### Step 10 — Model lifecycle
+### Step 10 — Model lifecycle — complete
 
 Create a registry containing role, model ID, quantization, memory estimate,
 context, modality, JSON/tool support, and measured performance. Add
 `atelier models list`, `status`, and `bench`. Track Ollama residency and avoid
 unnecessary simultaneous large-model loads.
+
+Implemented with `ModelLifecycle` and the `atelier models` command group. The
+registry records role, model ID, quantization estimate, memory/context budget,
+modality, tool/JSON support, install state, and Ollama residency; `bench` uses
+the frozen coding benchmark and saves its report.
 
 ### Step 11 — Multimodal scientific documents
 
