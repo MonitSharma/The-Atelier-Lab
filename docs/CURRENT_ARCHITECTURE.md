@@ -1,6 +1,6 @@
 # Current Atelier Architecture
 
-Status: **post-Scientific Library v1.0; coder benchmark frozen**
+Status: **foundation acceptance baseline; roadmap implementation in progress**
 
 ## Shipped baseline
 
@@ -35,14 +35,17 @@ Status: **post-Scientific Library v1.0; coder benchmark frozen**
   `LOCAL_ONLY` or without an attached network-capable workspace.
 - OpenQASM/Qiskit-aware circuit inspection and deterministic optimization
   feasibility/objective checks are exposed as agent tools.
-- Typed workflow specifications and isolated project memory v2 expose steps,
-  approvals, recovery, provenance, expiration, and export/import.
+- Typed workflow specifications and isolated project-memory primitives exist;
+  durable workflow execution, approval state, expiration enforcement, and
+  task/session integration remain in progress.
 - Registry dispatch applies shell allowlists, secret redaction, untrusted
   output markers, and minimal audit events through a security boundary.
 - `atelier.service.AtelierService` and the loopback `atelier serve` API provide
   shared JSON-friendly operations for CLI/UI clients.
-- A versioned external runtime-home layout can be initialized and validated;
-  state migration is copy-first and record-scoped for rollback.
+- A versioned external runtime-home layout is active by default under
+  `~/Atelier`; state migration is copy-first, source-preserving, and
+  record-scoped for rollback. The migrated three-paper index is currently
+  verified at 223 chunks with Qwen3-Embedding-4B / 2,560 dimensions.
 
 ## Deliberate placeholders
 
@@ -51,11 +54,19 @@ router configuration, but neither is installed. These are benchmark decisions,
 not setup failures. The project will choose future coding, routing, and vision
 models through frozen evaluations rather than by accumulating downloads.
 
-## Not shipped yet
+## Remaining roadmap work
 
-- workflow execution state and hardened approval/daemon boundary;
-- web/Finder interfaces and handoffs; external-home activation is the remaining
-  packaging/configuration step.
+- research cache, related/cited-by/citation verification, and download
+  provenance workflows;
+- richer quantum simulation/transpilation/backend comparison and optimization
+  solver integration;
+- durable typed workflow execution with checkpoints, recovery, and approvals;
+- project/session/task/artifact memory integration and expiration enforcement;
+- hardened prompt-injection and destructive-action security tests;
+- full web workspace, upload/source/paper/repository/workflow views;
+- actual macOS Quick Actions/Shortcuts and selected-context frontier handoffs;
+- expanded reliability/performance evaluation, packaging, migration repair,
+  and clean-Mac Step 26 release evidence.
 
 The dependency-ordered roadmap for these capabilities is maintained in
 [`ATELIER_WORKBENCH_PLAN.md`](ATELIER_WORKBENCH_PLAN.md).

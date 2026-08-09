@@ -444,6 +444,17 @@ def ingest(
         console.print("[yellow]Store reset.[/]")
     else:
         bootstrap_manifest_from_store(manifest, store, targets)
+        # A development-era migration can preserve the SQLite manifest while
+        # losing an untracked Chroma database.  Never treat that combination
+        # as a clean no-op: rebuild the vectors from the manifest's source
+        # files, preserving the manifest until each file is successfully
+        # replaced by ``execute_plan``.
+        if store.count() == 0 and manifest.all() and not force:
+            force = True
+            console.print(
+                "[yellow]The manifest contains documents but the vector index is empty; "
+                "rebuilding the local index.[/]"
+            )
     plan = build_plan(targets, manifest, force=force, sync=sync)
     counts = plan.counts()
     table = Table(show_header=False)
@@ -1173,25 +1184,24 @@ def state_validate(home: Path | None = typer.Option(None, "--home")) -> None:
 
 @state_app.command("plan")
 def state_plan(
-    source: Path = typer.Option(settings.data_dir, "--source", exists=True, file_okay=False),
+    source: Path = typer.Option(settings.legacy_data_dir, "--source", exists=True, file_okay=False),
     home: Path | None = typer.Option(None, "--home"),
 ) -> None:
     """Show a non-mutating plan for importing current repository state."""
-    from atelier.runtime import migration_plan, runtime_layout
+    from atelier.runtime import legacy_migration_plan, runtime_layout
 
-    console.print_json(json.dumps(migration_plan(source, runtime_layout(home).library)))
+    console.print_json(json.dumps(legacy_migration_plan(source, runtime_layout(home))))
 
 
 @state_app.command("migrate")
 def state_migrate(
-    source: Path = typer.Option(settings.data_dir, "--source", exists=True, file_okay=False),
+    source: Path = typer.Option(settings.legacy_data_dir, "--source", exists=True, file_okay=False),
     home: Path | None = typer.Option(None, "--home"),
 ) -> None:
     """Copy current state into a runtime home and write a rollback record."""
-    from atelier.runtime import migrate_state, runtime_layout
+    from atelier.runtime import migrate_legacy_state, runtime_layout
 
-    layout = runtime_layout(home).initialize()
-    result = migrate_state(source, layout.library / "legacy_import")
+    result = migrate_legacy_state(source, runtime_layout(home))
     console.print_json(json.dumps(result))
 
 

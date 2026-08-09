@@ -36,7 +36,7 @@ def analyze_pdf(path: str | Path, *, render: bool = False, output_dir: str | Pat
         raise RuntimeError("PyMuPDF is required for PDF visual analysis.") from exc
 
     document = fitz.open(resolved)
-    destination = Path(output_dir or settings.data_dir / "visual_cache" / resolved.stem)
+    destination = Path(output_dir or settings.visual_cache_dir / resolved.stem)
     pages: list[PageEvidence] = []
     try:
         for index, page in enumerate(document, 1):

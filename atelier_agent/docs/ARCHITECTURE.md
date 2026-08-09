@@ -93,16 +93,18 @@ receive an explicit persisted workspace context with approved roots and
 capabilities. `LOCAL_ONLY` is the default privacy policy; this remains an
 application-level boundary until the stronger security work in Step 17.
 
-The future `coder` role, explicit workspace manager, capability policy, and
-multi-file transaction workflow are not yet implemented. They must be added
-without weakening this low-level execution primitive.
+The coder role, explicit workspace manager, capability policy, and typed
+multi-file build workflow are implemented as deterministic application
+surfaces. The workflow still needs the broader durable execution engine and
+approval lifecycle described in the roadmap.
 
 ## Runtime state
 
-The current development runtime stores the local library and caches under
-`atelier_agent/data/`. This is intentionally still repository-local. Step 19
-will migrate user state to a versioned Atelier home with validation, backup,
-and rollback; the source checkout and user library are not independent yet.
+The active runtime stores user state outside the source checkout under
+`~/Atelier` by default (or `ATELIER_HOME`). Its versioned layout separates
+library, databases, workspaces, caches, logs, and backups. Development-era
+state can be copied into that layout with `atelier state migrate`; the source
+checkout remains preserved, and the migration writes a recoverable record.
 
 ## Reliability baseline
 
@@ -119,5 +121,5 @@ The frozen Scientific Library v1.0 baseline includes:
 
 The current benchmark is a small local three-paper regression suite. It is not
 evidence of repository-scale coding reliability, multimodal understanding,
-security isolation, or general research-agent reliability. Those are separate
-future evaluation milestones.
+security isolation, durable workflow execution, or general research-agent
+reliability. Those are separate roadmap milestones.

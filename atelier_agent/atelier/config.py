@@ -13,7 +13,9 @@ Example overrides::
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
+from typing import Any
 from dotenv import load_dotenv
 
 # Load .env file to populate environment variables like HF_TOKEN
@@ -24,6 +26,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Repo root = parent of this `atelier/` package directory.
 ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_HOME = Path(os.environ.get("ATELIER_HOME", Path.home() / "Atelier")).expanduser().resolve()
 
 
 class Settings(BaseSettings):
@@ -89,31 +92,58 @@ class Settings(BaseSettings):
     rerank: bool = False
     rerank_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
-    # --- Paths (all under the repo, all local) ----------------------------
+    # --- Paths (user state is external to the source checkout) ------------
     root: Path = ROOT
-    data_dir: Path = ROOT / "data"
-    corpus_dir: Path = ROOT / "data" / "corpus"
-    vector_dir: Path = ROOT / "data" / "vectorstore"
-    memory_dir: Path = ROOT / "data" / "memory"
-    traces_dir: Path = ROOT / "data" / "traces"
+    home_dir: Path = DEFAULT_HOME
+    legacy_data_dir: Path = ROOT / "data"
+    data_dir: Path = DEFAULT_HOME
+    corpus_dir: Path = DEFAULT_HOME / "library" / "corpus"
+    vector_dir: Path = DEFAULT_HOME / "databases" / "vectorstore"
+    memory_dir: Path = DEFAULT_HOME / "databases" / "memory"
+    traces_dir: Path = DEFAULT_HOME / "logs" / "traces"
     collection_name: str = "atelier"
-    paper_metadata_dir: Path = ROOT / "data" / "paper_metadata"
-    extracted_dir: Path = ROOT / "data" / "extracted"
-    manifest_path: Path = ROOT / "data" / "index_manifest.sqlite3"
-    memory_manifest_path: Path = ROOT / "data" / "memory_manifest.sqlite3"
-    memory_backup_dir: Path = ROOT / "data" / "memory_backups"
-    project_memory_path: Path = ROOT / "data" / "project_memory.sqlite3"
-    audit_log_path: Path = ROOT / "data" / "audit" / "tool_calls.jsonl"
-    workspace_registry_path: Path = ROOT / "data" / "workspaces.json"
+    paper_metadata_dir: Path = DEFAULT_HOME / "library" / "paper_metadata"
+    extracted_dir: Path = DEFAULT_HOME / "library" / "extracted"
+    visual_cache_dir: Path = DEFAULT_HOME / "cache" / "visual"
+    manifest_path: Path = DEFAULT_HOME / "databases" / "index_manifest.sqlite3"
+    memory_manifest_path: Path = DEFAULT_HOME / "databases" / "memory_manifest.sqlite3"
+    memory_backup_dir: Path = DEFAULT_HOME / "backups" / "memory"
+    project_memory_path: Path = DEFAULT_HOME / "databases" / "project_memory.sqlite3"
+    audit_log_path: Path = DEFAULT_HOME / "logs" / "tool_calls.jsonl"
+    workspace_registry_path: Path = DEFAULT_HOME / "workspaces" / "registry.json"
     metadata_schema_version: int = 2
     index_schema_version: int = 1
     chunk_schema_version: int = 2
 
+    def model_post_init(self, __context: Any) -> None:
+        """Derive default paths from ``ATELIER_HOME`` when it is overridden."""
+        home = Path(self.home_dir).expanduser().resolve()
+        defaults = {
+            "data_dir": home,
+            "corpus_dir": home / "library" / "corpus",
+            "vector_dir": home / "databases" / "vectorstore",
+            "memory_dir": home / "databases" / "memory",
+            "traces_dir": home / "logs" / "traces",
+            "paper_metadata_dir": home / "library" / "paper_metadata",
+            "extracted_dir": home / "library" / "extracted",
+            "visual_cache_dir": home / "cache" / "visual",
+            "manifest_path": home / "databases" / "index_manifest.sqlite3",
+            "memory_manifest_path": home / "databases" / "memory_manifest.sqlite3",
+            "memory_backup_dir": home / "backups" / "memory",
+            "project_memory_path": home / "databases" / "project_memory.sqlite3",
+            "audit_log_path": home / "logs" / "tool_calls.jsonl",
+            "workspace_registry_path": home / "workspaces" / "registry.json",
+        }
+        for name, value in defaults.items():
+            if name not in self.model_fields_set:
+                setattr(self, name, value)
+
     def ensure_dirs(self) -> None:
         """Create the runtime data directories if they don't exist."""
-        for d in (self.data_dir, self.corpus_dir, self.vector_dir,
+        for d in (self.home_dir, self.data_dir, self.corpus_dir, self.vector_dir,
                   self.memory_dir, self.traces_dir, self.paper_metadata_dir,
-                  self.extracted_dir, self.memory_backup_dir):
+                  self.extracted_dir, self.visual_cache_dir, self.memory_backup_dir,
+                  self.audit_log_path.parent, self.workspace_registry_path.parent):
             d.mkdir(parents=True, exist_ok=True)
 
 
