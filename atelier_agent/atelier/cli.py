@@ -1461,6 +1461,24 @@ def finder_plan(
     console.print_json(json.dumps(result, default=str))
 
 
+@finder_app.command("execute")
+def finder_execute(
+    action: str = typer.Argument(..., help="send_to_atelier, add_to_library, characterize_paper, or explain_file"),
+    path: Path = typer.Argument(..., exists=True, readable=True),
+    task: str | None = typer.Option(None, "--task", help="Optional task for send_to_atelier."),
+) -> None:
+    """Execute one explicit Finder action through the local Atelier service."""
+    from atelier.finder import execute_finder_action
+    from atelier.workspace import WorkspaceError
+
+    try:
+        result = execute_finder_action(action, path, task=task)
+    except (ValueError, WorkspaceError, OSError) as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    console.print_json(json.dumps(result, default=str))
+
+
 @handoff_app.command("create")
 def handoff_create(
     target: str = typer.Option(..., "--target", help="claude, codex, or gemini"),

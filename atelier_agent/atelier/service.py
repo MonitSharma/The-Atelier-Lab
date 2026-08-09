@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 import json
+import base64
+import hashlib
+import os
+import tempfile
 from typing import Any
 
 from atelier.config import settings
@@ -125,6 +129,73 @@ class AtelierService:
             "metadata": hit.get("metadata", {}),
         } for hit in hits]}
 
+    def source(self, path: str, *, max_chars: int = 200_000) -> dict[str, Any]:
+        resolved = self.manager.context().resolve(path, "read").path
+        if not resolved.is_file():
+            raise ValueError(f"Source path is not a file: {path}")
+        content = resolved.read_text(encoding="utf-8", errors="replace")[:max_chars]
+        return {"status": "success", "path": str(resolved), "content": content,
+                "truncated": resolved.stat().st_size > len(content.encode("utf-8")),
+                "sha256": hashlib.sha256(resolved.read_bytes()).hexdigest()}
+
+    def upload(self, arguments: dict[str, Any]) -> dict[str, Any]:
+        name = arguments.get("filename") or arguments.get("path")
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError("upload requires filename")
+        if isinstance(arguments.get("content_base64"), str):
+            try:
+                content = base64.b64decode(arguments["content_base64"], validate=True)
+            except (ValueError, TypeError) as exc:
+                raise ValueError("content_base64 is invalid") from exc
+        elif isinstance(arguments.get("content"), str):
+            content = arguments["content"].encode("utf-8")
+        else:
+            raise ValueError("upload requires content or content_base64")
+        if len(content) > 50_000_000:
+            raise ValueError("upload exceeds the 50 MB limit")
+        target = self.manager.context().resolve(name, "write").path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        fd, temporary = tempfile.mkstemp(prefix=f".{target.name}.", dir=str(target.parent))
+        try:
+            with os.fdopen(fd, "wb") as handle:
+                handle.write(content)
+            os.replace(temporary, target)
+        finally:
+            if os.path.exists(temporary):
+                os.unlink(temporary)
+        return {"status": "success", "path": str(target), "bytes": len(content),
+                "sha256": hashlib.sha256(content).hexdigest()}
+
+    def chat(self, task: str, *, start: bool = False, input_data: dict[str, Any] | None = None) -> dict[str, Any]:
+        decision = self.route(task)
+        result: dict[str, Any] = {"status": "routed", "task": task, "route": decision}
+        if start and decision.get("workflow"):
+            workflow_input = dict(input_data or {})
+            workflow_input.setdefault("task", task)
+            result["workflow"] = self.workflow_start(str(decision["workflow"]), workflow_input)
+        return result
+
+    def paper_action(self, action: str, path: str, *, project: str = "default") -> dict[str, Any]:
+        workflows = {"deep_read": "paper_deep_read", "characterize": "paper_fast", "explain": "paper_fast"}
+        workflow = workflows.get(action)
+        if workflow is None:
+            raise ValueError(f"Unsupported paper action: {action}")
+        return self.workflow_start(workflow, {"path": path, "project": project})
+
+    def repo_action(self, action: str, path: str = ".", *, project: str = "default", goal: str = "") -> dict[str, Any]:
+        if action == "inspect":
+            return self.repo_inspect(path)
+        if action == "fix":
+            return self.workflow_start("code_fix", {"path": path, "goal": goal, "project": project})
+        if action == "tests":
+            return self.execute_tool("test_runner", {"path": path})
+        raise ValueError(f"Unsupported repository action: {action}")
+
+    def finder_action(self, action: str, path: str, *, task: str | None = None) -> dict[str, Any]:
+        from atelier.finder import execute_finder_action
+
+        return execute_finder_action(action, path, manager=self.manager, task=task)
+
     def memory(self) -> list[dict[str, Any]]:
         from agent.memory import get_memory
 
@@ -185,6 +256,18 @@ class AtelierService:
                 return self.library()
             if operation == "search":
                 return self.search(str(arguments["query"]), int(arguments.get("k", 6)))
+            if operation in {"chat", "task_input"}:
+                return self.chat(str(arguments["task"]), start=bool(arguments.get("start", False)), input_data=arguments.get("input"))
+            if operation in {"source", "source_view"}:
+                return self.source(str(arguments["path"]))
+            if operation in {"upload", "file_upload"}:
+                return self.upload(arguments)
+            if operation == "paper_action":
+                return self.paper_action(str(arguments["action"]), str(arguments["path"]), project=str(arguments.get("project", "default")))
+            if operation == "repo_action":
+                return self.repo_action(str(arguments["action"]), str(arguments.get("path", ".")), project=str(arguments.get("project", "default")), goal=str(arguments.get("goal", "")))
+            if operation == "finder_action":
+                return self.finder_action(str(arguments["action"]), str(arguments["path"]), task=arguments.get("task"))
             if operation == "memory":
                 return {"memory": self.memory()}
             if operation in {"memory_context", "project_memory"}:

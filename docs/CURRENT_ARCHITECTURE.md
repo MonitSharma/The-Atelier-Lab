@@ -51,7 +51,12 @@ Status: **foundation acceptance baseline; roadmap implementation in progress**
 - Registry dispatch applies shell allowlists, secret redaction, untrusted
   output markers, and minimal audit events through a security boundary.
 - `atelier.service.AtelierService` and the loopback `atelier serve` API provide
-  shared JSON-friendly operations for CLI/UI clients.
+  shared JSON-friendly operations for CLI/UI clients, including chat/task
+  routing, source viewing, bounded uploads, paper/repository actions, and
+  workflow approvals.
+- The loopback web workbench exposes workspace/privacy, library, models,
+  workflows, chat, search, source viewing, uploads, paper actions, and
+  repository actions through that service.
 - A versioned external runtime-home layout is active by default under
   `~/Atelier`; state migration is copy-first, source-preserving, and
   record-scoped for rollback. The migrated three-paper index is currently
@@ -68,15 +73,14 @@ models through frozen evaluations rather than by accumulating downloads.
 
 - richer web search integration and broader research-source coverage beyond
   the current Crossref/arXiv/Semantic Scholar operations;
-- richer quantum simulation/transpilation/backend comparison and optimization
-  solver integration;
-- durable typed workflow execution with checkpoints, recovery, and approvals;
-- project/session/task/artifact memory integration and expiration enforcement;
+- richer quantum transpilation/backend comparison and external solver
+  integration;
 - broader hardened security isolation beyond the current capability boundary,
   prompt-injection markers, secret redaction, one-use destructive confirmations,
   and audit logging;
-- full web workspace, upload/source/paper/repository/workflow views;
-- actual macOS Quick Actions/Shortcuts and selected-context frontier handoffs;
+- polished web trace/source rendering and approval controls;
+- actual macOS Quick Actions/Shortcuts and richer selected-context frontier
+  handoffs;
 - expanded reliability/performance evaluation, packaging, migration repair,
   and clean-Mac Step 26 release evidence.
 

@@ -42,6 +42,10 @@ class _Handler(BaseHTTPRequestHandler):
         if operation == "approvals":
             self._write(self.service.dispatch("approvals"))
             return
+        if operation in {"source", "source_view"} and parse_qs(parsed.query).get("path"):
+            payload = self.service.dispatch("source", {"path": parse_qs(parsed.query)["path"][0]})
+            self._write(payload, 200 if payload.get("status", "ok") != "error" else 400)
+            return
         if operation == "workflow" and parse_qs(parsed.query).get("run_id"):
             payload = self.service.dispatch("workflow_get", {"run_id": parse_qs(parsed.query)["run_id"][0]})
             self._write(payload, 200 if payload.get("status", "ok") != "error" else 404)
