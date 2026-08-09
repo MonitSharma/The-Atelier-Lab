@@ -220,17 +220,18 @@ Built a replaceable, dependency-free local UI at `/ui` over the backend with
 workspace/privacy state, library, model status, traces, approvals, and
 workflow views, plus route and local-library search forms.
 
-### Step 21 — Finder integration
+### Step 21 — Finder integration — complete
 
-Add opt-in Quick Actions such as Send to Atelier, Add to Library,
-Characterize Paper, Explain File, and Ask Atelier. Honor workspace permissions;
-do not silently watch or index the Mac.
+Added explicit Finder/Shortcuts-compatible action planning for Send to Atelier,
+Add to Library, Characterize Paper, and Explain File. Actions honor workspace
+permissions and never silently watch or index the Mac.
 
-### Step 22 — Frontier handoff
+### Step 22 — Frontier handoff — complete
 
-Create explicit user-approved handoff bundles for Claude, Codex, and Gemini
+Created explicit local handoff bundles for Claude, Codex, and Gemini
 containing task, selected context, evidence, constraints, and requested output.
-Keep local operation independent of cloud access.
+External approval is recorded separately and no provider call is made by bundle
+creation, keeping local operation independent of cloud access.
 
 ### Step 23 — Reliability science v2
 
