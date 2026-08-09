@@ -43,6 +43,10 @@ optimize_app = typer.Typer(help="Deterministic optimization validation.")
 app.add_typer(optimize_app, name="optimize")
 state_app = typer.Typer(help="Initialize, validate, and migrate Atelier runtime state.")
 app.add_typer(state_app, name="state")
+finder_app = typer.Typer(help="Opt-in Finder/Shortcuts action plans.")
+app.add_typer(finder_app, name="finder")
+handoff_app = typer.Typer(help="Create explicit frontier-model handoff bundles.")
+app.add_typer(handoff_app, name="handoff")
 console = Console()
 INGEST_PATHS_ARG = typer.Argument(None, help="Files or folders to index. Defaults to data/corpus.")
 EVAL_PLOT_REPORT_OPT = typer.Option(None, "--report", help="Specific report JSON to plot.")
@@ -1195,6 +1199,49 @@ def state_rollback(record: Path = typer.Argument(..., exists=True, readable=True
     from atelier.runtime import rollback_migration
 
     console.print_json(json.dumps(rollback_migration(record)))
+
+
+@finder_app.command("plan")
+def finder_plan(
+    action: str = typer.Argument(..., help="send_to_atelier, add_to_library, characterize_paper, or explain_file"),
+    path: Path = typer.Argument(..., exists=True, readable=True),
+) -> None:
+    """Prepare one explicit Finder action without watching or indexing."""
+    from atelier.finder import prepare_finder_action
+    from atelier.workspace import WorkspaceError
+
+    try:
+        result = prepare_finder_action(action, path)
+    except (ValueError, WorkspaceError, OSError) as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    console.print_json(json.dumps(result, default=str))
+
+
+@handoff_app.command("create")
+def handoff_create(
+    target: str = typer.Option(..., "--target", help="claude, codex, or gemini"),
+    task: str = typer.Option(..., "--task"),
+    output: Path = typer.Option(..., "--output"),
+    context: list[str] = typer.Option([], "--context"),
+    evidence: list[str] = typer.Option([], "--evidence"),
+    constraint: list[str] = typer.Option([], "--constraint"),
+    requested_output: str = typer.Option("Return a concise, evidence-grounded result.", "--requested-output"),
+    approve_external: bool = typer.Option(False, "--approve-external", help="Record explicit approval; this still does not send anything."),
+    markdown: bool = typer.Option(False, "--markdown"),
+) -> None:
+    """Write a reviewable handoff file; no provider/API call is made."""
+    from atelier.handoff import create_handoff, export_handoff
+
+    try:
+        bundle = create_handoff(target, task, selected_context=context, evidence=evidence,
+                                constraints=constraint, requested_output=requested_output,
+                                approved_for_external_transfer=approve_external)
+        path = export_handoff(bundle, output, markdown=markdown)
+    except (ValueError, OSError) as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    console.print(f"[green]Handoff bundle written:[/] {path}")
 
 
 def main() -> None:
