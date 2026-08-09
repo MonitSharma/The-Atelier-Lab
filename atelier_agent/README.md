@@ -332,6 +332,11 @@ steps-by-task.
 | `atelier workspace open NAME` | Attach a workspace and make it active |
 | `atelier workspace list` | Show approved roots, capabilities, and privacy |
 | `atelier workspace close NAME` | Detach a workspace without deleting approval |
+| `atelier repo inspect PATH` | Characterize repository structure without model calls |
+| `atelier repo status PATH` | Show Git state, history, and diff |
+| `atelier repo symbols PATH` | List deterministic symbols and imports |
+| `atelier repo search PATTERN` | Search repository files with line evidence |
+| `atelier repo tests PATH` | Detect test frameworks and commands |
 | `atelier ingest PATH...` | Index notes/PDFs/code into the vector store (`--reset` to rebuild) |
 | `atelier paper PATH` | Fast-characterize a research PDF; add `--ingest` to index it |
 | `atelier search QUERY` | Show retrieved passages without synthesis |

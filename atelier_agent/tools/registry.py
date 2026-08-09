@@ -8,6 +8,7 @@ from tools.files import EDIT_FILE_TOOL, READ_FILE_TOOL, WRITE_FILE_TOOL
 from tools.knowledge import SEARCH_NOTES_TOOL
 from tools.memory_tools import RECALL_TOOL, REMEMBER_TOOL
 from tools.repo_map import REPO_MAP_TOOL
+from tools.repository import REPO_INSPECT_TOOL, REPO_SEARCH_TOOL, REPO_STATUS_TOOL, REPO_SYMBOLS_TOOL, REPO_TESTS_TOOL
 from tools.search import SEARCH_TOOL
 from tools.shell import SHELL_TOOL
 from tools.test_runner import TEST_RUNNER_TOOL
@@ -101,6 +102,11 @@ def create_default_registry(
         SEARCH_TOOL,
         SEARCH_NOTES_TOOL,
         REPO_MAP_TOOL,
+        REPO_INSPECT_TOOL,
+        REPO_STATUS_TOOL,
+        REPO_SYMBOLS_TOOL,
+        REPO_SEARCH_TOOL,
+        REPO_TESTS_TOOL,
         CODE_EXEC_TOOL,
         TEST_RUNNER_TOOL,
         REMEMBER_TOOL,
