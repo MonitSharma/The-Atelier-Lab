@@ -37,6 +37,10 @@ Status: **post-Scientific Library v1.0; coder benchmark frozen**
   feasibility/objective checks are exposed as agent tools.
 - Typed workflow specifications and isolated project memory v2 expose steps,
   approvals, recovery, provenance, expiration, and export/import.
+- Registry dispatch applies shell allowlists, secret redaction, untrusted
+  output markers, and minimal audit events through a security boundary.
+- `atelier.service.AtelierService` and the loopback `atelier serve` API provide
+  shared JSON-friendly operations for CLI/UI clients.
 
 ## Deliberate placeholders
 
@@ -47,8 +51,8 @@ models through frozen evaluations rather than by accumulating downloads.
 
 ## Not shipped yet
 
-- workflow execution state and hardened security boundary;
-- backend API, external runtime home, web/Finder interfaces, and handoffs.
+- workflow execution state and hardened approval/daemon boundary;
+- external runtime home, web/Finder interfaces, and handoffs.
 
 The dependency-ordered roadmap for these capabilities is maintained in
 [`ATELIER_WORKBENCH_PLAN.md`](ATELIER_WORKBENCH_PLAN.md).

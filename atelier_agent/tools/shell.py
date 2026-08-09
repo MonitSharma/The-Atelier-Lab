@@ -13,6 +13,7 @@ import subprocess
 from typing import Any
 
 from atelier.workspace import WorkspaceError, current_workspace_context
+from atelier.security import validate_shell_command
 from tools.base import Tool
 from tools.files import _resolve_workspace_path
 
@@ -33,6 +34,9 @@ def run_shell(arguments: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(command, str) or not command.strip():
         return {"status": "error", "error_type": "invalid_arguments",
                 "message": "shell requires a non-empty string 'command'."}
+    allowed, reason = validate_shell_command(command)
+    if not allowed:
+        return {"status": "denied", "error_type": "security_policy", "message": reason}
     lowered = command.lower()
     if any(bad in lowered for bad in _DENY):
         return {"status": "error", "error_type": "blocked",

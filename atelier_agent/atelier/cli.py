@@ -1128,6 +1128,18 @@ def list_tools(shell: bool = typer.Option(False, "--shell")) -> None:
     console.print(table)
 
 
+@app.command()
+def serve(
+    host: str = typer.Option("127.0.0.1", "--host", help="Bind only to localhost by default."),
+    port: int = typer.Option(8787, "--port", min=1, max=65535),
+) -> None:
+    """Run the local JSON API used by future UI clients."""
+    from atelier.api import run_server
+
+    console.print(f"Atelier API listening on http://{host}:{port}")
+    run_server(host=host, port=port)
+
+
 def main() -> None:
     app()
 

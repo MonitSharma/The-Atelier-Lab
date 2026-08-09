@@ -103,6 +103,7 @@ class Settings(BaseSettings):
     memory_manifest_path: Path = ROOT / "data" / "memory_manifest.sqlite3"
     memory_backup_dir: Path = ROOT / "data" / "memory_backups"
     project_memory_path: Path = ROOT / "data" / "project_memory.sqlite3"
+    audit_log_path: Path = ROOT / "data" / "audit" / "tool_calls.jsonl"
     workspace_registry_path: Path = ROOT / "data" / "workspaces.json"
     metadata_schema_version: int = 2
     index_schema_version: int = 1
