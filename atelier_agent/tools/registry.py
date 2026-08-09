@@ -15,6 +15,7 @@ from tools.search import SEARCH_TOOL
 from tools.shell import SHELL_TOOL
 from tools.test_runner import TEST_RUNNER_TOOL
 from atelier.workspace import WorkspaceContext, current_workspace_context, workspace_scope
+from atelier.security import SecurityBoundary
 
 
 class ToolRegistry:
@@ -22,9 +23,10 @@ class ToolRegistry:
     Store, describe and execute tools available to the agent.
     """
 
-    def __init__(self, workspace: WorkspaceContext | None = None) -> None:
+    def __init__(self, workspace: WorkspaceContext | None = None, security: SecurityBoundary | None = None) -> None:
         self._tools: dict[str,Tool] = {}
         self.workspace = workspace
+        self.security = security or SecurityBoundary()
 
     def register(self, tool:Tool) -> None:
         if tool.name in self._tools:
@@ -46,22 +48,33 @@ class ToolRegistry:
         tool = self.get(name)
 
         if tool is None:
-            return {
+            result = {
                     "status": "error",
                     "error_type": "unknown_tool",
                     "message": f"Unknown tool :{name}",
                     "available_tools" : sorted(self._tools.keys()),
                     }
+            self.security.audit(tool=name, status="error", error_type="unknown_tool")
+            return self.security.result(name, result)
 
         try:
             with workspace_scope(self.workspace or current_workspace_context()):
-                return tool.function(arguments)
+                allowed, reason = self.security.preflight(name, arguments)
+                if not allowed:
+                    result = {"status": "denied", "error_type": "security_policy", "message": reason}
+                    self.security.audit(tool=name, status="denied", error_type="security_policy")
+                    return self.security.result(name, result)
+                result = tool.function(arguments)
+                self.security.audit(tool=name, status=str(result.get("status", "unknown")), error_type=result.get("error_type"))
+                return self.security.result(name, result)
         except Exception as exc:
-            return {
+            result = {
                     "status": "error",
                     "error_type": "tool_execution_error",
                     "message" : str(exc),
                     }
+            self.security.audit(tool=name, status="error", error_type="tool_execution_error")
+            return self.security.result(name, result)
 
 
     def prompt_description(self) -> str:

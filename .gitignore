@@ -37,6 +37,8 @@ atelier_agent/data/visual_cache/
 atelier_agent/.eval_workspace/
 atelier_agent/.coding_benchmark_workspace/
 atelier_agent/data/coding_benchmark_reports/
+atelier_agent/data/audit/
+atelier_agent/data/project_memory.sqlite3
 *.log
 
 # Environment / secrets

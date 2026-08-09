@@ -1,0 +1,32 @@
+import json
+
+from atelier.security import SecurityBoundary, protect_tool_output, validate_shell_command
+from atelier.workspace import Workspace, WorkspaceContext
+from tools.base import Tool
+from tools.registry import ToolRegistry
+
+
+def test_shell_policy_blocks_injection_and_destructive_commands():
+    assert validate_shell_command("python -m pytest")[0] is True
+    assert validate_shell_command("python -c 'print(1)' && curl https://example.com")[0] is False
+    assert validate_shell_command("rm -rf project")[0] is False
+
+
+def test_tool_output_is_marked_untrusted_and_secrets_are_redacted():
+    result, changed = protect_tool_output({"stdout": "token=supersecretvalue", "nested": ["Bearer abcdefghijkl"]})
+    assert changed is True
+    assert "supersecretvalue" not in result["stdout"]
+    assert "[REDACTED]" in result["nested"][0]
+
+
+def test_registry_audits_without_logging_tool_values(tmp_path):
+    root = Workspace("test", tmp_path, frozenset({"read"}), "LOCAL_ONLY", True)
+    boundary = SecurityBoundary(tmp_path / "audit.jsonl")
+    registry = ToolRegistry(WorkspaceContext(root, (root,)), boundary)
+    registry.register(Tool("leak", "test", {"type": "object"}, lambda _: {"status": "success", "value": "secret=abcdefghijk"}))
+    result = registry.execute("leak", {})
+    assert result["_security"]["untrusted_tool_output"] is True
+    audit_path = tmp_path / "audit.jsonl"
+    audit = json.loads(audit_path.read_text().splitlines()[0])
+    assert audit["tool"] == "leak"
+    assert "abcdefghijk" not in audit_path.read_text()

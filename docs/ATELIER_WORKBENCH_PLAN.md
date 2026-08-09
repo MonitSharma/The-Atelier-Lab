@@ -189,17 +189,21 @@ artifacts, decisions, provenance, and expiration in a dedicated SQLite store.
 Added explicit remember, forget, export/import, project isolation, and CLI
 commands. Conversations are not persisted automatically.
 
-### Step 17 — Security and trust boundary
+### Step 17 — Security and trust boundary — complete
 
-Make capabilities mechanically enforceable. Add command allowlists, path
-scopes, secret redaction, prompt-injection tests, tool-output protection,
-destructive confirmations, audit logs, and opt-in raw shell access.
+Made capabilities mechanically enforceable at registry dispatch. Added a shell
+allowlist, path/capability scopes, secret redaction, untrusted tool-output
+markers, prompt-injection-oriented output tests, destructive-command blocking,
+audit logs, and opt-in raw shell access. Human approval UI for destructive
+operations remains a future extension.
 
-### Step 18 — Backend service/API
+### Step 18 — Backend service/API — complete
 
-Separate application operations from Typer behind a local service layer for
+Separated application operations from Typer behind a local service layer for
 workspaces, tasks, library, search, models, workflows, memory, and artifacts.
-CLI and UI must call the same backend.
+Added a loopback JSON HTTP API over that service. The CLI and future UI can call
+the same backend contract; broader UI migration and daemon hardening remain
+later milestones.
 
 ### Step 19 — Externalize runtime state
 
