@@ -23,6 +23,9 @@ Status: **post-Scientific Library v1.0; coder benchmark frozen**
 - A dedicated `coder` role uses `qwen3:8b`, selected through a frozen
   multi-file benchmark with test-pass, tool-use, latency, memory, and token
   measurements.
+- `atelier code-fix` wraps the ReAct primitive in a typed build workflow with
+  deterministic inspection, baseline/regression tests, checkpoints, optional
+  escalation to the brain, diff review, rollback, and a JSON certificate.
 
 ## Deliberate placeholders
 
@@ -33,7 +36,6 @@ models through frozen evaluations rather than by accumulating downloads.
 
 ## Not shipped yet
 
-- plan/edit/verify transactions and rollback;
 - domain-aware routing and model lifecycle management;
 - multimodal documents, general-file adapters, network research tools;
 - quantum/optimization tool families;

@@ -97,7 +97,7 @@ Implemented with `atelier benchmark-coding`, three frozen multi-file tasks, and
 the selected `qwen3:8b` coder role. The full comparison is recorded in
 [`steps/STEP_07_CODING_SPECIALIST_BENCHMARK.md`](steps/STEP_07_CODING_SPECIALIST_BENCHMARK.md).
 
-### Step 08 — Build Agent v2
+### Step 08 — Build Agent v2 — complete
 
 Keep the current ReAct loop as the low-level primitive. Add a typed coding
 workflow:
@@ -109,6 +109,14 @@ inspect → plan → identify files → baseline tests → edit
 
 Add checkpoints, rollback, evidence requirements, multi-file transactions, and
 measurable escalation from coder to a larger reasoner.
+
+Implemented as `agent.coding_workflow.BuildWorkflow` and exposed through
+`atelier code-fix`. It performs deterministic inspection and baseline tests,
+issues a typed protocol to the coder, records tool evidence, runs an independent
+regression suite and `git diff --check`, can retry with the brain role, and
+produces a structured certificate. Checkpoints preserve clean baseline files,
+remove workflow-created files on opt-in rollback, and preserve pre-existing
+dirty paths.
 
 ### Step 09 — Capability router
 
