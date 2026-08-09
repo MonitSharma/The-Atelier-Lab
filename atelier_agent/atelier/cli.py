@@ -1286,6 +1286,17 @@ def package_check_command(
         raise typer.Exit(code=1)
 
 
+@app.command("acceptance")
+def acceptance_command() -> None:
+    """Run the deterministic offline acceptance smoke without model or network calls."""
+    from atelier.acceptance import run_acceptance
+
+    result = run_acceptance(Path(__file__).resolve().parent.parent)
+    console.print_json(json.dumps(result, default=str))
+    if result["status"] != "passed":
+        raise typer.Exit(code=1)
+
+
 def main() -> None:
     app()
 
