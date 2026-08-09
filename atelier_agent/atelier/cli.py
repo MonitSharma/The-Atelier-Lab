@@ -1085,6 +1085,25 @@ def quantum_inspect(
     console.print_json(json.dumps(result, default=str))
 
 
+@quantum_app.command("simulate")
+def quantum_simulate(
+    qasm: str | None = typer.Option(None, "--qasm", help="Inline OpenQASM 2 source."),
+    path: Path | None = typer.Option(None, "--path", exists=True, readable=True),
+    shots: int = typer.Option(1024, "--shots", min=1, max=1_000_000),
+) -> None:
+    """Simulate a small common-gate circuit with the local NumPy statevector fallback."""
+    from tools.science import simulate_qasm_text
+
+    if qasm is None and path is None:
+        console.print("[red]Provide --qasm or --path.[/]")
+        raise typer.Exit(code=2)
+    text = qasm or path.read_text(encoding="utf-8")
+    result = simulate_qasm_text(text, shots=shots)
+    console.print_json(json.dumps(result, default=str))
+    if result.get("status") != "success":
+        raise typer.Exit(code=2)
+
+
 @optimize_app.command("validate")
 def optimize_validate(
     path: Path = typer.Argument(..., exists=True, readable=True, help="JSON optimization problem and candidate solution."),
@@ -1102,6 +1121,39 @@ def optimize_validate(
     console.print_json(json.dumps(result, default=str))
     if result.get("status") == "success" and not result.get("feasible"):
         raise typer.Exit(code=1)
+
+
+def _optimization_json(path: Path) -> dict[str, object]:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+
+
+@optimize_app.command("solve")
+def optimize_solve(path: Path = typer.Argument(..., exists=True, readable=True)) -> None:
+    """Solve a small LP or binary QUBO locally and print the candidate solution."""
+    from tools.science import solve_optimization
+
+    result = solve_optimization(_optimization_json(path))
+    console.print_json(json.dumps(result, default=str))
+    if result.get("status") != "success":
+        raise typer.Exit(code=2)
+
+
+@optimize_app.command("compare")
+def optimize_compare(
+    path: Path = typer.Argument(..., exists=True, readable=True),
+    solutions: Path = typer.Option(..., "--solutions", exists=True, readable=True),
+) -> None:
+    """Rank explicit candidate solutions against a problem's constraints and objective."""
+    from tools.science import compare_optimization_solutions
+
+    problem = _optimization_json(path)
+    candidates = _optimization_json(solutions)
+    result = compare_optimization_solutions(problem, candidates if isinstance(candidates, list) else candidates.get("solutions", []))
+    console.print_json(json.dumps(result, default=str))
 
 
 @app.command("workflows")

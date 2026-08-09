@@ -38,6 +38,9 @@ Status: **foundation acceptance baseline; roadmap implementation in progress**
   paper downloads with SHA-256 sidecars are available as explicit operations.
 - OpenQASM/Qiskit-aware circuit inspection and deterministic optimization
   feasibility/objective checks are exposed as agent tools.
+- Small OpenQASM circuits can be simulated with a bounded NumPy statevector;
+  small LPs use SciPy HiGHS when available, binary QUBOs use exact local
+  enumeration, and explicit candidate solutions can be compared.
 - Typed workflow specifications and isolated project-memory primitives exist;
   durable workflow execution, approval state, expiration enforcement, and
   task/session integration remain in progress.
