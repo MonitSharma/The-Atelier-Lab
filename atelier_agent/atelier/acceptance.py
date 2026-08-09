@@ -20,6 +20,7 @@ from atelier.workflows import list_workflows
 from atelier.workflow_engine import WorkflowEngine
 from atelier.workspace import WorkspaceManager, workspace_scope
 from agent.project_memory import ProjectMemoryStore
+from rag.visual import analyze_pdf
 from tools.registry import create_default_registry
 from tools.research import lookup_research
 from tools.science import inspect_qasm_text, validate_optimization
@@ -113,6 +114,9 @@ def run_clean_acceptance(root: str | Path) -> dict[str, Any]:
             }))),
             _check("clean-repo-inspect", lambda: str(service.repo_action("inspect", "."))),
             _check("clean-data-profile", lambda: str(service.profile("sample.csv"))),
+            _check("clean-figure-evidence", lambda: str(analyze_pdf(
+                workspace_root / "paper.pdf", render=True, output_dir=home.cache / "visual",
+            ))),
         ])
 
         paper_run = service.paper_action("deep_read", "paper.pdf", project="clean")

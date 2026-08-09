@@ -7,9 +7,9 @@ and the concise frozen baseline is [`docs/CURRENT_ARCHITECTURE.md`](../../docs/C
 ## Current system
 
 ```text
-CLI / persistent session / MCP
+CLI / Web / Finder / persistent session / MCP
               │
-       atelier application
+       Atelier service/API
           ┌───┴────┐
           │        │
     knowledge    build/general
@@ -131,7 +131,10 @@ The frozen Scientific Library v1.0 baseline includes:
 - a model-free Test workflow and clean-clone installation path;
 - a real Gemma-backed grounded `atelier ask` smoke test.
 
-The current benchmark is a small local three-paper regression suite. It is not
-evidence of repository-scale coding reliability, multimodal understanding,
-security isolation, durable workflow execution, or general research-agent
-reliability. Those are separate roadmap milestones.
+The current live library contains three verified papers, and the clean-state
+model-backed smoke has also been run from a fresh temporary runtime with fresh
+Qwen3-Embedding-4B ingestion and a Qwen3-8B cited answer. The frozen
+model-free v2 suite covers routing, workflows, memory isolation, security,
+research denial, quantum, and optimization. These checks still do not claim
+repository-scale statistical reliability, provider-backed Qiskit execution,
+or hardened OS-level isolation; those remain explicit extensions.

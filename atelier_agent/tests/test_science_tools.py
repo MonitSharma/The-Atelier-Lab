@@ -3,6 +3,8 @@ from tools.science import (
     inspect_qasm_text,
     simulate_qasm_text,
     solve_optimization,
+    compare_quantum_backends,
+    transpile_qasm_text,
     validate_optimization,
 )
 
@@ -40,6 +42,20 @@ def test_small_circuit_simulation_returns_normalized_bell_state():
     assert result["status"] == "success"
     assert result["normalization"] == 1.0
     assert set(result["probabilities"]) == {"00", "11"}
+
+
+def test_optional_transpile_reports_dependency_or_resource_result():
+    result = transpile_qasm_text("OPENQASM 2.0; qreg q[2]; h q[0]; cx q[0],q[1];")
+    assert result["status"] in {"success", "unavailable"}
+
+
+def test_provider_free_backend_comparison_uses_explicit_capacity_profiles():
+    result = compare_quantum_backends(
+        "OPENQASM 2.0; qreg q[2]; h q[0]; cx q[0],q[1];",
+        [{"name": "small", "max_qubits": 1}, {"name": "adequate", "max_qubits": 2, "max_depth": 5}],
+    )
+    assert result["status"] == "success"
+    assert [row["fits"] for row in result["backends"]] == [False, True]
 
 
 def test_qubo_exact_solver_and_candidate_comparison():

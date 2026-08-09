@@ -165,6 +165,61 @@ def simulate_qasm_text(text: str, *, shots: int = 1024) -> dict[str, Any]:
         return {"status": "error", "error_type": "invalid_qasm", "message": str(exc)}
 
 
+def transpile_qasm_text(text: str, *, optimization_level: int = 1) -> dict[str, Any]:
+    """Transpile with Qiskit when installed, otherwise report a safe fallback."""
+    inspected = inspect_qasm_text(text)
+    if inspected.get("status") != "success":
+        return inspected
+    try:
+        from qiskit import QuantumCircuit, transpile
+    except ImportError:
+        return {
+            "status": "unavailable", "error_type": "dependency_unavailable",
+            "capability": "qiskit_transpile", "fallback": inspected,
+            "message": "Install the optional quantum dependency to transpile circuits.",
+        }
+    try:
+        circuit = QuantumCircuit.from_qasm_str(text)
+        level = max(0, min(int(optimization_level), 3))
+        result = transpile(circuit, optimization_level=level)
+        return {
+            "status": "success", "tool": "quantum_transpile", "parser": "qiskit",
+            "optimization_level": level, "qubits": result.num_qubits,
+            "depth": result.depth(), "two_qubit_gates": sum(
+                int(item.operation.num_qubits == 2) for item in result.data
+            ), "gate_counts": {str(k): int(v) for k, v in result.count_ops().items()},
+        }
+    except Exception as exc:  # noqa: BLE001 - return structured optional capability result
+        return {"status": "error", "error_type": "transpile_failed", "message": str(exc)}
+
+
+def compare_quantum_backends(text: str, backends: list[dict[str, Any]]) -> dict[str, Any]:
+    """Compare circuit resources against explicit backend capacity profiles.
+
+    This is a provider-free planning comparison. It never contacts a backend;
+    callers supply the capacity facts they want to compare.
+    """
+    inspected = inspect_qasm_text(text)
+    if inspected.get("status") != "success":
+        return inspected
+    if not isinstance(backends, list) or not backends:
+        return {"status": "error", "error_type": "invalid_arguments", "message": "Provide at least one backend capacity profile."}
+    rows = []
+    for backend in backends:
+        if not isinstance(backend, dict) or not isinstance(backend.get("name"), str):
+            return {"status": "error", "error_type": "invalid_arguments", "message": "Each backend needs a name."}
+        max_qubits = backend.get("max_qubits")
+        max_depth = backend.get("max_depth")
+        max_two_qubit = backend.get("max_two_qubit_gates")
+        limits = {
+            "qubits": inspected.get("qubits") is None or max_qubits is None or inspected["qubits"] <= max_qubits,
+            "depth": max_depth is None or inspected["depth"] <= max_depth,
+            "two_qubit_gates": max_two_qubit is None or inspected["two_qubit_gates"] <= max_two_qubit,
+        }
+        rows.append({"name": backend["name"], "limits": limits, "fits": all(limits.values()), "profile": backend})
+    return {"status": "success", "tool": "quantum_compare_backends", "circuit": inspected, "backends": rows}
+
+
 def run_quantum_inspect(arguments: dict[str, Any]) -> dict[str, Any]:
     text = arguments.get("qasm")
     path = arguments.get("path")
@@ -176,6 +231,26 @@ def run_quantum_inspect(arguments: dict[str, Any]) -> dict[str, Any]:
     result = inspect_qasm_text(text)
     result["tool"] = "quantum_inspect"
     return result
+
+
+def run_quantum_transpile(arguments: dict[str, Any]) -> dict[str, Any]:
+    text = arguments.get("qasm")
+    if text is None and isinstance(arguments.get("path"), str):
+        try:
+            text = _resolve_workspace_path(arguments["path"], "read").read_text(encoding="utf-8")
+        except (ValueError, OSError) as exc:
+            return {"status": "error", "error_type": "path_not_allowed", "message": str(exc)}
+    return transpile_qasm_text(text, optimization_level=int(arguments.get("optimization_level", 1)))
+
+
+def run_quantum_compare_backends(arguments: dict[str, Any]) -> dict[str, Any]:
+    text = arguments.get("qasm")
+    if text is None and isinstance(arguments.get("path"), str):
+        try:
+            text = _resolve_workspace_path(arguments["path"], "read").read_text(encoding="utf-8")
+        except (ValueError, OSError) as exc:
+            return {"status": "error", "error_type": "path_not_allowed", "message": str(exc)}
+    return compare_quantum_backends(text, arguments.get("backends", []))
 
 
 def _number(value: Any) -> float:
@@ -302,6 +377,16 @@ QUANTUM_INSPECT_TOOL = Tool(
     name="quantum_inspect", description="Inspect OpenQASM deterministically; use Qiskit when installed and report fallback limits otherwise.",
     input_schema={"type": "object", "properties": {"qasm": {"type": "string"}, "path": {"type": "string"}}, "additionalProperties": False},
     function=run_quantum_inspect,
+)
+QUANTUM_TRANSPILE_TOOL = Tool(
+    name="quantum_transpile", description="Transpile an OpenQASM circuit with optional Qiskit; report dependency limits explicitly.",
+    input_schema={"type": "object", "properties": {"qasm": {"type": "string"}, "path": {"type": "string"}, "optimization_level": {"type": "integer"}}, "additionalProperties": False},
+    function=run_quantum_transpile,
+)
+QUANTUM_COMPARE_BACKENDS_TOOL = Tool(
+    name="quantum_compare_backends", description="Compare circuit resources against explicit provider-free backend capacity profiles.",
+    input_schema={"type": "object", "required": ["backends"], "properties": {"qasm": {"type": "string"}, "path": {"type": "string"}, "backends": {"type": "array"}}, "additionalProperties": False},
+    function=run_quantum_compare_backends,
 )
 OPTIMIZATION_VALIDATE_TOOL = Tool(
     name="optimization_validate", description="Verify a candidate LP/QUBO-style solution's constraints, bounds, and objective value deterministically.",

@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from atelier.service import AtelierService
 from agent.project_memory import ProjectMemoryStore
 from atelier.workflow_engine import WorkflowEngine
@@ -63,3 +65,23 @@ def test_service_exposes_workflow_and_task_operations(tmp_path):
     assert any(item["run_id"] == started["run_id"] for item in listed)
     approved = service.dispatch("task_approve", {"run_id": started["run_id"]})
     assert approved["status"] == "completed"
+
+
+def test_figure_workflow_persists_page_evidence_before_interpretation(tmp_path):
+    fitz = pytest.importorskip("fitz")
+    engine, _, root = _engine(tmp_path)
+    document = fitz.open()
+    page = document.new_page()
+    page.insert_text((72, 72), "Figure 1: Acceptance workflow\n" + "scientific evidence " * 20)
+    paper = root / "figure.pdf"
+    document.save(paper)
+    document.close()
+
+    state = engine.start("figure_inspect", {"path": "figure.pdf"})
+    assert state.status == "waiting_approval"
+    assert state.approval_required == "interpret visual"
+    assert state.outputs["locate pages"]["figure_pages"] == [1]
+
+    resumed = engine.approve(state.run_id)
+    assert resumed.status == "completed"
+    assert resumed.outputs["cite pages"]["status"] == "ready"

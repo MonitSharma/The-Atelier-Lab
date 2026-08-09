@@ -295,6 +295,7 @@ def profile_artifact(
 def paper_visual(
     path: Path = typer.Argument(..., exists=True, readable=True),
     render: bool = typer.Option(False, "--render", help="Render every page instead of fallback pages only."),
+    ocr: bool = typer.Option(False, "--ocr", help="Attempt opt-in OCR for poor-text pages; native text remains authoritative."),
     as_json: bool = typer.Option(False, "--json", help="Print the complete page evidence JSON."),
 ) -> None:
     """Analyze PDF text quality and figure/caption pages with citations."""
@@ -303,7 +304,7 @@ def paper_visual(
 
     try:
         approved = get_workspace_manager().context().resolve(str(path), "read").path
-        report = analyze_pdf(approved, render=render)
+        report = analyze_pdf(approved, render=render, ocr=ocr)
     except (WorkspaceError, ValueError, OSError, RuntimeError) as exc:
         console.print(f"[red]{exc}[/]")
         raise typer.Exit(code=2) from exc
@@ -713,7 +714,7 @@ def code_fix(
     as_json: bool = typer.Option(False, "--json", help="Print the complete certificate JSON."),
 ) -> None:
     """Run the typed inspect → edit → test → certificate coding workflow."""
-    from atelier.coding_workflow import BuildWorkflow
+    from agent.coding_workflow import BuildWorkflow
     from atelier.workspace import WorkspaceError, get_workspace_manager
 
     manager = get_workspace_manager()
@@ -1130,7 +1131,16 @@ def quantum_inspect(
     if qasm is None and path is None:
         console.print("[red]Provide --qasm or --path.[/]")
         raise typer.Exit(code=2)
-    result = run_quantum_inspect({"qasm": qasm, "path": str(path) if path else None})
+    if qasm is None:
+        from atelier.workspace import WorkspaceError, get_workspace_manager
+
+        try:
+            approved = get_workspace_manager().context().resolve(str(path), "read").path
+            qasm = approved.read_text(encoding="utf-8")
+        except (WorkspaceError, OSError) as exc:
+            console.print(f"[red]{exc}[/]")
+            raise typer.Exit(code=2) from exc
+    result = run_quantum_inspect({"qasm": qasm})
     if as_json:
         console.print_json(json.dumps(result, default=str))
         return
@@ -1149,8 +1159,85 @@ def quantum_simulate(
     if qasm is None and path is None:
         console.print("[red]Provide --qasm or --path.[/]")
         raise typer.Exit(code=2)
-    text = qasm or path.read_text(encoding="utf-8")
+    if qasm is not None:
+        text = qasm
+    else:
+        from atelier.workspace import WorkspaceError, get_workspace_manager
+
+        try:
+            approved = get_workspace_manager().context().resolve(str(path), "read").path
+            text = approved.read_text(encoding="utf-8")
+        except (WorkspaceError, OSError) as exc:
+            console.print(f"[red]{exc}[/]")
+            raise typer.Exit(code=2) from exc
     result = simulate_qasm_text(text, shots=shots)
+    console.print_json(json.dumps(result, default=str))
+    if result.get("status") != "success":
+        raise typer.Exit(code=2)
+
+
+@quantum_app.command("transpile")
+def quantum_transpile(
+    qasm: str | None = typer.Option(None, "--qasm", help="Inline OpenQASM 2 source."),
+    path: Path | None = typer.Option(None, "--path", exists=True, readable=True),
+    optimization_level: int = typer.Option(1, "--optimization-level", min=0, max=3),
+) -> None:
+    """Transpile with optional Qiskit and report an explicit fallback when absent."""
+    from tools.science import transpile_qasm_text
+
+    if qasm is None and path is None:
+        console.print("[red]Provide --qasm or --path.[/]")
+        raise typer.Exit(code=2)
+    if qasm is not None:
+        text = qasm
+    else:
+        from atelier.workspace import WorkspaceError, get_workspace_manager
+
+        try:
+            approved = get_workspace_manager().context().resolve(str(path), "read").path
+            text = approved.read_text(encoding="utf-8")
+        except (WorkspaceError, OSError) as exc:
+            console.print(f"[red]{exc}[/]")
+            raise typer.Exit(code=2) from exc
+    result = transpile_qasm_text(text, optimization_level=optimization_level)
+    console.print_json(json.dumps(result, default=str))
+    if result.get("status") == "error":
+        raise typer.Exit(code=2)
+
+
+@quantum_app.command("compare-backends")
+def quantum_compare_backends(
+    profile: Path = typer.Argument(..., exists=True, readable=True, help="JSON list of backend capacity profiles."),
+    qasm: str | None = typer.Option(None, "--qasm", help="Inline OpenQASM 2 source."),
+    path: Path | None = typer.Option(None, "--path", exists=True, readable=True),
+) -> None:
+    """Compare circuit resource needs against explicit provider-free profiles."""
+    from tools.science import compare_quantum_backends
+
+    try:
+        from atelier.workspace import WorkspaceError, get_workspace_manager
+
+        approved_profile = get_workspace_manager().context().resolve(str(profile), "read").path
+        payload = json.loads(approved_profile.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, WorkspaceError) as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    backends = payload.get("backends") if isinstance(payload, dict) else payload
+    if qasm is None and path is None:
+        console.print("[red]Provide --qasm or --path.[/]")
+        raise typer.Exit(code=2)
+    if qasm is not None:
+        text = qasm
+    else:
+        from atelier.workspace import WorkspaceError, get_workspace_manager
+
+        try:
+            approved = get_workspace_manager().context().resolve(str(path), "read").path
+            text = approved.read_text(encoding="utf-8")
+        except (WorkspaceError, OSError) as exc:
+            console.print(f"[red]{exc}[/]")
+            raise typer.Exit(code=2) from exc
+    result = compare_quantum_backends(text, backends)
     console.print_json(json.dumps(result, default=str))
     if result.get("status") != "success":
         raise typer.Exit(code=2)
@@ -1539,6 +1626,17 @@ def reliability_report(
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         console.print(f"[red]{exc}[/]")
         raise typer.Exit(code=2) from exc
+
+
+@app.command("route-eval")
+def route_eval_command() -> None:
+    """Run the frozen human-labeled capability-routing evaluation."""
+    from eval.capability_routing import run_capability_eval
+
+    result = run_capability_eval()
+    console.print_json(json.dumps(result, default=str))
+    if result["successes"] != result["cases"]:
+        raise typer.Exit(code=1)
 
 
 @app.command("performance")

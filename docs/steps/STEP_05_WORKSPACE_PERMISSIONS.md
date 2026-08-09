@@ -1,6 +1,6 @@
 # Step 05 — Workspace and Permission Architecture
 
-Status: **PASS — implemented on `codex/workspace-permissions-v1.0`**
+Status: **complete on the current development line**
 
 ## Objective
 
@@ -18,10 +18,10 @@ atelier workspace list
 atelier workspace close NAME
 ```
 
-The registry is stored in the local development runtime at
-`atelier_agent/data/workspaces.json` and is ignored by Git. The default
-development workspace is the Atelier repository itself with read/write/execute
-and `LOCAL_ONLY`; new user-added roots default to read-only and `LOCAL_ONLY`.
+The registry is stored in the external runtime at
+`~/Atelier/workspaces/registry.json` by default (or under `ATELIER_HOME`) and
+is ignored by Git. The source checkout is preserved as a system workspace for
+development; new user-added roots default to read-only and `LOCAL_ONLY`.
 
 ## Permission model
 
@@ -56,6 +56,6 @@ compileall: PASS
 ```
 
 This is an application-level capability boundary, not a kernel sandbox. Step 17
-will add stronger command allowlists, secret redaction, prompt-injection
-protection, audit logs, and hardened execution. Step 19 will migrate the
-registry and runtime state out of the source checkout.
+adds stronger command allowlists, secret redaction, prompt-injection
+protection, one-use confirmations, audit logs, and hardened execution policy;
+OS-level isolation remains an explicit future hardening extension.

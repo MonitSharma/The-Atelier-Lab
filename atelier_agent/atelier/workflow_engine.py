@@ -151,6 +151,8 @@ class WorkflowEngine:
             return True
         if spec.name in {"paper_deep_read", "paper_compare"} and step in {"synthesize", "report gaps"}:
             return True
+        if spec.name == "figure_inspect" and step == "interpret visual":
+            return True
         if spec.name == "data_analyze" and step in {"summarize", "cite inputs"}:
             return True
         if spec.name == "research_verify" and (state.input.get("download") or state.input.get("publish")):
@@ -195,6 +197,15 @@ class WorkflowEngine:
                         "note": "Citation verification requires explicit bibliographic metadata."}
             if step in {"retrieve", "inspect figures", "synthesize"}:
                 return {"status": "ready", "step": step, "path": str(path)}
+        elif workflow == "figure_inspect":
+            from rag.visual import analyze_pdf
+
+            path = self._resolve_path(state.input.get("path"), "read")
+            if step in {"locate pages", "render evidence"}:
+                return analyze_pdf(path, render=step == "render evidence")
+            if step == "interpret visual":
+                return {"status": "ready", "step": step, "note": "Visual interpretation requires an approved multimodal model input."}
+            return {"status": "ready", "step": step, "path": str(path)}
         elif workflow == "paper_compare":
             from rag.paper import characterize
 

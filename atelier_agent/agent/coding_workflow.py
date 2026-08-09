@@ -169,8 +169,11 @@ def _changed_files(root: Path, checkpoint: Checkpoint, inspector: RepositoryInsp
         path = root / rel
         if not path.exists() or _digest(path) != hashlib.sha256(content).hexdigest():
             changed.add(rel)
-    for directory, _, names in os.walk(root):
+    for directory, dirs, names in os.walk(root):
+        dirs[:] = [name for name in dirs if name not in {".git", ".venv", "venv", "env", "node_modules", "__pycache__", ".pytest_cache"}]
         for name in names:
+            if name.endswith(".pyc"):
+                continue
             path = Path(directory) / name
             if path.is_symlink():
                 continue

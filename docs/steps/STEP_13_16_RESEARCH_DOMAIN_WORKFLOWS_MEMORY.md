@@ -1,7 +1,6 @@
 # Steps 13–16 — Research, scientific tools, workflows, and project memory
 
-Status: implemented on the `codex/research-workflows-memory-v1.0` branch; CI
-and merge are the release gate.
+Status: **complete on the current development line**
 
 ## Step 13 — Explicit research lookup
 
@@ -23,8 +22,9 @@ atelier research-lookup "quantum approximate optimization" --source arxiv
 ```
 
 The agent-facing tool is available through the same registry as local tools.
-Downloads and full paper ingestion remain separate future operations so that
-network permission is not silently expanded.
+Downloads remain a separately gated operation, while explicit paper ingestion
+is available through the local library workflow. Downloaded results carry a
+SHA-256/timestamp/URL provenance sidecar under an approved workspace.
 
 ## Step 14 — Quantum and optimization checks
 
@@ -40,7 +40,13 @@ Install the optional Qiskit capability only when the project needs it:
 ```bash
 uv pip install -e '.[quantum]'
 atelier quantum inspect --path circuit.qasm
+atelier quantum transpile --path circuit.qasm
 ```
+
+`quantum_transpile` exposes optional Qiskit transpilation with an explicit
+dependency-unavailable result when Qiskit is absent. `quantum_compare_backends`
+compares resources against caller-supplied provider-free capacity profiles and
+never contacts a backend.
 
 `optimization_validate` checks an explicit LP/QUBO-style candidate: objective
 value, linear constraints, variable bounds, relation satisfaction, and final
@@ -55,7 +61,9 @@ future solver-backed extension.
 `research_verify`, `quantum_analyze`, and `optimization_validate`. Each
 specification declares ordered steps, required capabilities, an approval gate,
 and recovery behavior. The catalog is deliberately separate from execution so
-the future backend and UI can share the same visible workflow contract.
+the backend and UI share the same visible workflow contract. The durable JSON
+engine now persists checkpoints, pauses for approvals, and supports recovery
+and cancellation.
 
 ## Step 16 — Project memory v2
 
@@ -76,7 +84,8 @@ atelier project memory-forget atelier MEMORY_ID
 Project namespaces are enforced in list and forget operations, and imports
 rewrite the destination namespace instead of trusting the source namespace.
 Conversation transcripts are not automatically stored. The existing semantic
-user-memory system remains available separately for durable facts and recall.
+user-memory system remains available separately for durable facts and recall;
+workflow task state is mirrored into project entities with provenance.
 
 ## Verification
 

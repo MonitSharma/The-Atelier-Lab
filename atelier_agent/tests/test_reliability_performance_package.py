@@ -32,8 +32,8 @@ def test_package_check_passes_for_project():
 def test_reliability_v2_runs_frozen_cross_component_cases():
     report = run_reliability_v2(repetitions=2)
     assert report["schema_version"] == 2
-    assert report["trials"] == 14
-    assert report["successes"] == 14
+    assert report["trials"] == 22
+    assert report["successes"] == 22
     assert set(report["frozen_cases"]) >= {"security.prompt_injection", "workflow.repo_inspect"}
 
 

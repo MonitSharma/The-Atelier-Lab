@@ -10,4 +10,7 @@
 - `scripts/` owns repository-wide validation and summary utilities.
 - `docs/` owns project-wide orientation, method, results, limits, and decisions.
 
-Runtime data under `atelier_agent/data/` is local operational state. Committed reports and plots are retained as historical evidence; new runtime outputs remain ignored.
+Runtime data under `~/Atelier/` (or `ATELIER_HOME`) is the active local
+operational state. `atelier_agent/data/` is retained only as development-era
+legacy input and historical evidence; new runtime outputs remain external and
+ignored.

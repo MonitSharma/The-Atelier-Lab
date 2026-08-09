@@ -1,6 +1,6 @@
 # Current Atelier Architecture
 
-Status: **foundation acceptance baseline; roadmap implementation in progress**
+Status: **Atelier v1.0 verified locally; optional extensions remain**
 
 ## Shipped baseline
 
@@ -73,16 +73,13 @@ models through frozen evaluations rather than by accumulating downloads.
 
 - broader research-source coverage beyond the current Crossref/arXiv/Semantic
   Scholar operations;
-- richer quantum transpilation/backend comparison and external solver
-  integration;
+- richer quantum transpilation and provider-backed backend comparison;
 - broader hardened security isolation beyond the current capability boundary,
   prompt-injection markers, secret redaction, one-use destructive confirmations,
   and audit logging;
 - polished web trace/source rendering and richer selected-context presentation;
-- provider-backed quantum transpilation/backend comparison and external solver
-  integrations;
-- hardened OS-level isolation, signed artifacts, protected-master verification,
-  and live model-backed clean-Mac Step 26 release evidence.
+- external solver integrations, hardened OS-level isolation, signed artifacts,
+  automatic cloud routing, and richer frontier handoffs.
 
 The dependency-ordered roadmap for these capabilities is maintained in
 [`ATELIER_WORKBENCH_PLAN.md`](ATELIER_WORKBENCH_PLAN.md).

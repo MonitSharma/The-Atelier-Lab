@@ -26,12 +26,13 @@ its own reliability — and reports where it fails.
 > research and frontier-model handoffs are separate, explicit, permission-gated
 > operations with provenance and redaction rather than implicit data transfer.
 
-**Current state:** the deterministic foundation is implemented and the product
-roadmap is in progress. The project has an installable CLI, local RAG, approved
+**Current state:** the deterministic foundation and the clean-state local v1.0
+scenario are verified. The project has an installable CLI, local RAG, approved
 workspaces, repository intelligence, coding workflows, durable tasks and
 project memory, research/quantum/optimization tools, a shared service/API, a
-replaceable web UI, and model-free reliability evidence. Final clean-Mac Step
-26 acceptance is still pending.
+replaceable web UI, and model-backed plus model-free acceptance evidence.
+Provider-backed quantum execution, external solvers, hardened OS isolation,
+signed artifacts, and automatic cloud routing remain explicit extensions.
 
 ---
 
@@ -181,8 +182,9 @@ atelier recall "what license do I like?"
 
 The earlier phases (0–7) document the historical foundation. Current product
 milestones and their evidence live in
-[`docs/ATELIER_WORKBENCH_PLAN.md`](../docs/ATELIER_WORKBENCH_PLAN.md); final
-clean-Mac Step 26 acceptance is not yet claimed complete.
+[`docs/ATELIER_WORKBENCH_PLAN.md`](../docs/ATELIER_WORKBENCH_PLAN.md). The
+local v1.0 acceptance evidence is recorded in
+[`docs/steps/STEP_26_ATELIER_V1_RELEASE.md`](../docs/steps/STEP_26_ATELIER_V1_RELEASE.md).
 
 | Phase | Title | What it delivered | Where |
 |---|---|---|---|
@@ -357,6 +359,7 @@ steps-by-task.
 | `atelier recall "Q"` | Semantic search over long-term memory (`-k`) |
 | `atelier memory` | List everything in long-term memory |
 | `atelier route "TASK"` | Classify a task easy/hard and show the chosen model (`--backend`) |
+| `atelier route-eval` | Run the frozen human-labeled capability-routing evaluation |
 | `atelier mcp` | Serve the toolbox over MCP (stdio) |
 | `atelier eval` | Run the reliability suites (`--mode/--judge/--gate`) |
 | `atelier eval-plots` | Generate SVG charts from the latest or selected eval report |
