@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from tools import files as file_tools
+from atelier.workspace import current_workspace_context
 from tools.base import Tool
 from tools.files import _resolve_workspace_path
 
@@ -41,7 +42,7 @@ def run_repo_map(arguments: dict[str, Any]) -> dict[str, Any]:
         return {"status": "error", "error_type": "invalid_arguments",
                 "message": "repo_map 'path' must be a string."}
     try:
-        root = _resolve_workspace_path(target)
+        root = _resolve_workspace_path(target, "read")
     except ValueError as exc:
         return {"status": "error", "error_type": "path_not_allowed", "message": str(exc)}
     if not root.exists():
@@ -58,7 +59,12 @@ def run_repo_map(arguments: dict[str, Any]) -> dict[str, Any]:
         if count > _MAX_FILES:
             lines.append("... (truncated)")
             break
-        rel = p.relative_to(file_tools.PROJECT_ROOT)
+        context = current_workspace_context()
+        base = context.active.root if context is not None else file_tools.PROJECT_ROOT
+        try:
+            rel = p.relative_to(base)
+        except ValueError:
+            rel = p
         lines.append(str(rel))
         if p.suffix == ".py":
             for sym in _py_outline(p):

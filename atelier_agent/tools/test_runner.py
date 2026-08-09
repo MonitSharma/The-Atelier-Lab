@@ -41,7 +41,7 @@ def run_tests(arguments: dict[str, Any]) -> dict[str, Any]:
         return {"status": "error", "error_type": "invalid_arguments",
                 "message": "test_runner 'path' must be a string."}
     try:
-        resolved = _resolve_workspace_path(target)
+        resolved = _resolve_workspace_path(target, "execute")
     except ValueError as exc:
         return {"status": "error", "error_type": "path_not_allowed", "message": str(exc)}
 
@@ -52,7 +52,7 @@ def run_tests(arguments: dict[str, Any]) -> dict[str, Any]:
     try:
         proc = subprocess.run(
             cmd, capture_output=True, text=True, timeout=timeout,
-            cwd=str(_resolve_workspace_path(".")),
+            cwd=str(_resolve_workspace_path(".", "execute")),
         )
     except subprocess.TimeoutExpired:
         return {"status": "error", "error_type": "timeout",

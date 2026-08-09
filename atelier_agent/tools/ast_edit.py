@@ -92,7 +92,7 @@ def run_ast_edit(arguments: dict[str, Any]) -> dict[str, Any]:
             }
 
     try:
-        resolved_path = _resolve_workspace_path(path)
+        resolved_path = _resolve_workspace_path(path, "write")
     except ValueError as exc:
         return {"status": "error", "error_type": "path_not_allowed", "message": str(exc)}
 

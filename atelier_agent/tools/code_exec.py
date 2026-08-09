@@ -23,7 +23,9 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+from atelier.workspace import WorkspaceError, current_workspace_context
 from tools.base import Tool
+from tools.files import _resolve_workspace_path
 
 DEFAULT_TIMEOUT = 15
 
@@ -45,6 +47,19 @@ def run_python(arguments: dict[str, Any]) -> dict[str, Any]:
         }
     if not isinstance(timeout, (int, float)) or timeout <= 0 or timeout > 120:
         timeout = DEFAULT_TIMEOUT
+
+    try:
+        _resolve_workspace_path(".", "execute")
+    except (ValueError, WorkspaceError) as exc:
+        return {"status": "error", "error_type": "capability_denied", "message": str(exc)}
+
+    context = current_workspace_context()
+    if context is not None and context.active.privacy == "LOCAL_ONLY" and _SANDBOX_EXEC is None:
+        return {
+            "status": "error",
+            "error_type": "local_only_unenforceable",
+            "message": "LOCAL_ONLY code execution requires the macOS network sandbox.",
+        }
 
     with tempfile.TemporaryDirectory(prefix="atelier_exec_") as tmp:
         script = Path(tmp) / "snippet.py"

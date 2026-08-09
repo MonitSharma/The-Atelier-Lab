@@ -36,10 +36,12 @@ Scientific Library v1.0 is frozen and tagged. It provides:
 - semantic memory migration with backup and verification;
 - Ollama worker/heavy model integration;
 - CLI, persistent session, MCP, and Rich-safe output;
-- declared dependencies, clean-clone reproduction, CI, and protected `master`.
+- declared dependencies, clean-clone reproduction, CI, and protected `master`;
+- explicit persisted workspaces with capability-scoped tool contexts and
+  `LOCAL_ONLY` as the default privacy policy.
 
-The current development state is still repository-local, single-workspace,
-path-scoped, and primarily textual. See
+The current development state is still repository-local and primarily textual.
+Runtime state migration remains future work. See
 [`CURRENT_ARCHITECTURE.md`](CURRENT_ARCHITECTURE.md).
 
 ## Dependency-ordered milestones
@@ -50,7 +52,7 @@ Keep `master` canonical, develop each milestone on a fresh feature branch,
 protect `master`, eliminate stale architecture descriptions, and maintain one
 current roadmap. Freeze as `atelier-core-v1.0`.
 
-### Step 05 — Workspace and permission architecture
+### Step 05 — Workspace and permission architecture — complete
 
 Add:
 
@@ -61,11 +63,11 @@ atelier workspace list
 atelier workspace close NAME
 ```
 
-Use approved roots and explicit capabilities: `read`, `write`, `execute`, and
-`network`. Support multiple attached roots, reject path and symlink escapes,
-make `LOCAL_ONLY` the default privacy policy, and require confirmation for
-destructive actions. Tools must receive workspace context rather than reading a
-global current-working-directory constant.
+Implemented with approved roots and explicit `read`, `write`, `execute`, and
+`network` capabilities. Multiple attached roots, path and symlink escape
+rejection, `LOCAL_ONLY` default privacy, and context-aware tool dispatch are
+covered by tests. Destructive-operation confirmations and the hardened trust
+boundary remain Step 17 work.
 
 ### Step 06 — Repository intelligence
 

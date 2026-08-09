@@ -245,7 +245,8 @@ Flags:
 Every run streams its steps and writes a full JSON **trace** to `data/traces/`,
 so you can inspect exactly what the agent did.
 
-> **Safety:** file/test tools are pinned to the project workspace; `code_exec`
+> **Safety:** file/test tools are pinned to explicitly approved Atelier
+> workspaces; `code_exec`
 > runs in a subprocess with a timeout and (on macOS) a seatbelt profile that
 > blocks network access. The `shell` tool is opt-in. See
 > [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the exact guarantees.
@@ -327,6 +328,10 @@ steps-by-task.
 | Command | Purpose |
 |---|---|
 | `atelier doctor` | Check models, vector store, and embeddings are healthy |
+| `atelier workspace add PATH` | Approve a local root with explicit capabilities |
+| `atelier workspace open NAME` | Attach a workspace and make it active |
+| `atelier workspace list` | Show approved roots, capabilities, and privacy |
+| `atelier workspace close NAME` | Detach a workspace without deleting approval |
 | `atelier ingest PATH...` | Index notes/PDFs/code into the vector store (`--reset` to rebuild) |
 | `atelier paper PATH` | Fast-characterize a research PDF; add `--ingest` to index it |
 | `atelier search QUERY` | Show retrieved passages without synthesis |

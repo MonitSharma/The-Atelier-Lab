@@ -86,9 +86,10 @@ model JSON decision → one tool → bounded observation → next decision
 
 The registry is shared by the CLI, agent, and MCP server. Current tool families
 include file reads/writes, search, repository mapping, Python execution, test
-running, AST edits, semantic search, and memory. File access is currently
-anchored to the process workspace and is not yet a multi-workspace permission
-system; that is the next product milestone.
+running, AST edits, semantic search, and memory. File and execution tools now
+receive an explicit persisted workspace context with approved roots and
+capabilities. `LOCAL_ONLY` is the default privacy policy; this remains an
+application-level boundary until the stronger security work in Step 17.
 
 The future `coder` role, explicit workspace manager, capability policy, and
 multi-file transaction workflow are not yet implemented. They must be added

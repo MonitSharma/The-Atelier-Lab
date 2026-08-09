@@ -1,14 +1,21 @@
 from pathlib import Path
 from typing import Any
 
+from atelier.workspace import Capability, current_workspace_context
 from tools.base import Tool
 
 PROJECT_ROOT = Path.cwd().resolve()
 
-def _resolve_workspace_path(path: str) -> Path:
+def _resolve_workspace_path(path: str, capability: Capability = "read") -> Path:
+    """Resolve a path through the active approved workspace context.
+
+    Direct legacy calls retain the ``PROJECT_ROOT`` fallback; registry-driven
+    agent and MCP calls install an explicit context before dispatch.
     """
-    Resolve a user supplied path and esure it stas inside the project
-    """
+
+    context = current_workspace_context()
+    if context is not None:
+        return context.resolve(path, capability).path
 
     requested_path = Path(path)
 
@@ -41,7 +48,7 @@ def run_read_file(arguments: dict[str, Any]) -> dict[str,Any]:
                 }
 
     try:
-        resolved_path = _resolve_workspace_path(path)
+        resolved_path = _resolve_workspace_path(path, "read")
     except ValueError as exc:
         return {
                 "status": "error",
@@ -149,7 +156,7 @@ def run_write_file(arguments: dict[str, Any]) -> dict[str, Any]:
         }
 
     try:
-        resolved_path = _resolve_workspace_path(path)
+        resolved_path = _resolve_workspace_path(path, "write")
     except ValueError as exc:
         return {"status": "error", "error_type": "path_not_allowed", "message": str(exc)}
 
@@ -187,7 +194,7 @@ def run_edit_file(arguments: dict[str, Any]) -> dict[str, Any]:
             }
 
     try:
-        resolved_path = _resolve_workspace_path(path)
+        resolved_path = _resolve_workspace_path(path, "write")
     except ValueError as exc:
         return {"status": "error", "error_type": "path_not_allowed", "message": str(exc)}
 
@@ -257,7 +264,6 @@ EDIT_FILE_TOOL = Tool(
     },
     function=run_edit_file,
 )
-
 
 
 

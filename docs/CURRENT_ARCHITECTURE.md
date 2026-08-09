@@ -1,6 +1,6 @@
 # Current Atelier Architecture
 
-Status: **post-Scientific Library v1.0; core-consolidation work in progress**
+Status: **post-Scientific Library v1.0; workspace permissions implemented**
 
 ## Shipped baseline
 
@@ -15,6 +15,9 @@ Status: **post-Scientific Library v1.0; core-consolidation work in progress**
 - Semantic memory has backup-backed migration and a separate collection.
 - Root and agent dependencies are declared; Linux CI runs the full suite.
 - `master` is protected and requires the `Python 3.11` Test workflow.
+- Workspace roots are persisted with read/write/execute/network capabilities;
+  `LOCAL_ONLY` is the default privacy policy.
+- Agent, MCP, and CLI tool dispatch receive an explicit workspace context.
 
 ## Deliberate placeholders
 
@@ -25,7 +28,6 @@ models through frozen evaluations rather than by accumulating downloads.
 
 ## Not shipped yet
 
-- multi-workspace permissions and capability policy;
 - deterministic repository intelligence at repository scale;
 - a dedicated `coder` role and coding-model benchmark;
 - plan/edit/verify transactions and rollback;

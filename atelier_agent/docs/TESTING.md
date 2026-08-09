@@ -136,7 +136,7 @@ operation-not-permitted / connection error) — model-written code cannot phone
 home. (If `sandbox-exec` is unavailable, `net_blocked` is `False`; the doc is
 honest that this is best-effort.)
 
-### Verify file tools can't escape the workspace
+### Verify file tools can't escape the approved workspace
 ```bash
 ATELIER_NO_BANNER=1 python - <<'PY'
 from tools.files import run_read_file, run_write_file
@@ -360,9 +360,9 @@ knowledge mode, and build-mode tooling are all intact.
 
 | Ability | Command | Success signal |
 |---|---|---|
-| Health | `atelier doctor` | all models green |
+| Health | `atelier doctor` | model/index/workspace state reported |
 | Unit tests | `pytest -q` | all fast tests passed |
-| Ingest | `atelier ingest <path>` | chunks stored, dim 768 |
+| Ingest | `atelier ingest <path>` | chunks stored, Qwen3-Embedding-4B / 2560D |
 | Grounded Q&A | `atelier ask "..."` | cited answer matching your notes |
 | RAG lift | §2c before/after | grounded wins over baseline |
 | Sandbox | §3 network test | code can't reach the net |
