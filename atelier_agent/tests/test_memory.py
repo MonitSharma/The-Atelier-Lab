@@ -1,6 +1,10 @@
-"""Memory tests with a fake embedder (no model). Includes cross-'session' check."""
+"""Memory tests with a fake embedder (no model). Includes migration checks."""
 
-from agent.memory import MemoryStore
+from pathlib import Path
+
+from agent.memory import MemoryStore, migrate_memory
+from atelier.config import settings
+from rag.manifest import IndexManifest
 from rag.store import VectorStore
 
 
@@ -22,6 +26,12 @@ class FakeEmbedder:
 
     def embed_query(self, q):
         return self._vec(q)
+
+    @property
+    def dim(self):
+        return 4
+
+    model_name = "fake-embedding"
 
 
 def _mem(tmp_path):
@@ -61,3 +71,17 @@ def test_persists_across_sessions(tmp_path) -> None:
     mem2 = MemoryStore(embedder=FakeEmbedder(), store=s2)
     assert mem2.count() == 1
     assert "apple" in mem2.recall("apple", k=1)[0].text
+
+
+def test_memory_migration_backups_and_preserves_records(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "memory_backup_dir", tmp_path / "backups")
+    manifest = IndexManifest(tmp_path / "memory-manifest.sqlite3")
+    store = VectorStore(path=str(tmp_path / "mem"), collection="old_memory")
+    mem = MemoryStore(embedder=FakeEmbedder(), store=store, manifest=manifest)
+    mem.remember("apple fact", tags=["food"])
+    result = migrate_memory(embedder=FakeEmbedder(), manifest=manifest, store=store)
+    assert result["before"] == result["after"] == 1
+    assert Path(result["backup"]).exists()
+    migrated = MemoryStore(embedder=FakeEmbedder(), manifest=manifest)
+    assert migrated.count() == 1
+    assert migrated.all()[0].tags == ["food"]

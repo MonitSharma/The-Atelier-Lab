@@ -18,10 +18,15 @@ import typer
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+from rich.text import Text
 
 from atelier.config import settings
 
-app = typer.Typer(add_completion=False, help="Atelier — a local, zero-cost dual-mode agent.")
+app = typer.Typer(
+    add_completion=False,
+    invoke_without_command=True,
+    help="Atelier — local research workbench.",
+)
 console = Console()
 INGEST_PATHS_ARG = typer.Argument(None, help="Files or folders to index. Defaults to data/corpus.")
 EVAL_PLOT_REPORT_OPT = typer.Option(None, "--report", help="Specific report JSON to plot.")
@@ -30,13 +35,11 @@ EVAL_PLOT_OUT_OPT = typer.Option(None, "--out", help="Directory for generated SV
 
 @app.callback()
 def _root(ctx: typer.Context) -> None:
-    """Show the banner before any command (set ATELIER_NO_BANNER=1 to hide)."""
-    # The MCP server owns stdout for JSON-RPC — never print over it.
-    if ctx.invoked_subcommand == "mcp":
-        return
-    from atelier.banner import print_banner
+    """Enter the Atelier workbench when no subcommand is supplied."""
+    if ctx.invoked_subcommand is None:
+        from atelier.session import run_session
 
-    print_banner(console)
+        run_session(console)
 
 
 @app.command()
@@ -52,6 +55,9 @@ def doctor() -> None:
 
     if h["ok"]:
         for role, info in h["roles"].items():
+            if not info.get("configured", bool(info.get("model"))):
+                table.add_row(f"model:{role}", "[dim]unconfigured[/]", "optional future slot")
+                continue
             ok = info["pulled"]
             table.add_row(
                 f"model:{role}",
@@ -63,13 +69,35 @@ def doctor() -> None:
 
     try:
         from rag.store import VectorStore
+        from rag.manifest import IndexManifest
 
         store = VectorStore()
-        table.add_row("vector store", "[green]ok[/]", f"{store.count()} chunks @ {settings.vector_dir}")
+        state = IndexManifest().state()
+        state_model = state.get("embedding_model", "unknown")
+        state_dim = state.get("embedding_dimension") or str(store.embedding_dimension() or "unknown")
+        current_ok = state_model in {"unknown", settings.embed_model} and state_dim in {"unknown", str(settings.embed_dimension)}
+        status = "[green]compatible[/]" if current_ok else "[red]incompatible[/]"
+        table.add_row("knowledge index", status,
+                      f"{store.count()} chunks; {state_model}; {state_dim}D")
     except Exception as exc:  # noqa: BLE001
-        table.add_row("vector store", "[red]error[/]", str(exc))
+        table.add_row("knowledge index", "[red]error[/]", str(exc))
 
-    table.add_row("embed model", "[yellow]lazy[/]", f"{settings.embed_model} on {settings.embed_device}")
+    try:
+        from agent.memory import MemoryStore
+        from rag.manifest import IndexManifest
+
+        memory_store = MemoryStore()
+        memory_state = IndexManifest(settings.memory_manifest_path).state()
+        table.add_row("memory", "[green]ok[/]", f"{memory_store.count()} facts; "
+                      f"{memory_state.get('embedding_model', 'unknown')}; "
+                      f"{memory_state.get('embedding_dimension', 'unknown')}D")
+    except Exception as exc:  # noqa: BLE001
+        table.add_row("memory", "[red]error[/]", str(exc))
+    metadata_count = len(list(settings.paper_metadata_dir.glob("*.json"))) if settings.paper_metadata_dir.exists() else 0
+    extraction_count = len(list(settings.extracted_dir.glob("*.json"))) if settings.extracted_dir.exists() else 0
+    table.add_row("paper metadata cache", "[green]ok[/]", str(metadata_count))
+    table.add_row("extraction cache", "[green]ok[/]", str(extraction_count))
+    table.add_row("embed model", "[yellow]configured[/]", f"{settings.embed_model} (expected {settings.embed_dimension}D)")
     console.print(table)
 
 
@@ -77,44 +105,48 @@ def doctor() -> None:
 def ingest(
     paths: list[str] = INGEST_PATHS_ARG,
     reset: bool = typer.Option(False, "--reset", help="Clear the store before indexing."),
+    force: bool = typer.Option(False, "--force", help="Force extraction and re-embedding."),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Show the plan without modifying local state."),
+    sync: bool = typer.Option(False, "--sync", help="Reconcile files removed from the supplied roots."),
 ) -> None:
-    """Index notes/PDFs/code into the local vector store."""
-    from rag.embed import get_embedder
-    from rag.ingest import ingest_paths
+    """Incrementally index notes/PDFs/code into the local vector store."""
+    from rag.ingest import bootstrap_manifest_from_store, build_plan, execute_plan
+    from rag.manifest import IndexManifest
     from rag.store import VectorStore
 
     targets = paths or [str(settings.corpus_dir)]
+    manifest = IndexManifest()
     store = VectorStore()
+    if reset and dry_run:
+        console.print("[red]--reset cannot be combined with --dry-run.[/]")
+        raise typer.Exit(code=2)
     if reset:
+        # This is deliberately explicit: ordinary ingestion never destroys
+        # records or manifest state.
         store.reset()
+        manifest.reset()
         console.print("[yellow]Store reset.[/]")
-
-    with console.status("Loading and chunking files..."):
-        chunks, files = ingest_paths(targets)
-    if not chunks:
-        console.print(
-            Panel(
-                f"No supported files found under: {', '.join(targets)}\n"
-                "Point me at your notes, e.g.  atelier ingest ~/Notes",
-                title="Nothing to ingest",
-                border_style="yellow",
-            )
-        )
-        raise typer.Exit(code=0)
-
-    embedder = get_embedder()
-    texts = [c.text for c in chunks]
-    with console.status(f"Embedding {len(texts)} chunks with {settings.embed_model}..."):
-        vectors = embedder.embed_passages(texts)
-        for source in sorted({c.source for c in chunks}):
-            store.delete_source(source)
-        n = store.add(chunks, vectors)
-
+    else:
+        bootstrap_manifest_from_store(manifest, store, targets)
+    plan = build_plan(targets, manifest, force=force, sync=sync)
+    counts = plan.counts()
     table = Table(show_header=False)
-    table.add_row("Files indexed", str(len(files)))
-    table.add_row("Chunks stored", str(n))
-    table.add_row("Total in store", str(store.count()))
-    table.add_row("Vector dim", str(embedder.dim))
+    for key in ("unchanged", "new", "modified", "relocated", "duplicate", "forced", "removed"):
+        table.add_row(key, str(counts.get(key, 0)))
+    if dry_run:
+        console.print(Panel(table, title="Ingest plan (dry run)", border_style="blue"))
+        return
+    changed = sum(counts.get(key, 0) for key in ("new", "modified", "forced"))
+    if changed:
+        from rag.embed import get_embedder
+
+        embedder = get_embedder()
+        with console.status(f"Extracting and embedding {changed} file(s) with {settings.embed_model}..."):
+            execute_plan(plan, manifest, store, embedder)
+        table.add_row("vector_dimension", str(getattr(embedder, "dim", "unknown")))
+    else:
+        execute_plan(plan, manifest, store, embedder=None)
+    table.add_row("chunks_in_index", str(store.count()))
     console.print(Panel(table, title="Ingest complete", border_style="green"))
 
 
@@ -122,12 +154,20 @@ def ingest(
 def search(
     query: str = typer.Argument(..., help="Scientific or general retrieval query."),
     k: int = typer.Option(settings.retrieval_k, "-k", help="How many passages to show."),
+    source: str | None = typer.Option(None, "--source", help="Restrict to a filename."),
+    section_type: str | None = typer.Option(None, "--section-type", help="Restrict to section type."),
+    debug: bool = typer.Option(False, "--debug", "--scores", help="Show ranking diagnostics."),
 ) -> None:
     """Show the most relevant passages without model synthesis."""
     from rag.retrieve import retrieve
+    from rag.compat import IndexCompatibilityError
 
-    with console.status("Searching the local research library..."):
-        hits = retrieve(query, k=k)
+    try:
+        with console.status("Searching the local research library..."):
+            hits = retrieve(query, k=k, source=source, section_type=section_type)
+    except IndexCompatibilityError as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
     if not hits:
         console.print("[yellow]No matching passages. Run `atelier ingest <path>` first.[/]")
         return
@@ -136,7 +176,11 @@ def search(
         source = Path(meta.get("source", "?")).name
         section = meta.get("section", "")
         label = f"{source}  {section}" if section else source
-        console.print(Panel(hit["text"], title=f"[{i}] {label}", border_style="blue"))
+        title = f"[{i}] {label}"
+        if debug:
+            title += f"  score={hit.get('final_score', hit.get('score', 0)):.4f}"
+            title += f" adj={hit.get('section_adjustment', 1.0):.2f}"
+        console.print(Panel(Text(hit["text"]), title=Text(title), border_style="blue"))
 
 
 @app.command()
@@ -168,14 +212,19 @@ def ask(
     """Answer a question grounded in your indexed knowledge."""
     from rag.answer import answer_question
     from rag.retrieve import format_context
+    from rag.compat import IndexCompatibilityError
 
     role = "heavy" if heavy else "brain"
-    with console.status(f"Retrieving + reasoning ({settings.heavy_model if heavy else settings.brain_model})..."):
-        result = answer_question(question, k=k, role=role)
+    try:
+        with console.status(f"Retrieving + reasoning ({settings.heavy_model if heavy else settings.brain_model})..."):
+            result = answer_question(question, k=k, role=role)
+    except IndexCompatibilityError as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
 
     if show_context and result.hits:
-        console.print(Panel(format_context(result.hits), title="Retrieved context", border_style="blue"))
-    console.print(Panel(result.text, title="Answer", border_style="green"))
+        console.print(Panel(Text(format_context(result.hits)), title="Retrieved context", border_style="blue"))
+    console.print(Panel(Text(result.text), title="Answer", border_style="green"))
     if result.sources:
         console.print("[dim]Sources: " + ", ".join(result.sources) + "[/]")
 
@@ -218,7 +267,7 @@ def chat(
             continue
         with console.status("thinking..."):
             result = answer_question(q, role=role)
-        console.print(Panel(result.text, border_style="green"))
+        console.print(Panel(Text(result.text), border_style="green"))
         if result.sources:
             console.print("[dim]Sources: " + ", ".join(result.sources) + "[/]")
 
@@ -257,7 +306,7 @@ def agent(
         result = runner.run(goal)
 
     if result.success:
-        console.print(Panel(result.answer or "", title=f"Done in {result.steps} steps",
+        console.print(Panel(Text(result.answer or ""), title=f"Done in {result.steps} steps",
                             border_style="green"))
     else:
         console.print(Panel(f"Did not finish within {result.steps} steps.",
@@ -348,7 +397,7 @@ def eval(
         else:
             regressions = compare_reports(prev, report)
             if regressions:
-                console.print(Panel("\n".join(regressions), title="⚠ Regressions detected",
+                console.print(Panel(Text("\n".join(regressions)), title=Text("⚠ Regressions detected"),
                                     border_style="red"))
                 raise typer.Exit(code=1)
             console.print("[green]Gate: no regressions vs. last report.[/]")
@@ -373,6 +422,23 @@ def eval_plots(
     for path in paths:
         table.add_row(str(path))
     console.print(table)
+
+
+@app.command("benchmark-retrieval")
+def benchmark_retrieval(
+    k: int = typer.Option(6, "-k", help="Number of passages per query."),
+) -> None:
+    """Run the local scientific retrieval benchmark without reasoning-model calls."""
+    from eval.retrieval import run_local_retrieval_benchmark
+
+    try:
+        report = run_local_retrieval_benchmark(k=k)
+    except Exception as exc:  # noqa: BLE001
+        console.print(f"[red]Retrieval benchmark failed:[/] {exc}")
+        raise typer.Exit(code=1) from exc
+    console.print(f"[bold]Retrieval hits:[/] {report['aggregate']['hits']}/{report['aggregate']['queries']}")
+    console.print(f"[bold]Reference-dominated queries:[/] {report['aggregate']['reference_dominated_queries']}")
+    console.print(f"[dim]Report: {report['output']}[/]")
 
 
 @app.command()
@@ -409,6 +475,20 @@ def recall(
     console.print(table)
 
 
+@app.command("memory-migrate")
+def memory_migrate() -> None:
+    """Back up and re-embed semantic memory into a compatible collection."""
+    from agent.memory import migrate_memory
+
+    with console.status("Backing up and migrating semantic memory..."):
+        result = migrate_memory()
+    table = Table(show_header=False)
+    table.add_row("Facts before", str(result["before"]))
+    table.add_row("Facts after", str(result["after"]))
+    table.add_row("Backup", result["backup"])
+    console.print(Panel(table, title="Memory migration complete", border_style="green"))
+
+
 @app.command()
 def memory() -> None:
     """List everything in long-term memory."""
@@ -441,8 +521,8 @@ def route(
         model = r.route(task)
     color = "green" if difficulty == "easy" else "yellow"
     console.print(Panel(
-        f"difficulty: [{color}]{difficulty}[/]\nroute to: [bold]{model}[/]\nbackend: [dim]{r.name}[/]",
-        title="Router decision", border_style=color))
+        Text(f"difficulty: {difficulty}\nroute to: {model}\nbackend: {r.name}"),
+        title=Text("Router decision"), border_style=color))
 
 
 @app.command()

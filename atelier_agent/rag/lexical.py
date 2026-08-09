@@ -9,6 +9,7 @@ the store's chunk count changes.
 
 from __future__ import annotations
 
+import hashlib
 import math
 import re
 from typing import Any
@@ -74,14 +75,15 @@ class BM25Index:
         ]
 
 
-_cache: dict[str, Any] = {"count": -1, "index": None}
+_cache: dict[str, Any] = {"fingerprint": None, "index": None}
 
 
 def get_bm25(store: VectorStore | None = None) -> BM25Index:
     store = store or VectorStore()
-    count = store.count()
-    if _cache["index"] is None or _cache["count"] != count:
-        got = store.get_all()
+    got = store.get_all()
+    documents = got.get("documents", [])
+    fingerprint = hashlib.sha1("\0".join(documents).encode("utf-8")).hexdigest()
+    if _cache["index"] is None or _cache["fingerprint"] != fingerprint:
         _cache["index"] = BM25Index(got.get("documents", []), got.get("metadatas", []))
-        _cache["count"] = count
+        _cache["fingerprint"] = fingerprint
     return _cache["index"]

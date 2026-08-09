@@ -1,10 +1,4 @@
-"""Scientific-paper ingestion and fast characterization.
-
-This is the canonical home for the validated Atelier Workbench PDF path. It
-uses PyMuPDF4LLM for page-aware Markdown extraction, SHA-256 for stable paper
-identity, and the configured worker model for a bounded structured paper card.
-The normal ingestion path never calls the model; characterization is explicit.
-"""
+"""Content-addressed scientific PDF extraction and paper metadata."""
 
 from __future__ import annotations
 
@@ -12,20 +6,71 @@ import hashlib
 import json
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
+
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from atelier.config import settings
 from rag.chunk import Chunk, split_plain
 
 _HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 MAX_CHARACTERIZATION_CHARS = 18_000
+SECTION_TYPES = {
+    "front_matter", "abstract", "introduction", "related_work", "methods",
+    "theory", "experiments", "results", "discussion", "conclusion",
+    "references", "appendix", "other",
+}
 
-CHARACTERIZATION_FIELDS = (
-    "title", "paper_type", "domain", "subfields", "research_problem",
-    "method", "main_claim", "theoretical", "experimental", "ai_relevance",
-    "quantum_relevance", "optimization_relevance", "why_relevant",
-    "recommended_action", "confidence",
-)
+
+class StrictModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class PaperIdentity(StrictModel):
+    title: str
+    authors: list[str]
+    year: str
+    doi: str
+    arxiv_id: str
+    document_type: Literal[
+        "research_paper", "review", "survey", "book", "thesis", "report",
+        "technical_note", "other",
+    ]
+    domain: str
+    venue: str
+
+
+class PaperCharacterization(StrictModel):
+    paper_type: Literal[
+        "theoretical", "experimental", "theoretical_and_experimental", "review",
+        "survey", "methods", "other",
+    ]
+    subfields: list[str] = Field(max_length=5)
+    research_problem: str
+    method: str
+    main_claim: str
+    theoretical: bool
+    experimental: bool
+    ai_relevance: Literal["none", "low", "medium", "high"]
+    quantum_relevance: Literal["none", "low", "medium", "high"]
+    optimization_relevance: Literal["none", "low", "medium", "high"]
+    why_relevant: str
+    recommended_action: Literal["skip", "skim", "read", "deep_read", "reproduce"]
+    confidence: Literal["low", "medium", "high"]
+
+
+class PaperExtraction(StrictModel):
+    identity: PaperIdentity
+    characterization: PaperCharacterization
+
+
+def _sanitize_identity(values: dict[str, Any]) -> dict[str, Any]:
+    """Reject identifier-shaped hallucinations conservatively at the boundary."""
+    cleaned = dict(values)
+    arxiv = str(cleaned.get("arxiv_id", "")).strip()
+    if arxiv and not re.fullmatch(r"(?:arxiv:)?\d{4}\.\d{4,5}(?:v\d+)?", arxiv, re.I):
+        cleaned["arxiv_id"] = ""
+    return cleaned
 
 
 def sha256_file(path: Path) -> str:
@@ -36,7 +81,25 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _markdown_pages(path: Path, *, pages: list[int] | None = None) -> list[dict[str, Any]]:
+def clean_retrieval_text(text: str) -> str:
+    """Remove extractor boilerplate while leaving scientific content intact."""
+    text = text.replace("\x00", "")
+    text = re.sub(
+        r"(?is)\*{0,2}==>\s*picture.*?intentionally omitted\s*<==\*{0,2}\s*",
+        "",
+        text,
+    )
+    text = re.sub(r"(?is)-{3,}\s*Start of picture text\s*-{3,}.*?-{3,}\s*End of picture text\s*-{3,}", "", text)
+    text = re.sub(r"(?i)<br\s*/?>", "\n", text)
+    # Replacement glyphs are extractor noise when isolated; do not perform
+    # broad spell correction or rewrite equation-like text.
+    text = text.replace("\ufffd", "")
+    text = re.sub(r"[ \t]{2,}", " ", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
+def _extract_pages(path: Path) -> list[dict[str, Any]]:
     try:
         import pymupdf4llm
     except ImportError as exc:
@@ -44,39 +107,63 @@ def _markdown_pages(path: Path, *, pages: list[int] | None = None) -> list[dict[
             "Scientific PDF ingestion requires pymupdf4llm; install the project requirements."
         ) from exc
     result = pymupdf4llm.to_markdown(
-        str(path), page_chunks=True, pages=pages, header=False, footer=False, use_ocr=False
+        str(path), page_chunks=True, header=False, footer=False, use_ocr=False
     )
     if isinstance(result, str):
-        return [{"text": result, "page": 1}]
-    return [
-        {"text": item.get("text", ""), "page": item.get("metadata", {}).get("page", i + 1)}
-        for i, item in enumerate(result)
-    ]
+        result = [{"text": result, "metadata": {"page": 1}}]
+    pages: list[dict[str, Any]] = []
+    for index, item in enumerate(result, start=1):
+        raw = item.get("text", "")
+        metadata = item.get("metadata", {}) or {}
+        pages.append({
+            "page": metadata.get("page", index),
+            "raw_text": raw,
+            "text": clean_retrieval_text(raw),
+        })
+    return pages
+
+
+def extract_pdf_pages(path: Path, document_id: str | None = None) -> list[dict[str, Any]]:
+    """Return cached raw/retrieval page text, keyed by content hash."""
+    path = path.expanduser().resolve()
+    document_id = document_id or sha256_file(path)
+    settings.ensure_dirs()
+    cache_path = settings.extracted_dir / f"{document_id}.json"
+    if cache_path.exists():
+        payload = json.loads(cache_path.read_text(encoding="utf-8"))
+        if payload.get("document_id") == document_id:
+            return payload.get("pages", [])
+    pages = _extract_pages(path)
+    cache_path.write_text(
+        json.dumps({"schema_version": 1, "document_id": document_id, "pages": pages},
+                   ensure_ascii=False),
+        encoding="utf-8",
+    )
+    return pages
 
 
 def extract_fast_context(path: Path) -> str:
-    """Extract the opening four pages used for fast characterization."""
-    pages = _markdown_pages(path, pages=[0, 1, 2, 3])
-    text = "\n\n".join(page["text"] for page in pages)
-    if len(text.strip()) < 4_000:
-        # Born-digital PDFs are the baseline; OCR is deliberately not enabled
-        # implicitly because it is slower and can damage scientific notation.
-        return text[:MAX_CHARACTERIZATION_CHARS]
-    return text[:MAX_CHARACTERIZATION_CHARS]
+    document_id = sha256_file(path)
+    pages = extract_pdf_pages(path, document_id)[:4]
+    return "\n\n".join(page["text"] for page in pages)[:MAX_CHARACTERIZATION_CHARS]
 
 
-def _section_type(section: str) -> str:
-    value = section.lower()
+def section_type(section: str) -> str:
+    value = section.strip().lower()
+    if not value or value in {"front matter", "front_matter"}:
+        return "front_matter"
     groups = {
         "abstract": ("abstract",),
         "introduction": ("introduction",),
-        "related_work": ("related work", "literature review"),
+        "related_work": ("related work", "related literature", "literature review", "prior work"),
         "references": ("reference", "bibliography"),
-        "methods": ("method", "algorithm", "formulation", "framework", "model"),
-        "theory": ("theorem", "proof", "lemma", "bound", "analysis", "theory"),
-        "experiments": ("experiment", "benchmark", "simulation", "numerical", "hardware"),
-        "results": ("result", "evaluation", "finding"),
+        "appendix": ("appendix", "supplement"),
         "conclusion": ("conclusion", "future work"),
+        "discussion": ("discussion", "limitation", "implication"),
+        "theory": ("theorem", "proof", "lemma", "bound", "analysis", "theory"),
+        "experiments": ("experiment", "benchmark", "simulation", "numerical", "hardware", "protocol"),
+        "results": ("result", "evaluation", "finding"),
+        "methods": ("method", "algorithm", "formulation", "framework", "architecture", "implementation"),
     }
     for name, terms in groups.items():
         if any(term in value for term in terms):
@@ -85,14 +172,14 @@ def _section_type(section: str) -> str:
 
 
 def _page_blocks(text: str, inherited: str = "Front Matter") -> tuple[list[tuple[str, str]], str]:
-    section = inherited or "Front Matter"
+    current = inherited or "Front Matter"
     blocks: list[tuple[str, str]] = []
     buffer: list[str] = []
 
     def flush() -> None:
         body = "\n".join(buffer).strip()
         if body:
-            blocks.append((section, body))
+            blocks.append((current, body))
 
     for line in text.splitlines():
         match = _HEADING_RE.match(line.strip())
@@ -101,95 +188,149 @@ def _page_blocks(text: str, inherited: str = "Front Matter") -> tuple[list[tuple
             buffer.clear()
             candidate = re.sub(r"[*_`~]", "", match.group(2)).strip()
             if len(candidate) >= 4 and re.search(r"[A-Za-z]{3,}", candidate):
-                section = candidate
+                current = candidate
             else:
                 buffer.append(line)
         else:
             buffer.append(line)
     flush()
-    return blocks, section
+    return blocks, current
+
+
+def _identity_dict(identity: dict[str, Any] | PaperIdentity | None) -> dict[str, Any]:
+    if isinstance(identity, PaperIdentity):
+        return identity.model_dump()
+    return dict(identity or {})
 
 
 def chunk_pdf(path: Path, *, document_id: str | None = None,
-              identity: dict[str, Any] | None = None) -> list[Chunk]:
-    """Create page/section-aware chunks for a scientific PDF."""
+              identity: dict[str, Any] | PaperIdentity | None = None) -> list[Chunk]:
+    """Create page/section-aware retrieval chunks for a scientific PDF."""
     path = path.expanduser().resolve()
     document_id = document_id or sha256_file(path)
-    identity = identity or {}
+    identity_data = _identity_dict(identity)
     chunks: list[Chunk] = []
-    section = "Front Matter"
+    current_section = "Front Matter"
     index = 0
-    for page in _markdown_pages(path):
-        blocks, section = _page_blocks(page["text"], section)
-        for name, body in blocks:
-            breadcrumb = f"[{name}]\n" if name else ""
+    for page in extract_pdf_pages(path, document_id):
+        blocks, current_section = _page_blocks(page["text"], current_section)
+        for raw_section, body in blocks:
             pieces = split_plain(
-                breadcrumb + body,
-                str(path),
-                size=settings.paper_chunk_size,
-                overlap=settings.paper_chunk_overlap,
+                f"[{raw_section}]\n{body}", str(path),
+                size=settings.paper_chunk_size, overlap=settings.paper_chunk_overlap,
             )
             for piece in pieces:
-                meta: dict[str, Any] = {
+                metadata: dict[str, Any] = {
                     "filename": path.name,
                     "ext": ".pdf",
                     "doc_type": "research_paper",
                     "document_id": document_id,
                     "page": page["page"],
-                    "section": name,
-                    "section_type": _section_type(name),
+                    "section": raw_section,
+                    "section_type": section_type(raw_section),
+                    "metadata_schema_version": settings.metadata_schema_version,
                 }
-                for key in ("title", "authors", "doi", "arxiv_id", "year", "domain"):
-                    if key in identity:
-                        meta[key] = identity[key]
-                chunks.append(Chunk(piece.text, str(path), index, meta))
+                for key in ("title", "authors", "year", "doi", "arxiv_id", "document_type", "domain", "venue"):
+                    if key in identity_data:
+                        metadata[key] = identity_data[key]
+                chunks.append(Chunk(piece.text, str(path), index, metadata))
                 index += 1
     return chunks
 
 
+def _legacy_to_structured(payload: dict[str, Any], document_id: str, path: Path) -> dict[str, Any]:
+    if "identity" in payload and "characterization" in payload:
+        return payload
+    identity = {
+        "title": payload.get("title", ""), "authors": payload.get("authors", []),
+        "year": payload.get("year", ""), "doi": payload.get("doi", ""),
+        "arxiv_id": payload.get("arxiv_id", ""), "document_type": payload.get("document_type", "other"),
+        "domain": payload.get("domain", ""), "venue": payload.get("venue", ""),
+    }
+    characterization_defaults = {
+        "paper_type": "other", "subfields": [], "research_problem": "",
+        "method": "", "main_claim": "", "theoretical": False, "experimental": False,
+        "ai_relevance": "none", "quantum_relevance": "none",
+        "optimization_relevance": "none", "why_relevant": "",
+        "recommended_action": "skim", "confidence": "low",
+    }
+    characterization = {
+        key: payload.get(key, default)
+        for key, default in characterization_defaults.items()
+    }
+    return {"schema_version": settings.metadata_schema_version, "document_id": document_id,
+            "identity": identity, "characterization": characterization,
+            "legacy_source_filename": path.name}
+
+
+def load_metadata(path: Path, document_id: str | None = None) -> PaperExtraction | None:
+    path = path.expanduser().resolve()
+    document_id = document_id or sha256_file(path)
+    cache_path = settings.paper_metadata_dir / f"{document_id}.json"
+    if not cache_path.exists():
+        return None
+    raw_payload = json.loads(cache_path.read_text(encoding="utf-8"))
+    if "characterization" not in raw_payload and not {
+        "paper_type", "research_problem", "method", "main_claim"
+    }.issubset(raw_payload):
+        # Older workbench caches contained identity only. They are useful for
+        # chunk metadata but are not a complete Fast Paper card.
+        return None
+    payload = _legacy_to_structured(raw_payload, document_id, path)
+    try:
+        return PaperExtraction(
+            identity=PaperIdentity.model_validate(_sanitize_identity(payload.get("identity", {}))),
+            characterization=PaperCharacterization.model_validate(payload.get("characterization", {})),
+        )
+    except ValidationError:
+        return None
+
+
 def _prompt(text: str) -> str:
     return f"""You are Atelier's fast scientific-paper characterization worker.
-Return only valid JSON with exactly these fields:
-{', '.join(CHARACTERIZATION_FIELDS)}
+Return an object with exactly two fields: identity and characterization.
+Identity describes only facts present in the supplied paper. Never infer
+identity from the filename. Use empty strings/lists for missing identifiers.
+Characterization describes the paper and its relevance to AI, quantum
+computing, optimization, operations research, mathematics, and scientific
+computing. Do not invent facts.
 
-Characterize only the supplied paper text. Domain and subfields must describe
-the paper itself, not the user's interests. Set theoretical=true only for
-formal theory, proofs, bounds, guarantees, or analytical derivations. Set
-experimental=true for simulations, numerical studies, benchmarks, datasets,
-or hardware experiments. Relevance values must be one of none, low, medium,
-or high. recommended_action must be one of skip, skim, read, deep_read,
-or reproduce. Do not invent missing identifiers.
-
-The user's interests are AI, quantum computing, optimization, operations
-research, mathematics, and scientific computing.
-
-EXTRACTED PAPER TEXT:
+PAPER TEXT:
 {text[:MAX_CHARACTERIZATION_CHARS]}
 """
 
 
 def characterize(path: Path) -> dict[str, Any]:
-    """Characterize a paper with the local LFM worker and cache by file hash."""
+    """Run strict LFM extraction once per content hash and cache only valid output."""
     path = path.expanduser().resolve()
     document_id = sha256_file(path)
     settings.ensure_dirs()
-    cache_path = settings.paper_metadata_dir / f"{document_id}.json"
-    if cache_path.exists():
-        return json.loads(cache_path.read_text(encoding="utf-8"))
+    existing = load_metadata(path, document_id)
+    if existing is not None:
+        payload = {"schema_version": settings.metadata_schema_version, "document_id": document_id,
+                   "identity": existing.identity.model_dump(),
+                   "characterization": existing.characterization.model_dump()}
+        cache_path = settings.paper_metadata_dir / f"{document_id}.json"
+        if json.loads(cache_path.read_text(encoding="utf-8")) != payload:
+            cache_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        return payload
 
     from agent.brain import chat
 
     raw = chat(
         [{"role": "user", "content": _prompt(extract_fast_context(path))}],
         role="worker", temperature=0, json_mode=True,
+        json_schema=PaperExtraction.model_json_schema(),
     )
     try:
-        result = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        raise RuntimeError(f"Worker returned invalid paper JSON: {raw[:500]}") from exc
-    missing = [field for field in CHARACTERIZATION_FIELDS if field not in result]
-    if missing:
-        raise RuntimeError(f"Worker paper card is missing fields: {', '.join(missing)}")
-    result.update({"document_id": document_id, "source_filename": path.name, "path": str(path)})
-    cache_path.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    return result
+        parsed = PaperExtraction.model_validate_json(raw)
+    except (ValidationError, ValueError) as exc:
+        raise RuntimeError(f"Worker returned invalid paper metadata; cache not written: {exc}") from exc
+    identity = PaperIdentity.model_validate(_sanitize_identity(parsed.identity.model_dump()))
+    payload = {"schema_version": settings.metadata_schema_version, "document_id": document_id,
+               "identity": identity.model_dump(),
+               "characterization": parsed.characterization.model_dump()}
+    (settings.paper_metadata_dir / f"{document_id}.json").write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    return payload

@@ -55,6 +55,7 @@ class Settings(BaseSettings):
 
     # --- Embeddings / RAG --------------------------------------------------
     embed_model: str = "qwen3-embedding:4b"
+    embed_dimension: int = 2560
     #: Qwen3 retrieval instruction. It is applied to queries only; passages
     #: remain plain text so the two embedding spaces stay compatible.
     query_instruction: str = (
@@ -95,11 +96,19 @@ class Settings(BaseSettings):
     traces_dir: Path = ROOT / "data" / "traces"
     collection_name: str = "atelier"
     paper_metadata_dir: Path = ROOT / "data" / "paper_metadata"
+    extracted_dir: Path = ROOT / "data" / "extracted"
+    manifest_path: Path = ROOT / "data" / "index_manifest.sqlite3"
+    memory_manifest_path: Path = ROOT / "data" / "memory_manifest.sqlite3"
+    memory_backup_dir: Path = ROOT / "data" / "memory_backups"
+    metadata_schema_version: int = 2
+    index_schema_version: int = 1
+    chunk_schema_version: int = 2
 
     def ensure_dirs(self) -> None:
         """Create the runtime data directories if they don't exist."""
         for d in (self.data_dir, self.corpus_dir, self.vector_dir,
-                  self.memory_dir, self.traces_dir, self.paper_metadata_dir):
+                  self.memory_dir, self.traces_dir, self.paper_metadata_dir,
+                  self.extracted_dir, self.memory_backup_dir):
             d.mkdir(parents=True, exist_ok=True)
 
 

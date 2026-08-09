@@ -16,6 +16,19 @@ import urllib.request
 from atelier.config import settings
 
 
+def _pick_device(preferred: str) -> str:
+    """Compatibility helper for the optional sentence-transformers reranker."""
+    try:
+        import torch
+    except Exception:  # noqa: BLE001
+        return "cpu"
+    if preferred == "mps" and torch.backends.mps.is_available():
+        return "mps"
+    if preferred == "cuda" and torch.cuda.is_available():
+        return "cuda"
+    return "cpu"
+
+
 class Embedder:
     """Wraps Ollama's local embedding endpoint."""
 
@@ -57,7 +70,11 @@ class Embedder:
     def embed_passages(self, texts: list[str]) -> list[list[float]]:
         if not texts:
             return []
-        return self._embed(texts)
+        vectors: list[list[float]] = []
+        batch_size = max(1, settings.embed_batch_size)
+        for start in range(0, len(texts), batch_size):
+            vectors.extend(self._embed(texts[start:start + batch_size]))
+        return vectors
 
     def embed_query(self, query: str) -> list[float]:
         prompt = f"Instruct: {settings.query_instruction}\nQuery: {query}"

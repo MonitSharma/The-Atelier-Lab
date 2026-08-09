@@ -10,6 +10,16 @@ from rag.embed import get_embedder
 from rag.store import VectorStore
 
 
+REFERENCE_TERMS = {
+    "reference", "references", "bibliography", "citation", "citations", "cited",
+    "papers", "prior", "related", "literature", "sources",
+}
+
+
+def reference_intent(query: str) -> bool:
+    return bool(REFERENCE_TERMS.intersection(query.lower().split()))
+
+
 def _rrf_fuse(
     dense: list[dict[str, Any]],
     lexical: list[dict[str, Any]],
@@ -37,6 +47,48 @@ def _rrf_fuse(
     return out
 
 
+def _section_adjustment(hit: dict[str, Any], *, wants_references: bool) -> float:
+    section = hit.get("metadata", {}).get("section_type", "other")
+    if wants_references:
+        return {"references": 1.12, "related_work": 1.08}.get(section, 1.0)
+    if section == "references":
+        # References remain searchable, but broad concept queries should not
+        # let citation lists outrank substantive sections across the corpus.
+        return 0.35
+    if section in {"abstract", "introduction", "methods", "theory", "experiments", "results", "discussion", "conclusion", "related_work"}:
+        return 1.04
+    return 1.0
+
+
+def _post_rank(candidates: list[dict[str, Any]], query: str, k: int) -> list[dict[str, Any]]:
+    wants_references = reference_intent(query)
+    scored: list[dict[str, Any]] = []
+    for hit in candidates:
+        item = dict(hit)
+        base = float(item.get("fused_score", item.get("score", 0.0)))
+        adjustment = _section_adjustment(item, wants_references=wants_references)
+        item["section_adjustment"] = adjustment
+        item["final_score"] = round(base * adjustment, 8)
+        scored.append(item)
+    scored.sort(key=lambda hit: -hit["final_score"])
+
+    selected: list[dict[str, Any]] = []
+    seen_pairs: dict[tuple[str, str], int] = {}
+    deferred: list[dict[str, Any]] = []
+    for hit in scored:
+        meta = hit.get("metadata", {})
+        pair = (str(meta.get("document_id", meta.get("source", "?"))), str(meta.get("section_type", "other")))
+        if seen_pairs.get(pair, 0) >= 1:
+            deferred.append(hit)
+            continue
+        selected.append(hit)
+        seen_pairs[pair] = seen_pairs.get(pair, 0) + 1
+        if len(selected) >= k:
+            return selected
+    selected.extend(deferred[: max(0, k - len(selected))])
+    return selected[:k]
+
+
 def retrieve(
     query: str,
     k: int | None = None,
@@ -44,6 +96,8 @@ def retrieve(
     *,
     hybrid: bool | None = None,
     rerank: bool | None = None,
+    source: str | None = None,
+    section_type: str | None = None,
 ) -> list[dict[str, Any]]:
     """Retrieve the top-k chunks for a query.
 
@@ -56,13 +110,25 @@ def retrieve(
     do_rerank = settings.rerank if rerank is None else rerank
 
     n = max(settings.hybrid_candidates, k)
-    pool = n if do_rerank else k
+    pool = n
+
+    from rag.compat import ensure_compatible
+    from rag.manifest import IndexManifest
+
+    ensure_compatible(store, IndexManifest(), get_embedder())
 
     dense = store.query(get_embedder().embed_query(query), k=n)
+    if source or section_type:
+        dense = [hit for hit in dense if (
+            not source or Path(hit["metadata"].get("source", "")).name == Path(source).name
+        ) and (not section_type or hit["metadata"].get("section_type") == section_type)]
     if use_hybrid:
         from rag.lexical import get_bm25
 
         lexical = get_bm25(store).search(query, n)
+        lexical = [hit for hit in lexical if (
+            not source or Path(hit["metadata"].get("source", "")).name == Path(source).name
+        ) and (not section_type or hit["metadata"].get("section_type") == section_type)]
         candidates = _rrf_fuse(dense, lexical, pool, settings.rrf_k)
     else:
         candidates = dense[:pool]
@@ -72,7 +138,7 @@ def retrieve(
 
         candidates = _do_rerank(query, candidates, k)
 
-    return candidates[:k]
+    return _post_rank(candidates, query, k)
 
 
 def format_context(hits: list[dict[str, Any]], max_chars: int | None = None) -> str:

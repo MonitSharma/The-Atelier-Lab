@@ -125,7 +125,7 @@ Install only these four models initially; reserve the fifth slot for the officia
 | Role | Model | Quantization | Approx. size | Purpose |
 |---|---|---|---:|---|
 | Tiny worker/router | `LFM2.5-2.6B` | `Q6_K` | 2.22 GB | Routing, extraction, JSON, tool selection, query rewriting, and cheap repetitive work |
-| Embeddings/search | `Qwen3-Embedding-0.6B` | `Q8` | 639 MB | Semantic search over papers, notes, code, and experiments |
+| Embeddings/search | `qwen3-embedding:4b` | `Q4_K_M` | ~2.5 GB | 2,560-dimensional semantic search over papers, notes, code, and experiments |
 | Coding specialist | `Ornith-1.0-9B` | `Q5_K_M` | 6.47 GB | Repository exploration, coding, debugging, tests, and refactoring |
 | Vision/document | `Qwen3-VL-8B-Instruct` | `Q4_K_M` | 6.1 GB | Figures, tables, screenshots, diagrams, scanned pages, and OCR fallback |
 | Main local reasoner | `Qwen3.8-27B` | probably Q4-class | reserve 25 GB | Mathematics, research synthesis, quantum reasoning, private documents, and hard coding |

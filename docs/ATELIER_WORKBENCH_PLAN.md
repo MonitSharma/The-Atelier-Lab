@@ -165,7 +165,7 @@ Do not fill the machine with overlapping models. The first local stack is four d
 | Role | Model and quantization | Approx. disk | Purpose | Why this choice |
 |---|---|---:|---|---|
 | Tiny worker/router | `LFM2.5-2.6B` `Q6_K` | 2.22 GB | Routing, extraction, structured JSON, tool selection, query rewriting, fast characterization, and repetitive local actions | Small enough to run frequently while retaining more precision than an aggressive Q4 quantization; designed for on-device agent workloads |
-| Embeddings/search | `Qwen3-Embedding-0.6B` `Q8` | 639 MB | Semantic search across papers, notes, code, extracted text, and experiments | Embeddings run many times during indexing; the compact model gives a practical first retrieval baseline and can later be upgraded to the 4B model if evaluation requires it |
+| Embeddings/search | `qwen3-embedding:4b` `Q4_K_M` via Ollama | ~2.5 GB | 2,560-dimensional semantic search across papers, notes, code, extracted text, and experiments | This is the validated Step 2 retrieval backend; instruction-aware query formatting improved direct scientific relevance on the Atelier benchmark |
 | Coding specialist | `Ornith-1.0-9B` `Q5_K_M` | 6.47 GB | Repository exploration, scripts, debugging, tests, terminal-agent work, and small refactors | Coding-focused agentic training makes it a better candidate for acting on repositories than a general-purpose reasoner; Q5 balances coding quality and memory |
 | Vision/document | `Qwen3-VL-8B-Instruct` `Q4_K_M` | 6.1 GB | Figures, diagrams, screenshots, tables, scanned pages, visual equations, and OCR fallback | Scientific-document focus, visual reasoning, OCR, and long-document structure at a manageable local size; normal PDFs should use native text parsing first |
 | Main local reasoner | `Qwen3.8-27B`, probably Q4-class | Reserve 25 GB | Mathematics, paper analysis, optimization, quantum reasoning, private documents, complex coding, and synthesis | This is the regular-use upper range for a 36 GiB M3 Pro; wait for official weights and compare GGUF Q4, MLX 4-bit, and possibly Q5 on the actual Mac |
@@ -180,7 +180,7 @@ Install and understand one model at a time:
 
 1. install `LFM2.5-2.6B` alone;
 2. measure speed, memory, structured extraction, tool-call formatting, and paper classification;
-3. install the embedding model and benchmark retrieval;
+3. install the validated `qwen3-embedding:4b` backend and benchmark retrieval;
 4. install Ornith and evaluate repository tasks;
 5. install Qwen3-VL and evaluate figures, tables, screenshots, and OCR fallback;
 6. wait for the official Qwen3.8-27B weights before filling the large-reasoner slot.
@@ -191,7 +191,7 @@ Do not keep all large models loaded simultaneously. Unified memory, not disk, is
 
 - `LFM2.5-8B-A1B`: overlaps the tiny worker and future large-reasoning roles;
 - Gemma 4 12B: interesting multimodal model, but overlaps the document tier initially;
-- Qwen3-Embedding-4B/8B: upgrade only if the 0.6B retrieval benchmark is insufficient;
+- Qwen3-Embedding-8B: defer until a retrieval benchmark demonstrates that 4B is insufficient;
 - `LFM2.5-ColBERT-350M`: revisit when late-interaction retrieval is being implemented;
 - dedicated OCR models: Qwen3-VL is the first baseline;
 - 70B+ models: frontier subscriptions cover that tier more effectively.

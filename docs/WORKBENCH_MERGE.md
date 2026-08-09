@@ -18,6 +18,10 @@ runtime.
 - `atelier search QUERY` exposes retrieval without synthesis.
 - Re-ingestion replaces a source's existing chunks, preventing stale tail
   chunks after a document changes.
+- A SQLite manifest now records content identity, paths, chunk counts, index
+  schema, and embedding compatibility state; unchanged files are skipped.
+- A separate memory manifest and timestamped backup workflow support safe
+  re-embedding without deleting the prior memory collection first.
 
 ## Preserved from the existing application
 
@@ -42,5 +46,6 @@ These are local runtime artifacts and are intentionally ignored by Git.
 Existing Chroma records created with BGE embeddings must be rebuilt before
 using Qwen vectors in that collection. Run `atelier ingest --reset ...` for the
 knowledge index after the project dependencies and Ollama models are installed.
-Existing semantic memory should be exported and re-embedded before its old
-collection is reset; it must not be deleted blindly.
+Existing semantic memory can be migrated safely with `atelier memory-migrate`;
+the command writes a timestamped JSON backup and activates a verified new
+collection without deleting the old collection first.

@@ -387,7 +387,8 @@ export ATELIER_RERANK=1
 | Role | Default model | Resident RAM (approx.) | Notes |
 |---|---|---|---|
 | Brain | `qwen3:14b` (4-bit) | ~9 GB | Comfortable on 36 GB alongside the rest |
-| Worker / router target | `qwen3:4b` | ~2.5 GB | Fast iteration, cheap subtasks |
+| Worker | `hf.co/LiquidAI/LFM2.5-2.6B-GGUF:Q6_K` | ~2.2 GB | Fast iteration, routing, extraction, and strict paper JSON |
+| Router target | `qwen3:4b` | optional | Historical router target; doctor reports it missing if not installed |
 | Heavy (optional) | `gemma4:26b` | ~17 GB | For the hardest reasoning only |
 | Embeddings | `qwen3-embedding:4b` | ~2.5 GB | 2,560-dimensional local semantic retrieval |
 | Router | `Qwen2.5-0.5B` + LoRA | ~1.5 GB (train) | Fine-tune is ~1 min on M3 Pro |

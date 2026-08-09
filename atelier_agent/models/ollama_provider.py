@@ -16,9 +16,11 @@ class OllamaProvider:
         self._ollama = ollama
         self.client = ollama.Client(host=url)
 
-    def generate(self, messages: list[dict[str, Any]], spec: ModelSpec, *, temperature: float, json_mode: bool = False, think: bool = False) -> GenerationResult:
+    def generate(self, messages: list[dict[str, Any]], spec: ModelSpec, *, temperature: float, json_mode: bool = False, json_schema: dict[str, Any] | None = None, think: bool = False) -> GenerationResult:
         kwargs: dict[str, Any] = {"model": spec.model_id, "messages": messages, "options": {"temperature": temperature}, "stream": False}
-        if json_mode:
+        if json_schema is not None:
+            kwargs["format"] = json_schema
+        elif json_mode:
             kwargs["format"] = "json"
         started = time.perf_counter()
         try:

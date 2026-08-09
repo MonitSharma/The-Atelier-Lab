@@ -64,6 +64,7 @@ def chat(
     role: Role = "brain",
     temperature: float | None = None,
     json_mode: bool = False,
+    json_schema: dict[str, Any] | None = None,
     think: bool = False,
 ) -> str:
     """Send a conversation and return the assistant's text.
@@ -77,7 +78,14 @@ def chat(
         spec = _SPECS.get(role, _SPECS["brain"])
         if model:
             spec = ModelSpec(spec.name, spec.provider, model, spec.role, spec.quantization, spec.max_context, spec.supports_tools, spec.supports_json)
-        result = _provider.generate(messages, spec, temperature=settings.temperature if temperature is None else temperature, json_mode=json_mode, think=think)
+        kwargs: dict[str, Any] = {
+            "temperature": settings.temperature if temperature is None else temperature,
+            "json_mode": json_mode,
+            "think": think,
+        }
+        if json_schema is not None:
+            kwargs["json_schema"] = json_schema
+        result = _provider.generate(messages, spec, **kwargs)
         return strip_thinking(result.text)
     except Exception as exc:  # provider-specific errors become stable public errors
         raise BrainError(f"Local provider request failed for {name}: {exc}") from exc
@@ -109,16 +117,20 @@ def health() -> dict[str, Any]:
     except Exception as exc:  # noqa: BLE001 - surfaced to the user verbatim
         return {"ok": False, "error": str(exc), "models": []}
     available = {m.get("model", m.get("name", "")) for m in listed}
-    roles = {
+    configured_roles = {
         "brain": settings.brain_model,
         "worker": settings.worker_model,
         "expert": settings.expert_model,
         "router": settings.router_model,
     }
+    roles = {
+        role: {"model": model, "configured": bool(model), "pulled": bool(model) and model in available}
+        for role, model in configured_roles.items()
+    }
     return {
         "ok": True,
         "available": sorted(available),
-        "roles": {r: {"model": n, "pulled": n in available} for r, n in roles.items()},
+        "roles": roles,
     }
 
 
