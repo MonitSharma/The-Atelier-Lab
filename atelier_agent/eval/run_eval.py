@@ -137,7 +137,7 @@ def run_code_task(task_dir: Path, agent_runner: Callable[[str], Any] | None = No
         runner_error = str(exc)
     elapsed = round(time.time() - t0, 1)
 
-    verify = run_tests({"path": rel})
+    verify = run_tests({"path": str(work.resolve())})
     solved = bool(verify.get("passed_clean"))
     trace = getattr(result, "trace", []) or []
 
@@ -208,7 +208,7 @@ def run_combined_task(
 
     trace = getattr(result, "trace", []) or [] if result is not None else []
     tools_used = _tools_used(trace)
-    verify = run_tests({"path": rel})
+    verify = run_tests({"path": str(work.resolve())})
     tests_passed = bool(verify.get("passed_clean"))
     used_search_notes = "search_notes" in tools_used
     solved = tests_passed and used_search_notes
