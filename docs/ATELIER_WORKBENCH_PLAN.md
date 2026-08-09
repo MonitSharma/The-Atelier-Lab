@@ -138,18 +138,26 @@ registry records role, model ID, quantization estimate, memory/context budget,
 modality, tool/JSON support, install state, and Ollama residency; `bench` uses
 the frozen coding benchmark and saves its report.
 
-### Step 11 — Multimodal scientific documents
+### Step 11 — Multimodal scientific documents — complete
 
 Keep native PDF extraction first. Add vision only for poor text quality or
 figures, diagrams, tables, equation images, and scans. Support figure/caption
 pairing, page citations, table extraction, and OCR fallback with visual tests.
 
-### Step 12 — General file workbench
+Implemented deterministic PDF page evidence with text-quality flags,
+figure/caption pairing, page citations, and targeted page rendering via
+`atelier paper-visual`. Model vision remains a fallback consumer of these
+artifacts rather than the first PDF parser.
+
+### Step 12 — General file workbench — complete
 
 Create typed `ArtifactProfile` adapters for CSV, JSON, Parquet, SQLite,
 spreadsheets, images, LaTeX, notebooks, presentations, and text. Deterministic
 parsers must report schema, shape, types, missingness, formulas, references,
 and previews before model reasoning.
+
+Implemented with `files.artifacts` and `atelier profile` for common tabular,
+database, image, text, notebook, spreadsheet, archive, and PDF inputs.
 
 ### Step 13 — Research tools
 

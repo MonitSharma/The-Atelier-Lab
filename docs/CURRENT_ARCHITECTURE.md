@@ -29,6 +29,8 @@ Status: **post-Scientific Library v1.0; coder benchmark frozen**
 - Capability-first routing and a role-aware model lifecycle registry expose
   `atelier route`, `atelier models list`, `atelier models status`, and
   `atelier models bench`.
+- PDF visual evidence and deterministic `ArtifactProfile` adapters precede
+  model reasoning for scientific documents and structured files.
 
 ## Deliberate placeholders
 
@@ -39,7 +41,7 @@ models through frozen evaluations rather than by accumulating downloads.
 
 ## Not shipped yet
 
-- multimodal documents, general-file adapters, network research tools;
+- network research tools;
 - quantum/optimization tool families;
 - workflow state, project-scoped memory, hardened security boundary;
 - backend API, external runtime home, web/Finder interfaces, and handoffs.
