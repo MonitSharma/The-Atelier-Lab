@@ -214,10 +214,11 @@ record-scoped rollback. Existing repository state is preserved; activation of
 the external home for every runtime path is deferred to packaging/configuration
 work after review.
 
-### Step 20 — Web workbench
+### Step 20 — Web workbench — complete
 
-Build a replaceable UI over the backend with workspace, library, source/context,
-paper cards, model status, traces, approvals, privacy mode, and workflow views.
+Built a replaceable, dependency-free local UI at `/ui` over the backend with
+workspace/privacy state, library, model status, traces, approvals, and
+workflow views, plus route and local-library search forms.
 
 ### Step 21 — Finder integration
 

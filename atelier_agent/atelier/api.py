@@ -8,6 +8,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 from atelier.service import AtelierService
+from atelier.web import render_index
 
 
 class _Handler(BaseHTTPRequestHandler):
@@ -21,8 +22,25 @@ class _Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _write_html(self, body: str) -> None:
+        encoded = body.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(encoded)))
+        self.end_headers()
+        self.wfile.write(encoded)
+
     def do_GET(self) -> None:  # noqa: N802
-        operation = urlparse(self.path).path.strip("/") or "health"
+        path = urlparse(self.path).path
+        if path in {"", "/", "/ui"}:
+            self._write_html(render_index())
+            return
+        operation = path.strip("/") or "health"
+        if operation == "sources":
+            operation = "library"
+        if operation == "approvals":
+            self._write({"approvals": []})
+            return
         payload = self.service.dispatch(operation.replace("/", "_"))
         self._write(payload, 200 if payload.get("status", "ok") != "error" else 404)
 
