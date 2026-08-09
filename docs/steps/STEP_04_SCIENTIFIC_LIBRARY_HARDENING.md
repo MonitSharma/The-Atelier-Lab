@@ -511,8 +511,12 @@ python -m pytest -q
 ```
 
 A fresh temporary clone was used to validate this installation path before
-publication. It completed the full suite and repository checks without a
-manual PyArrow installation.
+publication. CI initially exposed one unrelated portability defect in the
+legacy dataset deduplication helper: a temporary output path could resolve its
+statistics directory to `/metadata` on Linux. The helper now keeps that report
+inside the temporary workspace for this case. The corrected clean clone
+completed the full suite and repository checks without a manual PyArrow
+installation.
 
 ## 26. Explicitly deferred work
 

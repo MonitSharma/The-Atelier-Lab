@@ -104,7 +104,14 @@ def deduplicate_directory(input_dir, output_dir, config_path):
     print(f"Final documents preserved: {stats['final_docs']:,}")
     
     # Save statistics report helper metrics
+    # The normal pipeline places ``output_dir`` two levels below the dataset
+    # project.  Temporary test directories can sit directly under ``/tmp``;
+    # walking two parents from those paths would otherwise resolve to ``/``
+    # and attempt to create a privileged ``/metadata`` directory.
+    output_dir = os.path.abspath(output_dir)
     project_dir = os.path.dirname(os.path.dirname(output_dir))
+    if project_dir == os.path.dirname(project_dir):
+        project_dir = os.path.dirname(output_dir)
     metadata_dir = os.path.join(project_dir, "metadata")
     os.makedirs(metadata_dir, exist_ok=True)
     with open(os.path.join(metadata_dir, "dedup_stats.json"), "w") as f:
