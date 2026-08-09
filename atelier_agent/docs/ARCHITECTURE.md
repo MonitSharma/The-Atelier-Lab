@@ -1,132 +1,120 @@
-# Atelier — architecture
+# Atelier Architecture
 
-How the pieces fit. Atelier is **one agent harness** that powers two capability
-modes (knowledge + build) over a shared toolbox, runs entirely locally, and is
-measured by a built-in eval harness. This document is the map; `PROJECT.md` is
-the why, `docs/TESTING.md` is the how-to-verify.
+This document describes the current implementation. The forward-looking
+product roadmap lives in [`docs/ATELIER_WORKBENCH_PLAN.md`](../../docs/ATELIER_WORKBENCH_PLAN.md),
+and the concise frozen baseline is [`docs/CURRENT_ARCHITECTURE.md`](../../docs/CURRENT_ARCHITECTURE.md).
 
-## 10,000-foot view
+## Current system
 
-```
-                         ┌─────────────────────────────────────┐
-        you ──────────▶  │            atelier CLI (typer)        │
-                         │  ask · chat · agent · remember ·      │
-                         │  recall · eval · mcp · doctor · tools │
-                         └──────┬───────────────────────┬────────┘
-                                │                       │
-                  knowledge mode│                       │build / general
-                                ▼                       ▼
-                       ┌─────────────────┐     ┌───────────────────────┐
-                       │  rag.answer     │     │   agent.react          │
-                       │  (grounded QA)  │     │   ReAct engine         │
-                       └───────┬─────────┘     │  reason→act→observe    │
-                               │               └───────┬───────────────┘
-                               ▼                       │ JSON tool calls
-                       ┌─────────────────┐             ▼
-                       │ rag.retrieve    │     ┌───────────────────────┐
-                       │ dense+BM25 (RRF)│     │  tools.registry        │
-                       │ + optional rerank│    │  (one toolbox)         │
-                       └───────┬─────────┘     └───────┬───────────────┘
-                               │                       │
-        ┌──────────────────────┼───────────────────────┼─────────────────┐
-        ▼                      ▼                        ▼                 ▼
-  ┌───────────┐        ┌──────────────┐        ┌──────────────┐   ┌────────────┐
-  │ rag.embed │        │  rag.store   │        │ build tools  │   │  memory    │
-  │ bge (MPS) │        │  ChromaDB    │        │ files/exec/  │   │ remember/  │
-  └───────────┘        │  (vectors)   │        │ test/repo_map│   │ recall     │
-                       └──────────────┘        └──────────────┘   └────────────┘
-                               ▲                        │                 ▲
-                               │                        ▼                 │
-                       ┌───────┴────────┐       ┌──────────────┐   ┌──────┴─────┐
-                       │ agent.brain    │◀──────│ tools run     │   │ ChromaDB   │
-                       │ Ollama client  │       │ locally,      │   │ (memory    │
-                       │ qwen3 / gemma  │       │ sandboxed     │   │ collection)│
-                       └────────────────┘       └──────────────┘   └────────────┘
-
-         Everything above runs on-device. Network egress: only the local
-         Ollama endpoint + a one-time embedding/reranker model download.
+```text
+CLI / persistent session / MCP
+              │
+       atelier application
+          ┌───┴────┐
+          │        │
+    knowledge    build/general
+          │        │
+       rag.answer  agent.react
+          │        │
+          └───┬────┘
+              │
+       shared guarded tools
+       ┌──────┼────────┬────────┐
+       │      │        │        │
+     files  search   tests    memory
+       │      │        │        │
+       └──────┴────────┴────────┘
+              │
+  Qwen3-Embedding-4B / 2560D
+              │
+     ChromaDB + SQLite manifest
 ```
 
-## The layers
+Atelier is local-first and model-agnostic. Ollama is the current local model
+transport; MLX remains an Apple-Silicon experiment/provider surface and is not
+required by the scientific-library runtime on Linux.
 
-### 1. Models — `models/` and `agent/brain.py`
-A thin client over local **Ollama**. Three *roles*, chosen by task size rather
-than hard-coded names:
+## Model roles
 
-| Role | Model | Use |
-|---|---|---|
-| `brain` | `qwen3:14b` | reasoning, build mode |
-| `worker` | `qwen3:4b` | cheap subtasks, the LLM-judge |
-| `heavy` | `gemma4:26b` | hardest reasoning (`--heavy`) |
+| Role | Current configuration | Status | Responsibility |
+|---|---|---|---|
+| `worker` | `hf.co/LiquidAI/LFM2.5-2.6B-GGUF:Q6_K` | installed | fast extraction, classification, structured subtasks |
+| `brain` | `qwen3:14b` | configuration placeholder | general reasoning and build mode |
+| `heavy` | `gemma4:26b` | installed | hard reasoning and end-to-end local synthesis |
+| `expert` | empty | intentionally unconfigured | reserved capability slot |
+| `router` | `qwen3:4b` | configuration placeholder | future routing experiment |
+| embedding | `qwen3-embedding:4b` | installed | 2,560-dimensional query/document embeddings |
 
-Features: JSON-only mode (reliable tool calls), streaming, and qwen3
-`<think>`-trace stripping. `health()` powers `atelier doctor`.
+The code does not assume that every configured model is installed. `doctor`
+reports `ok`, `missing`, or `unconfigured` explicitly. No model is downloaded
+merely to make a placeholder green.
 
-The compatibility-facing `chat()` and `stream()` functions remain in `agent/brain.py`, while `models/base.py`, `types.py`, `registry.py`, and the Ollama/MLX adapters provide a provider-neutral seam. Roles are configuration-driven: worker, brain, expert, and router.
+## Knowledge library
 
-### 2. Tools — `tools/`
-Every capability is a `Tool` (name, description, JSON input schema, function
-returning a status dict). The `ToolRegistry` validates and dispatches calls.
-One registry is the single source of truth, consumed by both the ReAct loop and
-the MCP server.
+```text
+source files
+    ↓
+SHA-256 document identity + SQLite manifest
+    ├── unchanged   → skip extraction and embedding
+    ├── relocated   → update path, reuse vectors
+    ├── duplicate   → register alias, reuse vectors
+    └── new/changed → extract → clean → section-chunk → embed → replace
+    ↓
+Qwen3-Embedding-4B / 2560D
+    ↓
+ChromaDB persistent collection
+    + SQLite index manifest
+    ↓
+dense + BM25 → RRF → section adjustment → diversity → optional reranking
+```
 
-- **Build:** `read_file` / `write_file` / `edit_file` (workspace-sandboxed),
-  `ast_edit` (compile-checked Python function body replacement), `code_exec`
-  (subprocess + timeout + macOS seatbelt network deny), `test_runner` (pytest,
-  parsed — the *verifier*), `repo_map` (AST outline), `search` (local grep).
-- **Knowledge:** `search_notes` (semantic RAG as a tool).
-- **Memory:** `remember`, `recall`.
-- **Opt-in:** `shell` (powerful, lightly guarded).
+PDFs retain raw and cleaned page text, section labels, source paths, and
+content-addressed metadata. Paper identity and subjective characterization
+are separate strict Pydantic schemas. Memory uses a separate Chroma collection
+and SQLite migration manifest.
 
-### 3. Knowledge mode — `rag/`
-`ingest` (md/txt/pdf/code) → `chunk` (heading-aware) → `embed`
-(`bge-base-en-v1.5` on MPS) → `store` (ChromaDB, cosine). At query time,
-`retrieve` runs **dense + BM25** and fuses them with **Reciprocal Rank Fusion**,
-with an **optional cross-encoder reranker**. `answer` feeds the top chunks to the
-brain under a strict "answer only from context, cite sources" prompt.
+ChromaDB plus SQLite is the frozen current storage choice. LanceDB is not a
+production dependency or an alternative store in the current architecture.
 
-### 4. The agent — `agent/react.py`
-The general ReAct engine: reason → call one tool → observe → repeat → final
-answer. Key reliability properties:
-- **JSON mode** every turn → tool calls parse.
-- **Reflection**: tool/parse errors are fed back as observations, not crashes.
-- **Observation capping**: big outputs are truncated before re-entering context.
-- **Trace logging**: every run → `data/traces/<ts>.json`.
-- **Optional memory recall** seeds the system prompt (`use_memory`).
+## Agent and tools
 
-### 5. Memory — `agent/memory.py`
-Discrete facts embedded into their own ChromaDB collection; recalled by semantic
-similarity. Persistent across sessions (on disk), shares the embedding model.
+The current build loop is a deliberately small ReAct primitive:
 
-### 6. MCP server — `atelier/mcp_server.py`
-Publishes the registry over MCP stdio so external hosts can use Atelier's tools.
-Same schemas as the local loop — no duplication.
+```text
+model JSON decision → one tool → bounded observation → next decision
+```
 
-### 7. Evaluation — `eval/`
-Two **frozen** suites (`tasks_docqa/`, `tasks_code/`), deterministic metrics
-(keyword coverage, retrieval hit@k, citation rate) + optional local LLM-judge,
-a runner that executes code tasks in isolated `.eval_workspace/` copies and
-verifies with the real pytest runner, JSON reports, and a **regression gate**
-(`--gate`) that fails on any drop vs. the last report.
+The registry is shared by the CLI, agent, and MCP server. Current tool families
+include file reads/writes, search, repository mapping, Python execution, test
+running, AST edits, semantic search, and memory. File access is currently
+anchored to the process workspace and is not yet a multi-workspace permission
+system; that is the next product milestone.
 
-## Data & control flow: "ask my notes"
-1. `atelier ask "Q"` → `rag.answer.answer_question`
-2. `retrieve(Q)` → embed query → dense (ChromaDB) + BM25 → RRF → (rerank) → top-k
-3. `format_context` numbers + truncates the chunks
-4. `brain.chat` (grounded prompt) → cited answer
+The future `coder` role, explicit workspace manager, capability policy, and
+multi-file transaction workflow are not yet implemented. They must be added
+without weakening this low-level execution primitive.
 
-## Data & control flow: "fix the failing test"
-1. `atelier agent "fix sample_task/"` → `ReActAgent.run`
-2. brain emits a JSON tool call → registry executes → observation appended
-3. typical arc: `repo_map → read_file → edit_file` or `ast_edit` → `test_runner`
-4. agent finalizes only when `test_runner.passed_clean` is true; trace saved
+## Runtime state
 
-## Hard constraints honored (PROJECT.md §1)
-Local-only, $0, single Mac, ≤36 GB. The only network calls are to local Ollama
-and one-time model downloads. Code execution is sandboxed; file/test tools are
-pinned to the workspace.
+The current development runtime stores the local library and caches under
+`atelier_agent/data/`. This is intentionally still repository-local. Step 19
+will migrate user state to a versioned Atelier home with validation, backup,
+and rollback; the source checkout and user library are not independent yet.
 
-## What's intentionally *not* here
-No cloud APIs, no hosted vector DB, no always-on service, and no multi-agent
-orchestrator yet. The fine-tuned router is present as a local component, but the
-main build loop is still a single ReAct agent.
+## Reliability baseline
+
+The frozen Scientific Library v1.0 baseline includes:
+
+- incremental content-addressed ingestion;
+- strict paper characterization and extraction caches;
+- compatible Qwen3-Embedding-4B / 2560D index checks;
+- hybrid retrieval and section-aware diversity;
+- safe semantic-memory migration;
+- Rich-safe rendering;
+- a model-free Test workflow and clean-clone installation path;
+- a real Gemma-backed grounded `atelier ask` smoke test.
+
+The current benchmark is a small local three-paper regression suite. It is not
+evidence of repository-scale coding reliability, multimodal understanding,
+security isolation, or general research-agent reliability. Those are separate
+future evaluation milestones.

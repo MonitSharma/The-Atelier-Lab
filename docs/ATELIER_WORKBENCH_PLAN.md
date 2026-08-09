@@ -1,267 +1,241 @@
-# Atelier Workbench plan
+# Atelier Workbench Roadmap
 
-## Destination
+This is the current-state product roadmap. It is not a historical account of
+the original build order. Historical benchmark and implementation notes remain
+in the Step reports and project changelog.
 
-The Atelier Lab is becoming a local-first AI workbench for the Mac: a general-purpose AI layer over files, documents, code, research, and deterministic tools.
+## Product destination
 
-The user should interact with the workbench rather than with individual models. The workbench should be accessible through a web UI, an `atelier` terminal command, and eventually Finder actions such as “Send to Atelier”.
-
-It is not a coding-only agent, a PDF chatbot, an Ollama wrapper, or a collection of unrelated model interfaces.
-
-## End-state architecture
-
-```text
-YOU
- │
- ├── Web UI
- ├── atelier CLI
- └── Finder actions
-       │
-       ▼
-ATELIER WORKBENCH
-       │
-       ▼
-TASK ROUTER
-       │
- ┌─────┼──────────┬──────────┬─────────┐
- ▼     ▼          ▼          ▼         ▼
-Docs  Code     Research     Data    General
- │     │          │          │         │
- └─────┴──────────┴──────────┴─────────┘
-       │
-       ▼
-TOOL / AGENT HARNESS
-       │
-       ▼
-MODEL ROUTER
-       │
- ┌─────┼──────────┬──────────┬─────────┐
- ▼     ▼          ▼          ▼         ▼
-Tiny  Coder   Multimodal  Large   Embedding
-local local      local     local    model
-       │
-       ▼
-Verification → optional escalation to Claude, Codex, or Gemini
-```
-
-The local system must remain useful when the internet is unavailable. Cloud models are optional escalation paths, not core dependencies.
-
-## What the workbench should feel like
-
-### Papers and documents
-
-Dropping a paper into Atelier should eventually trigger a staged workflow:
-
-1. identify title, authors, year, and metadata;
-2. extract text and determine whether OCR is necessary;
-3. characterize the field, problem, method, contribution, theory/experiment status, code, hardware, and research relevance;
-4. produce a short local characterization;
-5. index the source locally;
-6. offer deeper actions such as explain, deep read, find weaknesses, compare, reproduce, extract equations, inspect code, and find related work.
-
-Native PDF parsing comes first. OCR is invoked only when the parser finds insufficient usable text.
-
-### Code and repositories
-
-Repository understanding should be staged rather than sending every file to a large model:
+Atelier is a local-first, model-agnostic workbench over the user's approved
+files, documents, repositories, research sources, and deterministic tools.
 
 ```text
-folder → file tree → language/environment detection → important files
-       → symbols/imports → small coding model → deterministic tools
-       → large local reasoning → optional frontier escalation
+CLI / Web / Finder
+        ↓
+local Atelier service
+        ↓
+workspace + privacy policy
+        ↓
+characterize → route → retrieve → tools → reason → verify → escalate
+        ↓
+artifacts, provenance, memory, and audit trail
 ```
 
-Deterministic tools should inspect files, search symbols, run tests, inspect Git, and measure results before an LLM is asked to explain or modify the project.
+Cloud models remain optional handoff targets. The local system must remain
+useful offline and unpublished material must not leave the machine implicitly.
 
-### General files
+## Current baseline
 
-The workbench should eventually characterize CSV, JSON, Parquet, SQLite, spreadsheets, images, LaTeX, notebooks, presentations, and unstructured text. The product is therefore a workbench, not a chatbot.
+Scientific Library v1.0 is frozen and tagged. It provides:
 
-## System layers
+- content-addressed incremental ingestion;
+- PDF extraction, paper identity, and characterization caches;
+- Qwen3-Embedding-4B / 2,560D retrieval;
+- ChromaDB plus SQLite manifest storage;
+- dense + BM25 + RRF retrieval with section-aware ranking;
+- semantic memory migration with backup and verification;
+- Ollama worker/heavy model integration;
+- CLI, persistent session, MCP, and Rich-safe output;
+- declared dependencies, clean-clone reproduction, CI, and protected `master`.
 
-### 1. Local model runtime — Ollama
+The current development state is still repository-local, single-workspace,
+path-scoped, and primarily textual. See
+[`CURRENT_ARCHITECTURE.md`](CURRENT_ARCHITECTURE.md).
 
-Ollama is the local inference engine. It should expose models, structured JSON outputs, tool/function calling, and embeddings to the rest of Atelier.
+## Dependency-ordered milestones
 
-Ollama is the engine room, not the intelligence orchestrator.
+### Step 04.2 — Core consolidation
 
-### 2. Apple model laboratory — MLX / MLX-LM
+Keep `master` canonical, develop each milestone on a fresh feature branch,
+protect `master`, eliminate stale architecture descriptions, and maintain one
+current roadmap. Freeze as `atelier-core-v1.0`.
 
-MLX-LM remains separate from daily Ollama inference. It is for Apple-Silicon experiments, benchmarking, quantization, LoRA, fine-tuning, and router experiments. It is not required for version 1.
+### Step 05 — Workspace and permission architecture
 
-### 3. Replaceable user interface — Open WebUI initially
-
-Open WebUI may provide the first document and chat interface, but it must not own the library, workflows, memory, embeddings, or model configuration. It should be replaceable without losing Atelier data.
-
-### 4. Explicit workflow harness — LangGraph later
-
-The intended workflow shape is:
+Add:
 
 ```text
-input → characterize → route → retrieve → select tools → reason
-      → verify → escalate if necessary → answer
+atelier workspace add PATH
+atelier workspace open NAME
+atelier workspace list
+atelier workspace close NAME
 ```
 
-LangGraph is a candidate for explicit, stateful workflows that combine deterministic code, LLM-controlled steps, persistence, and human intervention. Start with simple workflows and add complexity only when the need is demonstrated.
+Use approved roots and explicit capabilities: `read`, `write`, `execute`, and
+`network`. Support multiple attached roots, reject path and symlink escapes,
+make `LOCAL_ONLY` the default privacy policy, and require confirmation for
+destructive actions. Tools must receive workspace context rather than reading a
+global current-working-directory constant.
 
-Do not begin with a giant autonomous-agent framework or many agents talking to one another.
+### Step 06 — Repository intelligence
 
-### 5. Tools
+Build deterministic repository inspection before selecting a coding model:
 
-Tools make local models useful. They should be exposed gradually and guarded by explicit permissions.
+- Git state, history, diff, and cleanliness;
+- file tree, languages, package managers, environments, and test frameworks;
+- entry points, important files, symbols, imports, references;
+- test-to-source relationships and repository search;
+- CLI commands: `repo inspect`, `repo status`, `repo symbols`, `repo search`,
+  and `repo tests`.
 
-Initial tool families:
+Use multi-file frozen fixtures and selective semantic indexing; do not embed an
+entire repository blindly.
 
-- **Files:** list, read, search, copy/move, metadata;
-- **Papers:** PDF text, metadata, tables, figures, OCR;
-- **Code:** Git, ripgrep, Python, tests, compilers, linters;
-- **Data:** CSV, JSON, Parquet, SQLite, spreadsheets;
-- **Research:** DOI, arXiv, Crossref, Semantic Scholar, web search;
-- **Quantum:** Qiskit, circuit inspection, transpilation, simulation, resource counting;
-- **Optimization:** Gurobi, OR-Tools, SciPy, CVXPY, solution validation.
+### Step 07 — Coding specialist benchmark
 
-MCP should be the connector standard where practical, allowing the same paper-library or domain tool to be used by Atelier, Claude, Gemini, and other compatible clients.
+Add a real `coder` model role. Research current local candidates at execution
+time and benchmark approximately three 7–14B candidates against Gemma and the
+worker on identical repository tasks. Record solve rate, test pass rate,
+unnecessary reads, invalid edits, tool errors, latency, memory, and tokens.
 
-### 6. Local research memory
+### Step 08 — Build Agent v2
 
-Research memory should remain outside the UI layer:
+Keep the current ReAct loop as the low-level primitive. Add a typed coding
+workflow:
 
 ```text
-~/Atelier/
-├── library/
-│   ├── papers/
-│   ├── books/
-│   ├── notes/
-│   ├── datasets/
-│   └── code/
-├── database/
-│   ├── metadata.sqlite
-│   └── vectors/
-├── workspace/
-├── models/
-└── config/
+inspect → plan → identify files → baseline tests → edit
+       → targeted tests → regression tests → diff review → certificate
 ```
 
-Use SQLite for metadata and LanceDB as a candidate embedded vector/full-text store. Keep original files, extracted text, metadata, chunks, and embeddings separately so the storage layer can evolve without losing sources.
+Add checkpoints, rollback, evidence requirements, multi-file transactions, and
+measurable escalation from coder to a larger reasoner.
 
-## Local model roles
+### Step 09 — Capability router
 
-The five local roles are deliberately distinct:
+Classify domain first—paper, code, data, vision, research, quantum,
+optimization, or general—then choose the cheapest capable workflow. Decisions
+must include modality, tools, privacy, context, difficulty, memory, abstention,
+and escalation conditions.
 
-1. **Tiny worker/router, approximately 2–4B:** classification, metadata, JSON, query rewriting, tool choice, RAG filtering, and cheap repetitive reasoning.
-2. **Embedding model:** semantic search and retrieval; it does not need to chat.
-3. **Small coding model, approximately 7–14B:** repository exploration, scripts, tests, debugging, and small refactors.
-4. **Multimodal/document model, approximately 4–12B:** figures, diagrams, plots, screenshots, tables, slides, and scanned pages.
-5. **Large local reasoner, approximately 20–30B Q4:** mathematics, paper analysis, optimization, quantum reasoning, complex code, synthesis, and private intellectual work.
+### Step 10 — Model lifecycle
 
-These roles map onto the four-tier stack in the root README: the embedding model is infrastructure, while the tiny worker, coding model, and large local reasoner occupy the main model tiers. A multimodal model is added only when document/figure evaluation justifies it.
+Create a registry containing role, model ID, quantization, memory estimate,
+context, modality, JSON/tool support, and measured performance. Add
+`atelier models list`, `status`, and `bench`. Track Ollama residency and avoid
+unnecessary simultaneous large-model loads.
 
-Do not fine-tune Atelier-specific models until the workflows have produced useful, high-quality training data.
+### Step 11 — Multimodal scientific documents
 
-## First-generation download roster
+Keep native PDF extraction first. Add vision only for poor text quality or
+figures, diagrams, tables, equation images, and scans. Support figure/caption
+pairing, page citations, table extraction, and OCR fallback with visual tests.
 
-Do not fill the machine with overlapping models. The first local stack is four downloads now, with a fifth slot reserved for the future large reasoner.
+### Step 12 — General file workbench
 
-| Role | Model and quantization | Approx. disk | Purpose | Why this choice |
-|---|---|---:|---|---|
-| Tiny worker/router | `LFM2.5-2.6B` `Q6_K` | 2.22 GB | Routing, extraction, structured JSON, tool selection, query rewriting, fast characterization, and repetitive local actions | Small enough to run frequently while retaining more precision than an aggressive Q4 quantization; designed for on-device agent workloads |
-| Embeddings/search | `qwen3-embedding:4b` `Q4_K_M` via Ollama | ~2.5 GB | 2,560-dimensional semantic search across papers, notes, code, extracted text, and experiments | This is the validated Step 2 retrieval backend; instruction-aware query formatting improved direct scientific relevance on the Atelier benchmark |
-| Coding specialist | `Ornith-1.0-9B` `Q5_K_M` | 6.47 GB | Repository exploration, scripts, debugging, tests, terminal-agent work, and small refactors | Coding-focused agentic training makes it a better candidate for acting on repositories than a general-purpose reasoner; Q5 balances coding quality and memory |
-| Vision/document | `Qwen3-VL-8B-Instruct` `Q4_K_M` | 6.1 GB | Figures, diagrams, screenshots, tables, scanned pages, visual equations, and OCR fallback | Scientific-document focus, visual reasoning, OCR, and long-document structure at a manageable local size; normal PDFs should use native text parsing first |
-| Main local reasoner | `Qwen3.8-27B`, probably Q4-class | Reserve 25 GB | Mathematics, paper analysis, optimization, quantum reasoning, private documents, complex coding, and synthesis | This is the regular-use upper range for a 36 GiB M3 Pro; wait for official weights and compare GGUF Q4, MLX 4-bit, and possibly Q5 on the actual Mac |
+Create typed `ArtifactProfile` adapters for CSV, JSON, Parquet, SQLite,
+spreadsheets, images, LaTeX, notebooks, presentations, and text. Deterministic
+parsers must report schema, shape, types, missingness, formulas, references,
+and previews before model reasoning.
 
-### Storage policy
+### Step 13 — Research tools
 
-The four immediate downloads total approximately 15.43 GB. Reserve another 25 GB for the future Qwen3.8-27B slot rather than treating all remaining disk space as model capacity. Python environments, Hugging Face caches, research datasets, vector stores, Docker images, and fine-tuning artifacts also need room.
+Add explicitly networked, provenance-tracked tools for DOI metadata, arXiv,
+Crossref, Semantic Scholar, search, citations, related work, and paper
+downloads. Unpublished local content must never become an external query by
+default.
 
-### Installation policy
+### Step 14 — Quantum and optimization tools
 
-Install and understand one model at a time:
+Add deterministic Qiskit circuit inspection, resource counting, transpilation,
+small simulation, and backend comparison. Add LP/MIP/QUBO validation, solver
+integration, feasibility/objective verification, and solution comparison. The
+LLM explains tool results; it does not invent them.
 
-1. install `LFM2.5-2.6B` alone;
-2. measure speed, memory, structured extraction, tool-call formatting, and paper classification;
-3. install the validated `qwen3-embedding:4b` backend and benchmark retrieval;
-4. install Ornith and evaluate repository tasks;
-5. install Qwen3-VL and evaluate figures, tables, screenshots, and OCR fallback;
-6. wait for the official Qwen3.8-27B weights before filling the large-reasoner slot.
+### Step 15 — Explicit workflows
 
-Do not keep all large models loaded simultaneously. Unified memory, not disk, is the main constraint. The router should load the large reasoner only for hard work, then unload it when the task is complete. Use retrieval and chunking rather than enormous context windows by default.
+Introduce typed workflows such as `paper_fast`, `paper_deep_read`,
+`paper_compare`, `repo_inspect`, `code_fix`, `data_analyze`,
+`research_verify`, `quantum_analyze`, and `optimization_validate`. Include
+checkpoints, recovery, and human approval gates. LangGraph is optional.
 
-### Deliberately deferred
+### Step 16 — Project memory v2
 
-- `LFM2.5-8B-A1B`: overlaps the tiny worker and future large-reasoning roles;
-- Gemma 4 12B: interesting multimodal model, but overlaps the document tier initially;
-- Qwen3-Embedding-8B: defer until a retrieval benchmark demonstrates that 4B is insufficient;
-- `LFM2.5-ColBERT-350M`: revisit when late-interaction retrieval is being implemented;
-- dedicated OCR models: Qwen3-VL is the first baseline;
-- 70B+ models: frontier subscriptions cover that tier more effectively.
+Separate durable user facts, task state, source-derived notes, projects,
+artifacts, decisions, provenance, and expiration. Add explicit remember,
+forget, export/import, and project isolation. Do not persist every conversation
+automatically.
 
-## Cloud responsibilities
+### Step 17 — Security and trust boundary
 
-Cloud models must remain optional and complementary:
+Make capabilities mechanically enforceable. Add command allowlists, path
+scopes, secret redaction, prompt-injection tests, tool-output protection,
+destructive confirmations, audit logs, and opt-in raw shell access.
 
-- **Claude:** architect, critic, reviewer, mathematical reasoning partner, research planner, difficult debugger;
-- **Codex:** implementation engineer, repository modifier, test runner, refactoring and experiment agent;
-- **Gemini:** very large context, multimodal material, large document sets, figures/screenshots, independent second opinions, and Google workflows.
+### Step 18 — Backend service/API
 
-Initially preserve native subscription workflows. Do not add API-based automatic routing or LiteLLM until explicit automatic cloud routing is needed.
+Separate application operations from Typer behind a local service layer for
+workspaces, tasks, library, search, models, workflows, memory, and artifacts.
+CLI and UI must call the same backend.
 
-## Interfaces and privacy
+### Step 19 — Externalize runtime state
 
-Provide three interfaces over one backend:
+Move user state from `atelier_agent/data/` to a versioned Atelier home with
+separate library, databases, workspaces, config, caches, logs, and backups.
+Provide migration, validation, rollback, and repair.
 
-1. a web UI for chat, documents, images, research, and the library;
-2. an `atelier` CLI for commands such as `ask`, `paper`, `inspect`, `search`, `compare`, and `summarize`;
-3. Finder actions for characterize, summarize, add to library, explain, and ask about.
+### Step 20 — Web workbench
 
-Every task should support a privacy mode:
+Build a replaceable UI over the backend with workspace, library, source/context,
+paper cards, model status, traces, approvals, privacy mode, and workflow views.
 
-- **LOCAL ONLY:** no cloud escalation;
-- **CLOUD ALLOWED:** frontier escalation is permitted after the workflow decides it is useful.
+### Step 21 — Finder integration
 
-Private and unpublished research should default to local-only handling.
+Add opt-in Quick Actions such as Send to Atelier, Add to Library,
+Characterize Paper, Explain File, and Ask Atelier. Honor workspace permissions;
+do not silently watch or index the Mac.
 
-## What we are not building
+### Step 22 — Frontier handoff
 
-- a ChatGPT clone;
-- a thin wrapper around Ollama;
-- a coding-only agent;
-- twenty agents talking to one another;
-- a RAG demo with no durable library;
-- a large collection of downloaded models;
-- an autonomous agent with unrestricted access to the Mac.
+Create explicit user-approved handoff bundles for Claude, Codex, and Gemini
+containing task, selected context, evidence, constraints, and requested output.
+Keep local operation independent of cloud access.
 
-The target is a **local-first, model-agnostic, tool-using personal AI workbench that understands the Mac, its files, and the research workflow, with cloud intelligence available only when useful**.
+### Step 23 — Reliability science v2
 
-## Build order
+Expand evaluation to repository, visual-document, data, research-verification,
+routing, injection, memory-isolation, quantum, optimization, and end-to-end
+tasks. Add confidence intervals, repeated trials, latency/memory/cost metrics,
+failure taxonomies, frozen test sets, and baseline comparisons.
 
-1. local model foundation;
-2. choose and benchmark the small model set;
-3. add Open WebUI as a replaceable front end;
-4. implement fast PDF characterization;
-5. create the local research library;
-6. add semantic search/RAG;
-7. add general file characterization;
-8. add code/folder characterization;
-9. expand the deterministic tool layer;
-10. introduce explicit LangGraph workflows;
-11. add automatic task routing;
-12. integrate durable memory;
-13. add Finder integration;
-14. add the CLI workflows;
-15. add Claude/Codex/Gemini handoff;
-16. benchmark models and harnesses;
-17. fine-tune local components;
-18. add more sophisticated agents only when justified.
+### Step 24 — Performance engineering
 
-## Immediate next step
+Measure cold start, time-to-first-token, embedding throughput, retrieval/index
+latency, peak unified memory, model swaps, disk use, long-session stability,
+and service concurrency. Optimize only from traces.
 
-Decide the exact local roster for the M3 Pro with 36 GB unified memory before installing more models:
+### Step 25 — Packaging and release engineering
 
-1. tiny worker/router;
-2. embedding model;
-3. coding model;
-4. multimodal/document model;
-5. large reasoning model.
+Add one supported install path, `atelier init`, config generation, model setup,
+schema migrations, backup/restore, export/import, health repair, macOS smoke
+validation, changelog, semantic versions, and signed release tags.
 
-Select one candidate per role, calculate storage and memory implications, install one at a time, and evaluate what each model can and cannot do before building the UI or harness.
+### Step 26 — Atelier v1.0 acceptance
+
+Verify the complete clean-Mac scenario: install, initialize, attach workspace,
+ingest and characterize a paper, answer with citations, inspect and modify a
+repository with tests, analyze structured data, inspect a figure, run quantum
+or optimization tools, preserve project memory, remain offline under
+`LOCAL_ONLY`, create an optional handoff, use CLI and UI, restart, recover, and
+pass the full reliability, security, and performance suites.
+
+## Separate expertise roadmap
+
+`ROADMAP.md` remains the personal AI expertise roadmap: transformers,
+pretraining, alignment, systems, kernels, and eventual research contribution.
+It is valuable but is not the dependency graph for shipping the Atelier product.
+
+```text
+product:   Library → Workspace → Repo → Coder → Router → Vision → Files
+           → Research/Domain → Workflows → Security → API → UI → Finder
+           → Handoffs → Reliability/Performance → Atelier v1.0
+
+expertise: Transformers → Pretraining → Alignment → Systems → Research
+```
+
+## Model policy
+
+Do not download missing placeholder models merely to make `doctor` green. Add a
+model only when its role has a frozen benchmark, a memory budget, and a clear
+workflow consumer. The current installed baseline is LFM worker, Qwen3
+embedding, and Gemma heavy reasoner.
