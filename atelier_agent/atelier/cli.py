@@ -11,6 +11,7 @@ Run `python -m atelier.cli ...` if you haven't `pip install -e .`'d the package.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import typer
@@ -105,6 +106,8 @@ def ingest(
     texts = [c.text for c in chunks]
     with console.status(f"Embedding {len(texts)} chunks with {settings.embed_model}..."):
         vectors = embedder.embed_passages(texts)
+        for source in sorted({c.source for c in chunks}):
+            store.delete_source(source)
         n = store.add(chunks, vectors)
 
     table = Table(show_header=False)
@@ -113,6 +116,46 @@ def ingest(
     table.add_row("Total in store", str(store.count()))
     table.add_row("Vector dim", str(embedder.dim))
     console.print(Panel(table, title="Ingest complete", border_style="green"))
+
+
+@app.command()
+def search(
+    query: str = typer.Argument(..., help="Scientific or general retrieval query."),
+    k: int = typer.Option(settings.retrieval_k, "-k", help="How many passages to show."),
+) -> None:
+    """Show the most relevant passages without model synthesis."""
+    from rag.retrieve import retrieve
+
+    with console.status("Searching the local research library..."):
+        hits = retrieve(query, k=k)
+    if not hits:
+        console.print("[yellow]No matching passages. Run `atelier ingest <path>` first.[/]")
+        return
+    for i, hit in enumerate(hits, start=1):
+        meta = hit.get("metadata", {})
+        source = Path(meta.get("source", "?")).name
+        section = meta.get("section", "")
+        label = f"{source}  {section}" if section else source
+        console.print(Panel(hit["text"], title=f"[{i}] {label}", border_style="blue"))
+
+
+@app.command()
+def paper(
+    path: Path = typer.Argument(..., exists=True, readable=True, help="Research PDF to characterize."),
+    index: bool = typer.Option(False, "--ingest", help="Also index the full paper after characterization."),
+) -> None:
+    """Create a cached Fast Paper characterization card for a research PDF."""
+    from rag.paper import characterize
+
+    if path.suffix.lower() != ".pdf":
+        console.print("[red]Input must be a PDF.[/]")
+        raise typer.Exit(code=2)
+    with console.status(f"Characterizing {path.name} with {settings.worker_model}..."):
+        result = characterize(path)
+    console.print_json(json.dumps(result, ensure_ascii=False))
+    console.print(f"[dim]Cached under {settings.paper_metadata_dir}[/]")
+    if index:
+        ingest(paths=[str(path)], reset=False)
 
 
 @app.command()

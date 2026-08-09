@@ -20,7 +20,8 @@ from rag.chunk import Chunk
 
 
 def _chunk_id(chunk: Chunk) -> str:
-    raw = f"{chunk.source}:{chunk.chunk_index}".encode()
+    document_id = chunk.metadata.get("document_id", chunk.source)
+    raw = f"{document_id}:{chunk.chunk_index}".encode()
     return hashlib.sha1(raw).hexdigest()
 
 
@@ -90,6 +91,15 @@ class VectorStore:
     def delete(self, ids: list[str]) -> None:
         if ids:
             self._collection.delete(ids=ids)
+
+    def delete_source(self, source: str) -> int:
+        """Remove all chunks belonging to one source before replacement."""
+        if self.count() == 0:
+            return 0
+        found = self._collection.get(where={"source": source}, include=["metadatas"])
+        ids = found.get("ids", [])
+        self.delete(ids)
+        return len(ids)
 
     def get_all(self) -> dict[str, Any]:
         return self._collection.get(include=["documents", "metadatas"])

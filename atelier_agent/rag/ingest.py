@@ -11,7 +11,9 @@ from __future__ import annotations
 from collections.abc import Iterable
 from pathlib import Path
 
+from atelier.config import settings
 from rag.chunk import Chunk, split_markdown, split_plain
+from rag.paper import chunk_pdf, sha256_file
 
 MARKDOWN_EXT = {".md", ".markdown", ".mdx"}
 TEXT_EXT = {".txt", ".rst", ".org"}
@@ -52,9 +54,14 @@ def chunk_file(path: Path) -> list[Chunk]:
     base_meta = {"filename": path.name, "ext": ext}
 
     if ext in PDF_EXT:
-        text = _read_pdf(path)
-        base_meta["doc_type"] = "pdf"
-        return split_plain(text, source, base_meta=base_meta)
+        document_id = sha256_file(path)
+        identity_path = settings.paper_metadata_dir / f"{document_id}.json"
+        identity = {}
+        if identity_path.exists():
+            import json
+
+            identity = json.loads(identity_path.read_text(encoding="utf-8"))
+        return chunk_pdf(path, document_id=document_id, identity=identity)
     if ext in MARKDOWN_EXT:
         base_meta["doc_type"] = "markdown"
         return split_markdown(_read_text(path), source, base_meta=base_meta)

@@ -1,70 +1,67 @@
-"""Local text embeddings via sentence-transformers (Apple-Silicon GPU / MPS).
+"""Local text embeddings through the Ollama embedding API.
 
-The model is loaded lazily and cached as a module singleton — loading weights
-costs a second or two, so we do it once. ``bge-base-en-v1.5`` wants a short
-instruction prepended to *queries* (not passages) for best retrieval; we honor
-that distinction with :meth:`embed_query` vs :meth:`embed_passages`.
+The canonical Atelier retrieval model is Qwen3-Embedding-4B. Queries receive
+the validated scientific-retrieval instruction from configuration; stored
+passages remain unmodified. The model is loaded by Ollama on first use and
+Ollama returns the model's embedding vectors directly; Chroma is configured
+for cosine distance, matching the validated retrieval experiment.
 """
 
 from __future__ import annotations
 
-import numpy as np
+import json
+import urllib.error
+import urllib.request
 
 from atelier.config import settings
 
 
-def _pick_device(preferred: str) -> str:
-    try:
-        import torch
-    except Exception:  # noqa: BLE001
-        return "cpu"
-    if preferred == "mps" and torch.backends.mps.is_available():
-        return "mps"
-    if preferred == "cuda" and torch.cuda.is_available():
-        return "cuda"
-    return "cpu"
-
-
 class Embedder:
-    """Wraps a sentence-transformers model with normalized output."""
+    """Wraps Ollama's local embedding endpoint."""
 
     def __init__(self, model_name: str | None = None, device: str | None = None) -> None:
         self.model_name = model_name or settings.embed_model
-        self.device = _pick_device(device or settings.embed_device)
-        self._model = None  # lazy
+        self.base_url = settings.ollama_url.rstrip("/")
+        self._dim: int | None = None
 
-    @property
-    def model(self):
-        if self._model is None:
-            from sentence_transformers import SentenceTransformer
-
-            self._model = SentenceTransformer(self.model_name, device=self.device)
-        return self._model
+    def _embed(self, texts: list[str]) -> list[list[float]]:
+        payload = json.dumps({
+            "model": self.model_name,
+            "input": texts,
+            "truncate": False,
+        }).encode("utf-8")
+        request = urllib.request.Request(
+            f"{self.base_url}/api/embed",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=settings.request_timeout) as response:
+                data = json.load(response)
+        except urllib.error.URLError as exc:
+            raise RuntimeError(
+                f"Could not reach Ollama at {self.base_url}; start `ollama serve`"
+            ) from exc
+        vectors = data.get("embeddings")
+        if not vectors or any(not isinstance(v, list) for v in vectors):
+            raise RuntimeError(f"Ollama returned no usable embeddings: {data}")
+        self._dim = len(vectors[0])
+        return vectors
 
     @property
     def dim(self) -> int:
-        # method was renamed across sentence-transformers versions
-        getter = getattr(self.model, "get_embedding_dimension", None) or \
-            self.model.get_sentence_embedding_dimension
-        return int(getter())
-
-    def _encode(self, texts: list[str]) -> np.ndarray:
-        return self.model.encode(
-            texts,
-            batch_size=settings.embed_batch_size,
-            normalize_embeddings=True,  # so cosine == dot product
-            convert_to_numpy=True,
-            show_progress_bar=len(texts) > 256,
-        )
+        if self._dim is None:
+            self._embed([""])
+        return self._dim or 0
 
     def embed_passages(self, texts: list[str]) -> list[list[float]]:
         if not texts:
             return []
-        return self._encode(texts).tolist()
+        return self._embed(texts)
 
     def embed_query(self, query: str) -> list[float]:
-        prompt = f"{settings.query_instruction}{query}"
-        return self._encode([prompt])[0].tolist()
+        prompt = f"Instruct: {settings.query_instruction}\nQuery: {query}"
+        return self._embed([prompt])[0]
 
 
 _default: Embedder | None = None

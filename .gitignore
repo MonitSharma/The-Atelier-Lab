@@ -23,6 +23,8 @@ data/memory/
 data/eval_reports/
 .eval_workspace/
 atelier_agent/data/vectorstore/
+atelier_agent/data/corpus/
+atelier_agent/data/paper_metadata/
 atelier_agent/data/traces/
 atelier_agent/data/memory/
 atelier_agent/data/eval_reports/

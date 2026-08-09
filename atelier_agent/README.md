@@ -95,7 +95,7 @@ edit scope.
    + optional rerank      ┌──────┼───────────────┬─────────────┐
             │             ▼      ▼               ▼             ▼
             ▼        files   code_exec       search_notes   memory
-     rag.embed (bge)  edit   (sandboxed)     (RAG tool)    remember/
+     rag.embed (Qwen3-Embedding-4B)  edit   (sandboxed)     (RAG tool)    remember/
      rag.store        test_runner            repo_map       recall
      (ChromaDB)            │
             └──────────────┴──▶ agent.brain ──▶ Ollama (qwen3 / gemma)
@@ -118,12 +118,12 @@ The local models Atelier uses by role:
 
 ```bash
 ollama pull qwen3:14b    # "brain"  — reasoning + build mode (default)
-ollama pull qwen3:4b     # "worker" — fast/cheap subtasks + the LLM judge
+ollama pull hf.co/LiquidAI/LFM2.5-2.6B-GGUF:Q6_K  # "worker" — fast subtasks + characterization
 ollama pull gemma4:26b   # "heavy"  — optional, for the hardest reasoning (--heavy)
 ```
 
-Embedding and router models download automatically from Hugging Face on first use
-(`bge-base-en-v1.5` ~110 MB; the 0.5B router base ~300 MB; optional reranker ~80 MB).
+The embedding model is served locally by Ollama (`qwen3-embedding:4b`, about
+2.5 GB). The optional reranker still downloads about 80 MB on first use.
 
 ---
 
@@ -151,6 +151,12 @@ atelier doctor                          # verify models + vector store + embeddi
 ```bash
 # 1) Index some notes (point it at anything — an Obsidian vault, a papers folder)
 atelier ingest ~/Notes ./Project.md
+
+# Characterize a paper with the fast LFM worker, then optionally index it
+atelier paper ./paper.pdf --ingest
+
+# Show passages without asking a model to synthesize an answer
+atelier search "finite-time regret bounds for stochastic inventory optimization"
 
 # 2) Ask a question grounded in what you indexed
 atelier ask "What did I decide about the embedding model and why?"
@@ -322,6 +328,8 @@ steps-by-task.
 |---|---|
 | `atelier doctor` | Check models, vector store, and embeddings are healthy |
 | `atelier ingest PATH...` | Index notes/PDFs/code into the vector store (`--reset` to rebuild) |
+| `atelier paper PATH` | Fast-characterize a research PDF; add `--ingest` to index it |
+| `atelier search QUERY` | Show retrieved passages without synthesis |
 | `atelier ask "Q"` | Grounded answer over your corpus (`-k`, `--show-context`, `--heavy`) |
 | `atelier chat` | Interactive knowledge-mode session |
 | `atelier sources` | List indexed source files |
@@ -348,12 +356,12 @@ Everything is overridable via environment variables (prefix `ATELIER_`) or a
 |---|---|---|
 | `ATELIER_OLLAMA_URL` | `http://localhost:11434` | Local Ollama endpoint |
 | `ATELIER_BRAIN_MODEL` | `qwen3:14b` | Main reasoning / build model |
-| `ATELIER_WORKER_MODEL` | `qwen3:4b` | Cheap subtasks, routing target, LLM judge |
+| `ATELIER_WORKER_MODEL` | `hf.co/LiquidAI/LFM2.5-2.6B-GGUF:Q6_K` | Cheap subtasks, routing, paper characterization |
 | `ATELIER_HEAVY_MODEL` | `gemma4:26b` | Optional heavy reasoner (`--heavy`) |
 | `ATELIER_TEMPERATURE` | `0.1` | Sampling temperature |
 | `ATELIER_REQUEST_TIMEOUT` | `600` | Per-request timeout (s) |
 | `ATELIER_MAX_CONTEXT_CHARS` | `12000` | Cap on retrieved context fed to the model |
-| `ATELIER_EMBED_MODEL` | `BAAI/bge-base-en-v1.5` | Local embedding model |
+| `ATELIER_EMBED_MODEL` | `qwen3-embedding:4b` | Ollama semantic embedding model |
 | `ATELIER_EMBED_DEVICE` | `mps` | `mps` (Apple GPU), `cuda`, or `cpu` |
 | `ATELIER_CHUNK_SIZE` | `1000` | Chunk size (characters) |
 | `ATELIER_CHUNK_OVERLAP` | `150` | Chunk overlap (characters) |
@@ -381,7 +389,7 @@ export ATELIER_RERANK=1
 | Brain | `qwen3:14b` (4-bit) | ~9 GB | Comfortable on 36 GB alongside the rest |
 | Worker / router target | `qwen3:4b` | ~2.5 GB | Fast iteration, cheap subtasks |
 | Heavy (optional) | `gemma4:26b` | ~17 GB | For the hardest reasoning only |
-| Embeddings | `bge-base-en-v1.5` | ~0.5 GB | Runs on the Apple GPU (MPS) |
+| Embeddings | `qwen3-embedding:4b` | ~2.5 GB | 2,560-dimensional local semantic retrieval |
 | Router | `Qwen2.5-0.5B` + LoRA | ~1.5 GB (train) | Fine-tune is ~1 min on M3 Pro |
 
 **Rule of thumb:** keep the brain ≤ ~14B so the embedding model, vector store,

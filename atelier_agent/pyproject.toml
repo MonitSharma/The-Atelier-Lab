@@ -18,6 +18,7 @@ dependencies = [
     "jinja2>=3.1",
     "numpy>=2",
     "pymupdf>=1.27",
+    "pymupdf4llm>=0.0.17",
     "pypdf>=6",
     "sentence-transformers>=5",
     "torch>=2.6",
