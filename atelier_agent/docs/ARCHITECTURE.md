@@ -93,6 +93,12 @@ receive an explicit persisted workspace context with approved roots and
 capabilities. `LOCAL_ONLY` is the default privacy policy; this remains an
 application-level boundary until the stronger security work in Step 17.
 
+Research network operations are separate and explicit: lookup results are
+cached under the external runtime home with request provenance; graph lookup,
+Crossref citation verification, and allowlisted paper download are exposed as
+distinct tools. They require an attached `CLOUD_ALLOWED` workspace with the
+network capability, and downloads write a sidecar URL/timestamp/hash record.
+
 The coder role, explicit workspace manager, capability policy, and typed
 multi-file build workflow are implemented as deterministic application
 surfaces. The workflow still needs the broader durable execution engine and

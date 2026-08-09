@@ -33,6 +33,9 @@ Status: **foundation acceptance baseline; roadmap implementation in progress**
   model reasoning for scientific documents and structured files.
 - Explicit network research lookup records provenance and is denied under
   `LOCAL_ONLY` or without an attached network-capable workspace.
+- Research lookup responses are cached under the external runtime home;
+  related/cited-by discovery, Crossref citation verification, and allowlisted
+  paper downloads with SHA-256 sidecars are available as explicit operations.
 - OpenQASM/Qiskit-aware circuit inspection and deterministic optimization
   feasibility/objective checks are exposed as agent tools.
 - Typed workflow specifications and isolated project-memory primitives exist;
@@ -56,8 +59,8 @@ models through frozen evaluations rather than by accumulating downloads.
 
 ## Remaining roadmap work
 
-- research cache, related/cited-by/citation verification, and download
-  provenance workflows;
+- richer web search integration and broader research-source coverage beyond
+  the current Crossref/arXiv/Semantic Scholar operations;
 - richer quantum simulation/transpilation/backend comparison and optimization
   solver integration;
 - durable typed workflow execution with checkpoints, recovery, and approvals;

@@ -49,6 +49,8 @@ handoff_app = typer.Typer(help="Create explicit frontier-model handoff bundles."
 app.add_typer(handoff_app, name="handoff")
 package_app = typer.Typer(help="Packaging and release-readiness checks.")
 app.add_typer(package_app, name="package")
+research_app = typer.Typer(help="Provenance-tracked external research operations.")
+app.add_typer(research_app, name="research")
 console = Console()
 INGEST_PATHS_ARG = typer.Argument(None, help="Files or folders to index. Defaults to data/corpus.")
 EVAL_PLOT_REPORT_OPT = typer.Option(None, "--report", help="Specific report JSON to plot.")
@@ -338,6 +340,57 @@ def research_lookup(
     console.print_json(json.dumps(result, default=str))
     if result.get("status") != "success":
         raise typer.Exit(code=2)
+
+
+def _run_research_operation(operation: str, arguments: dict[str, object]) -> None:
+    from atelier.workspace import WorkspaceError, get_workspace_manager, workspace_scope
+    from tools.research import download_paper, research_graph, verify_citation
+
+    try:
+        context = get_workspace_manager().context()
+        with workspace_scope(context):
+            if operation == "graph":
+                result = research_graph(arguments)
+            elif operation == "verify-citation":
+                result = verify_citation(arguments)
+            else:
+                result = download_paper(arguments)
+    except WorkspaceError as exc:
+        result = {"status": "denied", "error_type": "workspace_denied", "message": str(exc)}
+    console.print_json(json.dumps(result, default=str))
+    if result.get("status") != "success":
+        raise typer.Exit(code=2)
+
+
+@research_app.command("graph")
+def research_graph_command(
+    paper_id: str | None = typer.Option(None, "--paper-id"),
+    doi: str | None = typer.Option(None, "--doi"),
+    relation: str = typer.Option("related", "--relation", help="related or cited_by"),
+    max_results: int = typer.Option(10, "--max-results", min=1, max=100),
+) -> None:
+    """Find related papers or papers citing an explicit paper identifier."""
+    _run_research_operation("graph", {"paper_id": paper_id, "doi": doi, "relation": relation, "max_results": max_results})
+
+
+@research_app.command("verify-citation")
+def research_verify_citation(
+    doi: str = typer.Option(..., "--doi"),
+    title: str = typer.Option(..., "--title"),
+    authors: str = typer.Option("", "--authors", help="Comma-separated author family names."),
+) -> None:
+    """Compare a citation against Crossref metadata."""
+    _run_research_operation("verify-citation", {"doi": doi, "title": title, "authors": [item.strip() for item in authors.split(",") if item.strip()]})
+
+
+@research_app.command("download")
+def research_download(
+    url: str = typer.Option(..., "--url"),
+    destination: str = typer.Option(..., "--destination"),
+    overwrite: bool = typer.Option(False, "--overwrite"),
+) -> None:
+    """Download an explicitly selected paper into the active cloud-approved workspace."""
+    _run_research_operation("download", {"url": url, "destination": destination, "overwrite": overwrite})
 
 
 @app.callback()

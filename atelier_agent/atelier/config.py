@@ -105,6 +105,7 @@ class Settings(BaseSettings):
     paper_metadata_dir: Path = DEFAULT_HOME / "library" / "paper_metadata"
     extracted_dir: Path = DEFAULT_HOME / "library" / "extracted"
     visual_cache_dir: Path = DEFAULT_HOME / "cache" / "visual"
+    research_cache_dir: Path = DEFAULT_HOME / "cache" / "research"
     manifest_path: Path = DEFAULT_HOME / "databases" / "index_manifest.sqlite3"
     memory_manifest_path: Path = DEFAULT_HOME / "databases" / "memory_manifest.sqlite3"
     memory_backup_dir: Path = DEFAULT_HOME / "backups" / "memory"
@@ -127,6 +128,7 @@ class Settings(BaseSettings):
             "paper_metadata_dir": home / "library" / "paper_metadata",
             "extracted_dir": home / "library" / "extracted",
             "visual_cache_dir": home / "cache" / "visual",
+            "research_cache_dir": home / "cache" / "research",
             "manifest_path": home / "databases" / "index_manifest.sqlite3",
             "memory_manifest_path": home / "databases" / "memory_manifest.sqlite3",
             "memory_backup_dir": home / "backups" / "memory",
@@ -142,7 +144,8 @@ class Settings(BaseSettings):
         """Create the runtime data directories if they don't exist."""
         for d in (self.home_dir, self.data_dir, self.corpus_dir, self.vector_dir,
                   self.memory_dir, self.traces_dir, self.paper_metadata_dir,
-                  self.extracted_dir, self.visual_cache_dir, self.memory_backup_dir,
+                  self.extracted_dir, self.visual_cache_dir, self.research_cache_dir,
+                  self.memory_backup_dir,
                   self.audit_log_path.parent, self.workspace_registry_path.parent):
             d.mkdir(parents=True, exist_ok=True)
 
