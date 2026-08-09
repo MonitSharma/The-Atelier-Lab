@@ -245,6 +245,63 @@ def repo_tests(
         raise typer.Exit(code=result.returncode)
 
 
+@app.command("profile")
+def profile_artifact(
+    path: Path = typer.Argument(..., exists=True, readable=True),
+    as_json: bool = typer.Option(False, "--json", help="Print the complete artifact profile."),
+) -> None:
+    """Profile a structured file deterministically before model reasoning."""
+    from atelier.workspace import WorkspaceError, get_workspace_manager
+    from files.artifacts import profile_path
+
+    try:
+        approved = get_workspace_manager().context().resolve(str(path), "read").path
+        profile = profile_path(approved).to_dict()
+    except (WorkspaceError, ValueError, OSError) as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    if as_json:
+        console.print_json(json.dumps(profile, default=str))
+        return
+    table = Table(title=f"Artifact profile: {approved.name}")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    for field in ("kind", "size_bytes", "shape", "schema", "missingness", "formulas", "references", "warnings"):
+        table.add_row(field, json.dumps(profile[field], default=str)[:4000])
+    console.print(table)
+
+
+@app.command("paper-visual")
+def paper_visual(
+    path: Path = typer.Argument(..., exists=True, readable=True),
+    render: bool = typer.Option(False, "--render", help="Render every page instead of fallback pages only."),
+    as_json: bool = typer.Option(False, "--json", help="Print the complete page evidence JSON."),
+) -> None:
+    """Analyze PDF text quality and figure/caption pages with citations."""
+    from atelier.workspace import WorkspaceError, get_workspace_manager
+    from rag.visual import analyze_pdf
+
+    try:
+        approved = get_workspace_manager().context().resolve(str(path), "read").path
+        report = analyze_pdf(approved, render=render)
+    except (WorkspaceError, ValueError, OSError, RuntimeError) as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    if as_json:
+        console.print_json(json.dumps(report, default=str))
+        return
+    table = Table(title=f"Visual evidence: {approved.name}")
+    table.add_column("Page")
+    table.add_column("Quality")
+    table.add_column("Characters")
+    table.add_column("Figures")
+    table.add_column("Citation")
+    for page in report["pages"]:
+        table.add_row(str(page["page"]), page["quality"], str(page["characters"]), str(len(page["captions"])), page["citation"])
+    console.print(table)
+    console.print(f"Visual fallback needed: {'yes' if report['visual_fallback'] else 'no'}")
+
+
 @app.callback()
 def _root(ctx: typer.Context) -> None:
     """Enter the Atelier workbench when no subcommand is supplied."""

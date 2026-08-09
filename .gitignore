@@ -33,6 +33,7 @@ atelier_agent/data/workspaces.json
 atelier_agent/data/traces/
 atelier_agent/data/memory/
 atelier_agent/data/eval_reports/
+atelier_agent/data/visual_cache/
 atelier_agent/.eval_workspace/
 atelier_agent/.coding_benchmark_workspace/
 atelier_agent/data/coding_benchmark_reports/
