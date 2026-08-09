@@ -112,6 +112,7 @@ class Settings(BaseSettings):
     memory_backup_dir: Path = DEFAULT_HOME / "backups" / "memory"
     project_memory_path: Path = DEFAULT_HOME / "databases" / "project_memory.sqlite3"
     audit_log_path: Path = DEFAULT_HOME / "logs" / "tool_calls.jsonl"
+    confirmation_path: Path = DEFAULT_HOME / "logs" / "confirmations.json"
     workspace_registry_path: Path = DEFAULT_HOME / "workspaces" / "registry.json"
     metadata_schema_version: int = 2
     index_schema_version: int = 1
@@ -136,6 +137,7 @@ class Settings(BaseSettings):
             "memory_backup_dir": home / "backups" / "memory",
             "project_memory_path": home / "databases" / "project_memory.sqlite3",
             "audit_log_path": home / "logs" / "tool_calls.jsonl",
+            "confirmation_path": home / "logs" / "confirmations.json",
             "workspace_registry_path": home / "workspaces" / "registry.json",
         }
         for name, value in defaults.items():
@@ -148,7 +150,8 @@ class Settings(BaseSettings):
                   self.memory_dir, self.traces_dir, self.workflow_dir, self.paper_metadata_dir,
                   self.extracted_dir, self.visual_cache_dir, self.research_cache_dir,
                   self.memory_backup_dir,
-                  self.audit_log_path.parent, self.workspace_registry_path.parent):
+                  self.audit_log_path.parent, self.confirmation_path.parent,
+                  self.workspace_registry_path.parent):
             d.mkdir(parents=True, exist_ok=True)
 
 

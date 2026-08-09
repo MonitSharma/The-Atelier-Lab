@@ -75,6 +75,11 @@ content-addressed metadata. Paper identity and subjective characterization
 are separate strict Pydantic schemas. Memory uses a separate Chroma collection
 and SQLite migration manifest.
 
+Project memory is separate from semantic user memory. It stores explicit
+project-scoped notes with optional expiry and provenance, plus structured
+session, task, and artifact entities. Workflow task state is mirrored there;
+conversation text is not automatically promoted to durable memory.
+
 ChromaDB plus SQLite is the frozen current storage choice. LanceDB is not a
 production dependency or an alternative store in the current architecture.
 
@@ -91,7 +96,7 @@ include file reads/writes, search, repository mapping, Python execution, test
 running, AST edits, deterministic repository inspection, semantic search, and memory. File and execution tools now
 receive an explicit persisted workspace context with approved roots and
 capabilities. `LOCAL_ONLY` is the default privacy policy; this remains an
-application-level boundary until the stronger security work in Step 17.
+application-level boundary until stronger OS-level isolation is added.
 
 Research network operations are separate and explicit: lookup results are
 cached under the external runtime home with request provenance; graph lookup,

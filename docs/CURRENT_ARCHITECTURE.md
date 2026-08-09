@@ -45,6 +45,9 @@ Status: **foundation acceptance baseline; roadmap implementation in progress**
   per-step checkpoints, approval pauses, recovery, cancellation, and shared
   service/API task operations. Project/session memory integration and
   expiration enforcement remain in progress.
+- Project memory now enforces expiry, records structured provenance, and stores
+  isolated session/task/artifact entities; workflow tasks are mirrored into
+  that project state.
 - Registry dispatch applies shell allowlists, secret redaction, untrusted
   output markers, and minimal audit events through a security boundary.
 - `atelier.service.AtelierService` and the loopback `atelier serve` API provide
@@ -69,7 +72,9 @@ models through frozen evaluations rather than by accumulating downloads.
   solver integration;
 - durable typed workflow execution with checkpoints, recovery, and approvals;
 - project/session/task/artifact memory integration and expiration enforcement;
-- hardened prompt-injection and destructive-action security tests;
+- broader hardened security isolation beyond the current capability boundary,
+  prompt-injection markers, secret redaction, one-use destructive confirmations,
+  and audit logging;
 - full web workspace, upload/source/paper/repository/workflow views;
 - actual macOS Quick Actions/Shortcuts and selected-context frontier handoffs;
 - expanded reliability/performance evaluation, packaging, migration repair,

@@ -34,7 +34,7 @@ def run_shell(arguments: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(command, str) or not command.strip():
         return {"status": "error", "error_type": "invalid_arguments",
                 "message": "shell requires a non-empty string 'command'."}
-    allowed, reason = validate_shell_command(command)
+    allowed, reason = validate_shell_command(command, allow_destructive=bool(arguments.get("_destructive_approved")))
     if not allowed:
         return {"status": "denied", "error_type": "security_policy", "message": reason}
     lowered = command.lower()

@@ -53,6 +53,8 @@ research_app = typer.Typer(help="Provenance-tracked external research operations
 app.add_typer(research_app, name="research")
 workflow_app = typer.Typer(help="Run durable typed workflows with checkpoints and approvals.")
 app.add_typer(workflow_app, name="workflow")
+security_app = typer.Typer(help="Manage explicit one-use destructive-operation confirmations.")
+app.add_typer(security_app, name="security")
 console = Console()
 INGEST_PATHS_ARG = typer.Argument(None, help="Files or folders to index. Defaults to data/corpus.")
 EVAL_PLOT_REPORT_OPT = typer.Option(None, "--report", help="Specific report JSON to plot.")
@@ -1045,6 +1047,54 @@ def project_memory_import(project: str = typer.Argument(...), path: Path = typer
     console.print(f"[green]Imported[/] {count} project memories into {project}")
 
 
+@project_app.command("context")
+def project_context(project: str = typer.Argument(...), as_json: bool = typer.Option(False, "--json")) -> None:
+    """Show active session, task, artifact, and non-expired memory state for a project."""
+    from agent.project_memory import ProjectMemoryStore
+
+    store = ProjectMemoryStore()
+    payload = {"project": project, "active": store.active_context(project),
+               "memory": [item.to_dict() for item in store.list(project)],
+               "sessions": store.list_entities(project, entity_type="session"),
+               "tasks": store.list_entities(project, entity_type="task"),
+               "artifacts": store.list_entities(project, entity_type="artifact")}
+    if as_json:
+        console.print_json(json.dumps(payload, default=str))
+        return
+    console.print_json(json.dumps(payload, default=str))
+
+
+@project_app.command("session-start")
+def project_session_start(
+    project: str = typer.Argument(...),
+    session_id: str | None = typer.Option(None, "--session-id"),
+) -> None:
+    """Create or activate an explicit project session."""
+    from agent.project_memory import ProjectMemoryStore
+
+    import uuid
+
+    store = ProjectMemoryStore()
+    session = session_id or f"session-{uuid.uuid4().hex[:12]}"
+    result = store.upsert_entity(project, session, "session", {"project": project}, status="active")
+    store.set_active_context(project, session)
+    console.print_json(json.dumps(result, default=str))
+
+
+@project_app.command("artifact-record")
+def project_artifact_record(
+    project: str = typer.Argument(...),
+    artifact_id: str = typer.Argument(...),
+    path: str = typer.Option(..., "--path"),
+    kind: str = typer.Option("artifact", "--kind"),
+) -> None:
+    """Record an artifact locator and its project association without indexing it."""
+    from agent.project_memory import ProjectMemoryStore
+
+    result = ProjectMemoryStore().upsert_entity(project, artifact_id, "artifact", {"path": path, "kind": kind})
+    console.print_json(json.dumps(result, default=str))
+
+
 @app.command()
 def route(
     task: str = typer.Argument(..., help="A task to classify and route."),
@@ -1248,6 +1298,13 @@ def workflow_recover(run_id: str = typer.Argument(...)) -> None:
         console.print(f"[red]{exc}[/]")
         raise typer.Exit(code=2) from exc
     console.print_json(json.dumps(result, default=str))
+
+
+@security_app.command("request")
+def security_request(operation: str = typer.Argument(..., help="Exact destructive command or operation to approve once.")) -> None:
+    """Issue a one-use confirmation token; the token must match the exact operation."""
+    service, _ = _workflow_service()
+    console.print_json(json.dumps(service.issue_security_confirmation(operation), default=str))
 
 
 @models_app.command("list")
