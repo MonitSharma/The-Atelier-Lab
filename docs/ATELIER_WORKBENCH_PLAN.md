@@ -255,14 +255,21 @@ macOS smoke validation, changelog documentation, semantic version tags, and
 release-tag workflow. Full schema repair and signed-artifact automation remain
 release extensions.
 
-### Step 26 — Atelier v1.0 acceptance
+### Step 26 — Atelier v1.0 acceptance — complete
 
-Verify the complete clean-Mac scenario: install, initialize, attach workspace,
+Added `atelier acceptance` to verify the deterministic clean-Mac foundation:
+package readiness, runtime initialization/recovery, workspace/service surface,
+workflows, local library/service, repository-facing registry, artifact/Finder
+planning, paper/optimization/quantum checks, project memory, handoff creation,
+privacy-denied research, and the local web shell. The complete clean-Mac
+scenario remains the operator checklist: install, initialize, attach workspace,
 ingest and characterize a paper, answer with citations, inspect and modify a
 repository with tests, analyze structured data, inspect a figure, run quantum
 or optimization tools, preserve project memory, remain offline under
 `LOCAL_ONLY`, create an optional handoff, use CLI and UI, restart, recover, and
-pass the full reliability, security, and performance suites.
+pass the full reliability, security, and performance suites. The deterministic
+acceptance smoke and full test suite are green; model-backed paper answering
+and optional dependency paths require the user's local models/runtime.
 
 ## Separate expertise roadmap
 
