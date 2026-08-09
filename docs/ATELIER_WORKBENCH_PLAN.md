@@ -205,11 +205,14 @@ Added a loopback JSON HTTP API over that service. The CLI and future UI can call
 the same backend contract; broader UI migration and daemon hardening remain
 later milestones.
 
-### Step 19 — Externalize runtime state
+### Step 19 — Externalize runtime state — complete
 
-Move user state from `atelier_agent/data/` to a versioned Atelier home with
+Added a versioned Atelier home with
 separate library, databases, workspaces, config, caches, logs, and backups.
-Provide migration, validation, rollback, and repair.
+Added `atelier init`, state planning, validation, copy migration, and
+record-scoped rollback. Existing repository state is preserved; activation of
+the external home for every runtime path is deferred to packaging/configuration
+work after review.
 
 ### Step 20 — Web workbench
 

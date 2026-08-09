@@ -41,6 +41,8 @@ quantum_app = typer.Typer(help="Deterministic quantum-circuit inspection.")
 app.add_typer(quantum_app, name="quantum")
 optimize_app = typer.Typer(help="Deterministic optimization validation.")
 app.add_typer(optimize_app, name="optimize")
+state_app = typer.Typer(help="Initialize, validate, and migrate Atelier runtime state.")
+app.add_typer(state_app, name="state")
 console = Console()
 INGEST_PATHS_ARG = typer.Argument(None, help="Files or folders to index. Defaults to data/corpus.")
 EVAL_PLOT_REPORT_OPT = typer.Option(None, "--report", help="Specific report JSON to plot.")
@@ -1138,6 +1140,61 @@ def serve(
 
     console.print(f"Atelier API listening on http://{host}:{port}")
     run_server(host=host, port=port)
+
+
+@app.command()
+def init(
+    home: Path | None = typer.Option(None, "--home", help="Runtime home (default ~/.atelier or ATELIER_HOME)."),
+) -> None:
+    """Initialize a versioned external Atelier runtime home."""
+    from atelier.runtime import runtime_layout
+
+    layout = runtime_layout(home).initialize()
+    console.print(f"[green]Initialized Atelier runtime home:[/] {layout.root}")
+    console.print_json(json.dumps(layout.to_dict()))
+
+
+@state_app.command("validate")
+def state_validate(home: Path | None = typer.Option(None, "--home")) -> None:
+    """Validate runtime-home directories and manifest without changing state."""
+    from atelier.runtime import runtime_layout
+
+    result = runtime_layout(home).validate()
+    console.print_json(json.dumps(result))
+    if not result["valid"]:
+        raise typer.Exit(code=1)
+
+
+@state_app.command("plan")
+def state_plan(
+    source: Path = typer.Option(settings.data_dir, "--source", exists=True, file_okay=False),
+    home: Path | None = typer.Option(None, "--home"),
+) -> None:
+    """Show a non-mutating plan for importing current repository state."""
+    from atelier.runtime import migration_plan, runtime_layout
+
+    console.print_json(json.dumps(migration_plan(source, runtime_layout(home).library)))
+
+
+@state_app.command("migrate")
+def state_migrate(
+    source: Path = typer.Option(settings.data_dir, "--source", exists=True, file_okay=False),
+    home: Path | None = typer.Option(None, "--home"),
+) -> None:
+    """Copy current state into a runtime home and write a rollback record."""
+    from atelier.runtime import migrate_state, runtime_layout
+
+    layout = runtime_layout(home).initialize()
+    result = migrate_state(source, layout.library / "legacy_import")
+    console.print_json(json.dumps(result))
+
+
+@state_app.command("rollback")
+def state_rollback(record: Path = typer.Argument(..., exists=True, readable=True)) -> None:
+    """Remove only files listed in an explicit migration record; source stays intact."""
+    from atelier.runtime import rollback_migration
+
+    console.print_json(json.dumps(rollback_migration(record)))
 
 
 def main() -> None:

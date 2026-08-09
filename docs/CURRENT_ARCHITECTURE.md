@@ -41,6 +41,8 @@ Status: **post-Scientific Library v1.0; coder benchmark frozen**
   output markers, and minimal audit events through a security boundary.
 - `atelier.service.AtelierService` and the loopback `atelier serve` API provide
   shared JSON-friendly operations for CLI/UI clients.
+- A versioned external runtime-home layout can be initialized and validated;
+  state migration is copy-first and record-scoped for rollback.
 
 ## Deliberate placeholders
 
@@ -52,7 +54,8 @@ models through frozen evaluations rather than by accumulating downloads.
 ## Not shipped yet
 
 - workflow execution state and hardened approval/daemon boundary;
-- external runtime home, web/Finder interfaces, and handoffs.
+- web/Finder interfaces and handoffs; external-home activation is the remaining
+  packaging/configuration step.
 
 The dependency-ordered roadmap for these capabilities is maintained in
 [`ATELIER_WORKBENCH_PLAN.md`](ATELIER_WORKBENCH_PLAN.md).
