@@ -1,6 +1,7 @@
 import json
 
 from atelier.service import AtelierService
+from agent.project_memory import ProjectMemoryStore
 from atelier.workflow_engine import WorkflowEngine
 from atelier.workspace import WorkspaceManager
 
@@ -55,7 +56,7 @@ def test_failed_workflow_recovers_from_checkpoint(tmp_path):
 def test_service_exposes_workflow_and_task_operations(tmp_path):
     engine, manager, root = _engine(tmp_path)
     (root / "data.json").write_text("{\"ok\": true}\n", encoding="utf-8")
-    service = AtelierService(manager=manager, workflow_engine=engine)
+    service = AtelierService(manager=manager, workflow_engine=engine, project_memory=ProjectMemoryStore(tmp_path / "project-memory.sqlite3"))
     started = service.dispatch("task_create", {"workflow": "data_analyze", "input": {"path": "data.json"}})
     assert started["status"] == "waiting_approval"
     listed = service.dispatch("tasks")["tasks"]
