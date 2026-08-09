@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 import json
 from typing import Any
 
 from atelier.config import settings
 from atelier.workflows import list_workflows
+from atelier.workflow_engine import WorkflowEngine
 from atelier.workspace import WorkspaceManager, get_workspace_manager
 from files.artifacts import profile_path
 from repo.inspector import RepositoryInspector
@@ -17,9 +17,15 @@ from tools.registry import ToolRegistry, create_default_registry
 class AtelierService:
     """Small JSON-friendly facade over Atelier capabilities and policy."""
 
-    def __init__(self, manager: WorkspaceManager | None = None, registry: ToolRegistry | None = None) -> None:
+    def __init__(
+        self,
+        manager: WorkspaceManager | None = None,
+        registry: ToolRegistry | None = None,
+        workflow_engine: WorkflowEngine | None = None,
+    ) -> None:
         self.manager = manager or get_workspace_manager()
         self.registry = registry or create_default_registry(workspace=self.manager.context())
+        self.workflow_engine = workflow_engine or WorkflowEngine(manager=self.manager)
 
     def health(self) -> dict[str, Any]:
         context = self.manager.context()
@@ -43,6 +49,21 @@ class AtelierService:
 
     def workflows(self) -> list[dict[str, object]]:
         return [workflow.to_dict() for workflow in list_workflows()]
+
+    def workflow_start(self, workflow: str, input_data: dict[str, Any], *, approved: bool = False) -> dict[str, Any]:
+        return self.workflow_engine.start(workflow, input_data, approved=approved).to_dict()
+
+    def workflow_get(self, run_id: str) -> dict[str, Any]:
+        return self.workflow_engine.get(run_id).to_dict()
+
+    def workflow_approve(self, run_id: str, *, approved: bool = True) -> dict[str, Any]:
+        return self.workflow_engine.approve(run_id, approved=approved).to_dict()
+
+    def workflow_recover(self, run_id: str) -> dict[str, Any]:
+        return self.workflow_engine.recover(run_id).to_dict()
+
+    def workflow_cancel(self, run_id: str) -> dict[str, Any]:
+        return self.workflow_engine.cancel(run_id).to_dict()
 
     def models(self) -> list[dict[str, Any]]:
         from models.lifecycle import ModelLifecycle
@@ -71,16 +92,19 @@ class AtelierService:
                 for item in get_memory().all()]
 
     def tasks(self) -> list[dict[str, Any]]:
-        tasks = []
+        tasks = [state.to_dict() for state in self.workflow_engine.list()]
         if settings.traces_dir.exists():
             for path in sorted(settings.traces_dir.glob("*.json"), key=lambda item: item.stat().st_mtime, reverse=True)[:50]:
                 try:
                     payload = json.loads(path.read_text(encoding="utf-8"))
                     trace = payload.get("trace", [])
-                    tasks.append({"id": path.stem, "goal": payload.get("goal", ""), "steps": len(trace), "path": str(path)})
+                    tasks.append({"id": path.stem, "goal": payload.get("goal", ""), "steps": len(trace), "path": str(path), "kind": "react_trace"})
                 except (OSError, json.JSONDecodeError, TypeError):
                     continue
         return tasks
+
+    def approvals(self) -> list[dict[str, Any]]:
+        return [state.to_dict() for state in self.workflow_engine.list() if state.status == "waiting_approval"]
 
     def profile(self, path: str) -> dict[str, Any]:
         resolved = self.manager.context().resolve(path, "read").path
@@ -101,6 +125,20 @@ class AtelierService:
                 return {"tools": self.tools()}
             if operation == "workflows":
                 return {"workflows": self.workflows()}
+            if operation in {"workflow_start", "task_create"}:
+                workflow = str(arguments.get("workflow", ""))
+                input_data = arguments.get("input", arguments.get("input_data", {}))
+                if not isinstance(input_data, dict):
+                    raise TypeError("workflow input must be an object")
+                return self.workflow_start(workflow, input_data, approved=bool(arguments.get("approved", False)))
+            if operation in {"workflow_get", "task_status"}:
+                return self.workflow_get(str(arguments["run_id"]))
+            if operation in {"workflow_approve", "task_approve"}:
+                return self.workflow_approve(str(arguments["run_id"]), approved=bool(arguments.get("approved", True)))
+            if operation in {"workflow_recover", "task_recover"}:
+                return self.workflow_recover(str(arguments["run_id"]))
+            if operation in {"workflow_cancel", "task_cancel"}:
+                return self.workflow_cancel(str(arguments["run_id"]))
             if operation == "models":
                 return {"models": self.models()}
             if operation == "library":
@@ -111,6 +149,8 @@ class AtelierService:
                 return {"memory": self.memory()}
             if operation == "tasks":
                 return {"tasks": self.tasks()}
+            if operation == "approvals":
+                return {"approvals": self.approvals()}
             if operation == "route":
                 return self.route(str(arguments["task"]))
             if operation == "profile":

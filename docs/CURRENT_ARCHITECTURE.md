@@ -41,9 +41,10 @@ Status: **foundation acceptance baseline; roadmap implementation in progress**
 - Small OpenQASM circuits can be simulated with a bounded NumPy statevector;
   small LPs use SciPy HiGHS when available, binary QUBOs use exact local
   enumeration, and explicit candidate solutions can be compared.
-- Typed workflow specifications and isolated project-memory primitives exist;
-  durable workflow execution, approval state, expiration enforcement, and
-  task/session integration remain in progress.
+- Typed workflow specifications now have a durable JSON execution engine with
+  per-step checkpoints, approval pauses, recovery, cancellation, and shared
+  service/API task operations. Project/session memory integration and
+  expiration enforcement remain in progress.
 - Registry dispatch applies shell allowlists, secret redaction, untrusted
   output markers, and minimal audit events through a security boundary.
 - `atelier.service.AtelierService` and the loopback `atelier serve` API provide

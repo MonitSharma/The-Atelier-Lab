@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 from atelier.service import AtelierService
 from atelier.web import render_index
@@ -31,7 +31,8 @@ class _Handler(BaseHTTPRequestHandler):
         self.wfile.write(encoded)
 
     def do_GET(self) -> None:  # noqa: N802
-        path = urlparse(self.path).path
+        parsed = urlparse(self.path)
+        path = parsed.path
         if path in {"", "/", "/ui"}:
             self._write_html(render_index())
             return
@@ -39,7 +40,15 @@ class _Handler(BaseHTTPRequestHandler):
         if operation == "sources":
             operation = "library"
         if operation == "approvals":
-            self._write({"approvals": []})
+            self._write(self.service.dispatch("approvals"))
+            return
+        if operation == "workflow" and parse_qs(parsed.query).get("run_id"):
+            payload = self.service.dispatch("workflow_get", {"run_id": parse_qs(parsed.query)["run_id"][0]})
+            self._write(payload, 200 if payload.get("status", "ok") != "error" else 404)
+            return
+        if operation.startswith("workflow/"):
+            payload = self.service.dispatch("workflow_get", {"run_id": operation.split("/", 1)[1]})
+            self._write(payload, 200 if payload.get("status", "ok") != "error" else 404)
             return
         payload = self.service.dispatch(operation.replace("/", "_"))
         self._write(payload, 200 if payload.get("status", "ok") != "error" else 404)

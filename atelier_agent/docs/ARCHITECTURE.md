@@ -99,10 +99,11 @@ Crossref citation verification, and allowlisted paper download are exposed as
 distinct tools. They require an attached `CLOUD_ALLOWED` workspace with the
 network capability, and downloads write a sidecar URL/timestamp/hash record.
 
-The coder role, explicit workspace manager, capability policy, and typed
-multi-file build workflow are implemented as deterministic application
-surfaces. The workflow still needs the broader durable execution engine and
-approval lifecycle described in the roadmap.
+The coder role, explicit workspace manager, capability policy, typed
+multi-file build workflow, and durable workflow engine are implemented as
+application surfaces. Workflow runs persist typed state and checkpoints under
+the external runtime home, pause at explicit approval gates, and can be
+recovered or cancelled through the service/API.
 
 ## Runtime state
 

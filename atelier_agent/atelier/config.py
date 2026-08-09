@@ -101,6 +101,7 @@ class Settings(BaseSettings):
     vector_dir: Path = DEFAULT_HOME / "databases" / "vectorstore"
     memory_dir: Path = DEFAULT_HOME / "databases" / "memory"
     traces_dir: Path = DEFAULT_HOME / "logs" / "traces"
+    workflow_dir: Path = DEFAULT_HOME / "logs" / "workflows"
     collection_name: str = "atelier"
     paper_metadata_dir: Path = DEFAULT_HOME / "library" / "paper_metadata"
     extracted_dir: Path = DEFAULT_HOME / "library" / "extracted"
@@ -125,6 +126,7 @@ class Settings(BaseSettings):
             "vector_dir": home / "databases" / "vectorstore",
             "memory_dir": home / "databases" / "memory",
             "traces_dir": home / "logs" / "traces",
+            "workflow_dir": home / "logs" / "workflows",
             "paper_metadata_dir": home / "library" / "paper_metadata",
             "extracted_dir": home / "library" / "extracted",
             "visual_cache_dir": home / "cache" / "visual",
@@ -143,7 +145,7 @@ class Settings(BaseSettings):
     def ensure_dirs(self) -> None:
         """Create the runtime data directories if they don't exist."""
         for d in (self.home_dir, self.data_dir, self.corpus_dir, self.vector_dir,
-                  self.memory_dir, self.traces_dir, self.paper_metadata_dir,
+                  self.memory_dir, self.traces_dir, self.workflow_dir, self.paper_metadata_dir,
                   self.extracted_dir, self.visual_cache_dir, self.research_cache_dir,
                   self.memory_backup_dir,
                   self.audit_log_path.parent, self.workspace_registry_path.parent):
