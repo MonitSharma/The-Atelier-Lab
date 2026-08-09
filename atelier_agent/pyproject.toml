@@ -33,6 +33,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.9"]
+quantum = ["qiskit>=1.0"]
 
 [project.scripts]
 atelier = "atelier.cli:app"

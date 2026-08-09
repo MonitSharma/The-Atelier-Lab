@@ -102,6 +102,7 @@ class Settings(BaseSettings):
     manifest_path: Path = ROOT / "data" / "index_manifest.sqlite3"
     memory_manifest_path: Path = ROOT / "data" / "memory_manifest.sqlite3"
     memory_backup_dir: Path = ROOT / "data" / "memory_backups"
+    project_memory_path: Path = ROOT / "data" / "project_memory.sqlite3"
     workspace_registry_path: Path = ROOT / "data" / "workspaces.json"
     metadata_schema_version: int = 2
     index_schema_version: int = 1

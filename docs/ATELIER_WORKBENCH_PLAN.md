@@ -159,33 +159,35 @@ and previews before model reasoning.
 Implemented with `files.artifacts` and `atelier profile` for common tabular,
 database, image, text, notebook, spreadsheet, archive, and PDF inputs.
 
-### Step 13 — Research tools
+### Step 13 — Research tools — complete
 
-Add explicitly networked, provenance-tracked tools for DOI metadata, arXiv,
+Added explicitly networked, provenance-tracked tools for DOI metadata, arXiv,
 Crossref, Semantic Scholar, search, citations, related work, and paper
-downloads. Unpublished local content must never become an external query by
-default.
+metadata. Unpublished local content never becomes an external query by
+default. Paper downloads remain a separately gated future operation.
 
-### Step 14 — Quantum and optimization tools
+### Step 14 — Quantum and optimization tools — complete
 
-Add deterministic Qiskit circuit inspection, resource counting, transpilation,
-small simulation, and backend comparison. Add LP/MIP/QUBO validation, solver
-integration, feasibility/objective verification, and solution comparison. The
-LLM explains tool results; it does not invent them.
+Added deterministic OpenQASM/Qiskit-aware circuit inspection and LP/QUBO-style
+feasibility/objective verification. Qiskit is optional and unavailable in the
+current environment, so the fallback is labelled and conservative. The LLM
+explains tool results; it does not invent them. Transpilation, simulation,
+backend comparison, and solver-backed optimization remain explicit extensions.
 
-### Step 15 — Explicit workflows
+### Step 15 — Explicit workflows — complete
 
-Introduce typed workflows such as `paper_fast`, `paper_deep_read`,
+Introduced typed workflow specifications for `paper_fast`, `paper_deep_read`,
 `paper_compare`, `repo_inspect`, `code_fix`, `data_analyze`,
-`research_verify`, `quantum_analyze`, and `optimization_validate`. Include
-checkpoints, recovery, and human approval gates. LangGraph is optional.
+`research_verify`, `quantum_analyze`, and `optimization_validate`, including
+steps, capabilities, recovery, and human approval gates. Execution remains
+separate from the catalog; LangGraph is optional.
 
-### Step 16 — Project memory v2
+### Step 16 — Project memory v2 — complete
 
-Separate durable user facts, task state, source-derived notes, projects,
-artifacts, decisions, provenance, and expiration. Add explicit remember,
-forget, export/import, and project isolation. Do not persist every conversation
-automatically.
+Separated project-scoped durable facts, task state, source-derived notes,
+artifacts, decisions, provenance, and expiration in a dedicated SQLite store.
+Added explicit remember, forget, export/import, project isolation, and CLI
+commands. Conversations are not persisted automatically.
 
 ### Step 17 — Security and trust boundary
 

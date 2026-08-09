@@ -31,6 +31,12 @@ Status: **post-Scientific Library v1.0; coder benchmark frozen**
   `atelier models bench`.
 - PDF visual evidence and deterministic `ArtifactProfile` adapters precede
   model reasoning for scientific documents and structured files.
+- Explicit network research lookup records provenance and is denied under
+  `LOCAL_ONLY` or without an attached network-capable workspace.
+- OpenQASM/Qiskit-aware circuit inspection and deterministic optimization
+  feasibility/objective checks are exposed as agent tools.
+- Typed workflow specifications and isolated project memory v2 expose steps,
+  approvals, recovery, provenance, expiration, and export/import.
 
 ## Deliberate placeholders
 
@@ -41,9 +47,7 @@ models through frozen evaluations rather than by accumulating downloads.
 
 ## Not shipped yet
 
-- network research tools;
-- quantum/optimization tool families;
-- workflow state, project-scoped memory, hardened security boundary;
+- workflow execution state and hardened security boundary;
 - backend API, external runtime home, web/Finder interfaces, and handoffs.
 
 The dependency-ordered roadmap for these capabilities is maintained in
