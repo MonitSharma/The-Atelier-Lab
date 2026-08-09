@@ -35,6 +35,12 @@ repo_app = typer.Typer(help="Deterministic repository inspection and verificatio
 app.add_typer(repo_app, name="repo")
 models_app = typer.Typer(help="Inspect configured models, local residency, and benchmarks.")
 app.add_typer(models_app, name="models")
+project_app = typer.Typer(help="Manage explicit project-scoped memory.")
+app.add_typer(project_app, name="project")
+quantum_app = typer.Typer(help="Deterministic quantum-circuit inspection.")
+app.add_typer(quantum_app, name="quantum")
+optimize_app = typer.Typer(help="Deterministic optimization validation.")
+app.add_typer(optimize_app, name="optimize")
 console = Console()
 INGEST_PATHS_ARG = typer.Argument(None, help="Files or folders to index. Defaults to data/corpus.")
 EVAL_PLOT_REPORT_OPT = typer.Option(None, "--report", help="Specific report JSON to plot.")
@@ -300,6 +306,30 @@ def paper_visual(
         table.add_row(str(page["page"]), page["quality"], str(page["characters"]), str(len(page["captions"])), page["citation"])
     console.print(table)
     console.print(f"Visual fallback needed: {'yes' if report['visual_fallback'] else 'no'}")
+
+
+@app.command("research-lookup")
+def research_lookup(
+    query: str | None = typer.Argument(None, help="Explicit bibliographic query."),
+    source: str = typer.Option("crossref", "--source", help="crossref, arxiv, or semantic_scholar."),
+    doi: str | None = typer.Option(None, "--doi", help="Explicit DOI for a Crossref lookup."),
+    max_results: int = typer.Option(5, "--max-results", min=1, max=20),
+) -> None:
+    """Run a provenance-tracked external lookup under the active privacy policy."""
+    from atelier.workspace import WorkspaceError, get_workspace_manager, workspace_scope
+    from tools.research import run_research_lookup
+
+    try:
+        context = get_workspace_manager().context()
+        with workspace_scope(context):
+            result = run_research_lookup({
+                "query": query, "source": source, "doi": doi, "max_results": max_results,
+            })
+    except WorkspaceError as exc:
+        result = {"status": "denied", "error_type": "network_denied", "message": str(exc)}
+    console.print_json(json.dumps(result, default=str))
+    if result.get("status") != "success":
+        raise typer.Exit(code=2)
 
 
 @app.callback()
@@ -872,7 +902,73 @@ def memory() -> None:
     table.add_column("tags", style="dim")
     for m in mems:
         table.add_row(m.id, m.text, ", ".join(m.tags))
+
+
+@project_app.command("memory-add")
+def project_memory_add(
+    project: str = typer.Argument(..., help="Project namespace; memories never cross it automatically."),
+    text: str = typer.Argument(..., help="The project fact, decision, or note."),
+    kind: str = typer.Option("project", "--kind", help="project, decision, source_note, artifact, task_state, or durable_user_fact."),
+    source: str | None = typer.Option(None, "--source", help="Evidence or file locator."),
+    expires_at: str | None = typer.Option(None, "--expires-at", help="Optional ISO-8601 expiry."),
+) -> None:
+    """Remember an explicit project-scoped item."""
+    from agent.project_memory import ProjectMemoryStore
+
+    item = ProjectMemoryStore().remember(project, text, kind=kind, source=source, expires_at=expires_at)
+    console.print(f"[green]Remembered[/] {item.id} in {project} ({item.kind})")
+
+
+@project_app.command("memory-list")
+def project_memory_list(
+    project: str = typer.Argument(...),
+    kind: str | None = typer.Option(None, "--kind"),
+    as_json: bool = typer.Option(False, "--json"),
+) -> None:
+    """List only the selected project's explicit memory."""
+    from agent.project_memory import ProjectMemoryStore
+
+    items = ProjectMemoryStore().list(project, kind=kind)
+    if as_json:
+        console.print_json(json.dumps([item.to_dict() for item in items]))
+        return
+    table = Table(title=f"Project memory: {project}")
+    for column in ("id", "kind", "text", "source", "expires"):
+        table.add_column(column)
+    for item in items:
+        table.add_row(item.id, item.kind, item.text, item.source or "", item.expires_at or "")
     console.print(table)
+
+
+@project_app.command("memory-forget")
+def project_memory_forget(
+    project: str = typer.Argument(...), memory_id: str = typer.Argument(...),
+) -> None:
+    """Forget an item only when its project namespace also matches."""
+    from agent.project_memory import ProjectMemoryStore
+
+    if not ProjectMemoryStore().forget(memory_id, project):
+        console.print("[yellow]No matching project memory was removed.[/]")
+        raise typer.Exit(code=1)
+    console.print(f"[green]Forgot[/] {memory_id}")
+
+
+@project_app.command("memory-export")
+def project_memory_export(project: str = typer.Argument(...), path: Path = typer.Argument(...)) -> None:
+    """Export one project's memory to a portable JSON file."""
+    from agent.project_memory import ProjectMemoryStore
+
+    target = ProjectMemoryStore().export(project, path)
+    console.print(f"[green]Exported[/] {target}")
+
+
+@project_app.command("memory-import")
+def project_memory_import(project: str = typer.Argument(...), path: Path = typer.Argument(..., exists=True, readable=True)) -> None:
+    """Import project memory JSON into the selected namespace."""
+    from agent.project_memory import ProjectMemoryStore
+
+    count = ProjectMemoryStore().import_file(project, path)
+    console.print(f"[green]Imported[/] {count} project memories into {project}")
 
 
 @app.command()
@@ -896,6 +992,69 @@ def route(
             f"memory: {decision.use_memory}\nreason: {decision.reason}"
         ),
         title=Text("Router decision"), border_style=color))
+
+
+@quantum_app.command("inspect")
+def quantum_inspect(
+    qasm: str | None = typer.Option(None, "--qasm", help="Inline OpenQASM 2 source."),
+    path: Path | None = typer.Option(None, "--path", exists=True, readable=True),
+    as_json: bool = typer.Option(False, "--json"),
+) -> None:
+    """Inspect a circuit without executing arbitrary code or contacting a backend."""
+    from tools.science import run_quantum_inspect
+
+    if qasm is None and path is None:
+        console.print("[red]Provide --qasm or --path.[/]")
+        raise typer.Exit(code=2)
+    result = run_quantum_inspect({"qasm": qasm, "path": str(path) if path else None})
+    if as_json:
+        console.print_json(json.dumps(result, default=str))
+        return
+    console.print_json(json.dumps(result, default=str))
+
+
+@optimize_app.command("validate")
+def optimize_validate(
+    path: Path = typer.Argument(..., exists=True, readable=True, help="JSON optimization problem and candidate solution."),
+    as_json: bool = typer.Option(False, "--json"),
+) -> None:
+    """Validate an LP/QUBO-style candidate from a JSON file."""
+    from tools.science import run_optimization_validate
+
+    try:
+        problem = json.loads(path.read_text(encoding="utf-8"))
+        result = run_optimization_validate({"problem": problem})
+    except (OSError, json.JSONDecodeError) as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    console.print_json(json.dumps(result, default=str))
+    if result.get("status") == "success" and not result.get("feasible"):
+        raise typer.Exit(code=1)
+
+
+@app.command("workflows")
+def workflows_list(
+    name: str | None = typer.Option(None, "--name", help="Describe one workflow."),
+    as_json: bool = typer.Option(False, "--json"),
+) -> None:
+    """List the typed workflow catalog and its approval/recovery gates."""
+    from atelier.workflows import get_workflow, list_workflows
+
+    try:
+        rows = [get_workflow(name)] if name else list_workflows()
+    except KeyError as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    payload = [row.to_dict() for row in rows]
+    if as_json:
+        console.print_json(json.dumps(payload))
+        return
+    table = Table(title="Atelier workflows")
+    for column in ("name", "purpose", "capabilities", "approval", "recovery"):
+        table.add_column(column)
+    for row in rows:
+        table.add_row(row.name, row.purpose, ", ".join(row.required_capabilities), row.approval_gate, row.recovery)
+    console.print(table)
 
 
 @models_app.command("list")

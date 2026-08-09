@@ -9,6 +9,8 @@ from tools.knowledge import SEARCH_NOTES_TOOL
 from tools.memory_tools import RECALL_TOOL, REMEMBER_TOOL
 from tools.repo_map import REPO_MAP_TOOL
 from tools.repository import REPO_INSPECT_TOOL, REPO_SEARCH_TOOL, REPO_STATUS_TOOL, REPO_SYMBOLS_TOOL, REPO_TESTS_TOOL
+from tools.research import RESEARCH_LOOKUP_TOOL
+from tools.science import OPTIMIZATION_VALIDATE_TOOL, QUANTUM_INSPECT_TOOL
 from tools.search import SEARCH_TOOL
 from tools.shell import SHELL_TOOL
 from tools.test_runner import TEST_RUNNER_TOOL
@@ -111,6 +113,9 @@ def create_default_registry(
         TEST_RUNNER_TOOL,
         REMEMBER_TOOL,
         RECALL_TOOL,
+        RESEARCH_LOOKUP_TOOL,
+        QUANTUM_INSPECT_TOOL,
+        OPTIMIZATION_VALIDATE_TOOL,
     ):
         registry.register(tool)
     if include_shell:
