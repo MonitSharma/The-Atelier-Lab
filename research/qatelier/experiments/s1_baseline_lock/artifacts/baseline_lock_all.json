@@ -14,19 +14,21 @@
     ]
   },
   "claim_level": "classical_reference",
-  "config_sha256": "a819fe48a958e352cd14829099852997268f6e90f631814f30dc9a16e01dc6df",
+  "config_sha256": "b12525591ca87421b71df48ca0ce4ecfe9e2591d5231fdbb008296e2f730262a",
   "public_task_status": {
     "additional_classification": {
       "requirement": "public_classification_task_with_distinct_label_geometry",
       "status": "reference_locked"
     },
     "controlled_interaction_order": {
+      "definition": "controlled_interaction_order",
       "requirement": "qatelier_benchmark_with_orders_1_through_6",
-      "status": "unresolved"
+      "status": "definition_ready"
     },
     "scientific_retrieval": {
+      "definition": "scientific_retrieval",
       "requirement": "public_scientific_reranking_benchmark",
-      "status": "unresolved"
+      "status": "definition_ready"
     },
     "semantic_pair": {
       "requirement": "public_pair_task_with_frozen_pair_representation",

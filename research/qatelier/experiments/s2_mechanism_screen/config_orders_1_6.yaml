@@ -1,5 +1,5 @@
 schema_version: 1
-experiment_id: qatelier-s2-mechanism-screen
+experiment_id: qatelier-s2-mechanism-screen-orders-1-6
 status: exploratory_screen_not_selection_freeze
 problem:
   n_features: 6
@@ -12,10 +12,10 @@ problem:
   evaluation_seed: 101
 quantum:
   families: [QIA-P, QIA-L, QIA-X, QIA-A]
-  q_values: [2, 4, 6]
+  q_values: [2, 4]
   reuploads: [1, 2]
   trainable_layers: 1
-  train_steps: 4
+  train_steps: 2
   learning_rate: 0.08
   finite_difference_epsilon: 0.01
   l2: 0.001

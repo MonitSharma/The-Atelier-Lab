@@ -69,17 +69,20 @@ def run_screen(*, config_path: str | Path, output_dir: str | Path) -> Path:
                 rows.append({"family": family, "interaction_order": order, "model_type": "classical", "candidate_id": name, "metrics": evaluate(model, evaluation_data.features, evaluation_data.labels, representation=representation), "target_fingerprint": problem.target_fingerprint, "feature_target_alignment": base_diagnostics["feature_target_alignment"], "feature_effective_rank": base_diagnostics["feature_effective_rank"]})
             for quantum_family in config["quantum"]["families"]:
                 for reuploads in config["quantum"]["reuploads"]:
-                    q = int(config["quantum"]["q"])
-                    circuit_config = QuantumAdapterConfig(q=q, R=int(reuploads), L=int(config["quantum"]["trainable_layers"]), family=quantum_family, readout=ReadoutSpec(("Z0",), trainable_weights=True, trainable_bias=True))
-                    parameters, history = _train_quantum(circuit_config, train_data.features[:, :q], train_data.labels, seed=problem_config["train_seed"] + order, steps=int(config["quantum"]["train_steps"]), learning_rate=float(config["quantum"]["learning_rate"]), epsilon=float(config["quantum"]["finite_difference_epsilon"]), l2=float(config["quantum"]["l2"]), initialization_scale=float(config["quantum"]["initialization_scale"]))
-                    simulator = PQCStatevectorSimulator(circuit_config)
-                    scores = _quantum_scores(simulator, evaluation_data.features[:, :q], parameters)
-                    gradient = finite_difference_gradient(lambda theta: float(np.mean((_quantum_scores(simulator, train_data.features[: int(config["diagnostics"]["gradient_rows"]), :q], theta) - train_data.labels[: int(config["diagnostics"]["gradient_rows"])] ) ** 2)), parameters, epsilon=float(config["diagnostics"]["gradient_epsilon"]))
-                    grid = np.linspace(-2.0, 2.0, int(config["diagnostics"]["spectral_grid_size"]))
-                    line_features = np.zeros((grid.size, q), dtype=float)
-                    line_features[:, 0] = grid
-                    line_scores = _quantum_scores(simulator, line_features, parameters)
-                    rows.append({"family": family, "interaction_order": order, "model_type": "quantum_simulator", "candidate_id": f"{quantum_family}-q{q}-R{reuploads}", "metrics": classification_metrics(evaluation_data.labels, scores), "target_fingerprint": problem.target_fingerprint, "feature_target_alignment": base_diagnostics["feature_target_alignment"], "feature_effective_rank": base_diagnostics["feature_effective_rank"], "circuit": CircuitSchedule.from_config(circuit_config).to_dict(), "parameters_hash": hashlib.sha256(np.ascontiguousarray(parameters).tobytes()).hexdigest(), "training_history": history, "gradient_summary": gradient_summary(gradient), "line_spectral_summary": spectral_summary(line_scores[:, None])})
+                    for q in config["quantum"]["q_values"]:
+                        q = int(q)
+                        if q > problem_config["n_features"]:
+                            raise ValueError("quantum q cannot exceed benchmark feature dimension")
+                        circuit_config = QuantumAdapterConfig(q=q, R=int(reuploads), L=int(config["quantum"]["trainable_layers"]), family=quantum_family, readout=ReadoutSpec(("Z0",), trainable_weights=True, trainable_bias=True))
+                        parameters, history = _train_quantum(circuit_config, train_data.features[:, :q], train_data.labels, seed=problem_config["train_seed"] + order, steps=int(config["quantum"]["train_steps"]), learning_rate=float(config["quantum"]["learning_rate"]), epsilon=float(config["quantum"]["finite_difference_epsilon"]), l2=float(config["quantum"]["l2"]), initialization_scale=float(config["quantum"]["initialization_scale"]))
+                        simulator = PQCStatevectorSimulator(circuit_config)
+                        scores = _quantum_scores(simulator, evaluation_data.features[:, :q], parameters)
+                        gradient = finite_difference_gradient(lambda theta: float(np.mean((_quantum_scores(simulator, train_data.features[: int(config["diagnostics"]["gradient_rows"]), :q], theta) - train_data.labels[: int(config["diagnostics"]["gradient_rows"])] ) ** 2)), parameters, epsilon=float(config["diagnostics"]["gradient_epsilon"]))
+                        grid = np.linspace(-2.0, 2.0, int(config["diagnostics"]["spectral_grid_size"]))
+                        line_features = np.zeros((grid.size, q), dtype=float)
+                        line_features[:, 0] = grid
+                        line_scores = _quantum_scores(simulator, line_features, parameters)
+                        rows.append({"family": family, "interaction_order": order, "model_type": "quantum_simulator", "candidate_id": f"{quantum_family}-q{q}-R{reuploads}", "metrics": classification_metrics(evaluation_data.labels, scores), "target_fingerprint": problem.target_fingerprint, "feature_target_alignment": base_diagnostics["feature_target_alignment"], "feature_effective_rank": base_diagnostics["feature_effective_rank"], "circuit": CircuitSchedule.from_config(circuit_config).to_dict(), "parameters_hash": hashlib.sha256(np.ascontiguousarray(parameters).tobytes()).hexdigest(), "training_history": history, "gradient_summary": gradient_summary(gradient), "line_spectral_summary": spectral_summary(line_scores[:, None])})
     manifest = {"schema_version": 1, "experiment_id": config["experiment_id"], "config_sha256": hashlib.sha256(config_path.read_bytes()).hexdigest(), "row_count": len(rows), "provider_contacted": False, "jobs_submitted": 0, "status": "exploratory_screen_not_selection_freeze"}
     (destination / "run_manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
     (destination / "results.json").write_text(json.dumps(_ready({"run_manifest": manifest, "rows": rows}), indent=2, sort_keys=True) + "\n")

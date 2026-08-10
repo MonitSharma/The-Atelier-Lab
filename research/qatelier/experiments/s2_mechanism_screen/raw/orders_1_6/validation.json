@@ -1,0 +1,39 @@
+{
+  "candidate_freeze": false,
+  "classical_rows": 72,
+  "families": [
+    "aligned",
+    "fourier",
+    "misaligned",
+    "rotated"
+  ],
+  "jobs_submitted": 0,
+  "orders": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "provider_contacted": false,
+  "q_values": [
+    2,
+    4
+  ],
+  "quantum_families": [
+    "QIA-A",
+    "QIA-L",
+    "QIA-P",
+    "QIA-X"
+  ],
+  "quantum_rows": 384,
+  "raw_results_sha256": "2b95bb42f986c4815dc955446f033b20961fbd817d4e344876dcc97c5eead367",
+  "reuploads": [
+    1,
+    2
+  ],
+  "row_count": 456,
+  "schema_version": 1,
+  "status": "validated"
+}

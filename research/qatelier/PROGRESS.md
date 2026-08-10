@@ -112,13 +112,24 @@ The following credential-free infrastructure is now implemented on `qatelier`:
   `experiments/s1_baseline_lock/raw/cola/` with 480 rows and zero provider jobs.
   The combined SST-2/MRPC/CoLA reference table is
   [`experiments/s1_baseline_lock/artifacts/baseline_lock_all.json`](experiments/s1_baseline_lock/artifacts/baseline_lock_all.json),
-  while scientific retrieval and controlled interaction-order remain open.
+  while the remaining scientific-retrieval and controlled-order definitions
+  are now pinned for later head evaluation under
+  `experiments/s1_baseline_lock/scientific_retrieval/` and
+  `experiments/s1_baseline_lock/controlled_interaction_order/`.
 - The initial S2 mechanism screen is implemented with kernel alignment,
   effective-rank, spectrum, and finite-difference gradient diagnostics. A
   bounded screen over four interaction families and orders 1–4 is archived
   under [`experiments/s2_mechanism_screen/raw/`](experiments/s2_mechanism_screen/raw/);
   quantum heads were near chance and no candidate was frozen. This is a useful
   negative optimization/mechanism checkpoint, not a C1/C2 result.
+- A bounded all-order S2 panel is now archived under
+  `experiments/s2_mechanism_screen/raw/orders_1_6/`: 456 rows covering all
+  four benchmark families, orders 1–6, q=2/4, all four QIA families, both
+  re-upload counts, and three classical controls. It uses two short training
+  steps, reports zero provider jobs, and explicitly freezes no candidate. A
+  larger q=6 exploratory attempt was stopped after becoming impractical for
+  the current finite-difference simulator; its declared configuration remains
+  documented but no partial output was retained.
 
 Focused QAtelier verification currently passes: 71 tests plus 7 benchmark
 subtests, with Ruff clean. No provider job was submitted.
@@ -138,8 +149,8 @@ may not silently revise an earlier stage's split, baseline, or selection rule.
 | Stage | Purpose | Required controls | Advance rule | Status |
 | --- | --- | --- | --- | --- |
 | S0 — reproduction/calibration | Reproduce a compact published-style frozen-embedding quantum-head setup and resolve discrepancies. | Same embeddings and splits for LR/SVM and the quantum head; record simulator and seed. | Basic behavior is reproduced or the discrepancy is explained. | Complete; negative calibration result archived |
-| S1 — classical baseline lock | Establish the reference numbers before quantum screening. | Shared compressor, full nonlinear baseline ladder, equal validation/search budgets. | Search spaces, metrics, seeds, and reference outputs are frozen. | Partial multi-task lock: SST-2, MRPC, CoLA; retrieval and controlled-order pending |
-| S2 — mechanism screen | Test QIA-P/L/X/A across low-data and controlled interaction-order conditions. | Matched `q`, depth, trainable-parameter bands, optimization budget, and paired seeds; include aligned and deliberately misaligned tasks. | Retain only Pareto candidates with stable validation utility and non-pathological gradients. | Initial bounded screen archived; full q/family/ablation screen pending |
+| S1 — classical baseline lock | Establish the reference numbers before quantum screening. | Shared compressor, full nonlinear baseline ladder, equal validation/search budgets. | Search spaces, metrics, seeds, and reference outputs are frozen. | Partial multi-task lock: SST-2, MRPC, CoLA heads locked; retrieval/order definitions pinned, heads pending |
+| S2 — mechanism screen | Test QIA-P/L/X/A across low-data and controlled interaction-order conditions. | Matched `q`, depth, trainable-parameter bands, optimization budget, and paired seeds; include aligned and deliberately misaligned tasks. | Retain only Pareto candidates with stable validation utility and non-pathological gradients. | Bounded orders 1–6 q=2/4 panel archived; candidate freeze pending |
 | S3 — held-out simulator | Evaluate the frozen candidates on all predeclared public/OOD tasks. | No test tuning; report paired effect sizes and bootstrap intervals across seeds/tasks. | C1/C2 evidence exists, or a rigorous negative result explains the loss. | Planned |
 | S4 — noise/shot screen | Estimate finite-shot and device-noise degradation. | Fixed shot budgets, noise-model versions, and candidate list; report gradient and resource costs. | Select 2–4 candidates only if signal is stable enough to justify QPU spend. | Planned |
 | S5 — hardware pilot | Run a small, fixed sample slice on IBM and Quantinuum where access permits. | Frozen parameters, sample IDs, thresholds, shots, compilation settings, and one preregistered mitigation condition. | Outputs are stable enough for a main campaign; otherwise stop at simulation evidence. | Planned |
@@ -185,11 +196,10 @@ may not silently revise an earlier stage's split, baseline, or selection rule.
 
 ## Immediate next actions
 
-1. Complete the remaining S1 scientific-retrieval and controlled-order task
-   definitions, or record a justified scope decision before S3.
-2. Extend S2 to the preregistered q/family/ablation grid and use the locked
-   classical tables as the comparison reference; do not tune against
-   confirmation results.
+1. Prepare and lock the S1 scientific-retrieval and controlled-order classical
+   reference heads; do not use their confirmation results for quantum tuning.
+2. Add the remaining S2 ablations and paired-seed analysis, using the locked
+   classical tables as the comparison reference; no candidate is frozen yet.
 3. Keep IBM/Helios-1E execution gated until S2–S4 produce frozen candidates and
    accepted resource/cost manifests.
 
