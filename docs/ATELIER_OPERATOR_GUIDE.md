@@ -47,6 +47,12 @@ atelier › git status
 atelier › paper report.pdf --ingest
 ```
 
+Press `Tab` to complete Atelier commands and local filesystem paths. For
+example, `cd Dow<Tab>` completes a matching directory such as
+`Downloads/`; path arguments to `paper`, `ingest`, `find`, `rg`, and `cat` are
+also completed. Completion is limited to the current local filesystem and does
+not search or upload anything.
+
 `cd` changes both the process directory and the active Atelier workspace.
 Commands are executed without a shell, so pipes and redirections are not
 interpreted inside the Atelier prompt; use a normal terminal for shell syntax.
