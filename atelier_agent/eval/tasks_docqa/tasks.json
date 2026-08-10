@@ -126,7 +126,7 @@
       "category": "models",
       "difficulty": "easy",
       "question": "What are the default local model roles and which model backs each role?",
-      "expected_contains": ["brain", "qwen3:14b", "worker", "qwen3:4b", "heavy", "gemma4:26b"],
+      "expected_contains": ["brain", "qwen3:8b", "worker", "qwen3:4b", "heavy", "gemma4:26b"],
       "expected_sources": ["docs/ARCHITECTURE.md", "README.md", "Project.md"]
     },
     {

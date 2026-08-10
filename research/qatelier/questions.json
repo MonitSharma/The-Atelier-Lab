@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "name": "QAtelier document understanding evaluation",
+  "source": "~/Downloads/QAtelier_Quantum_Adapters_Research_Plan.docx",
+  "source_type": "docx",
+  "grounding_rule": "Ground answers in the QAtelier document. Label external knowledge and inferences explicitly. Do not claim quantum advantage from accuracy alone.",
+  "questions": [
+    {
+      "id": "summary",
+      "dimension": "summary",
+      "question": "Give a concise, faithful summary of the QAtelier research plan. State the central research question, proposed contribution, experimental scope, and what would count as evidence for or against a useful quantum-adapter effect.",
+      "must_cover": [
+        "frozen foundation-model representations",
+        "small parameterized quantum adapter",
+        "matched classical controls",
+        "low-data, out-of-distribution, and controlled high-order-correlation regimes",
+        "resource- and hardware-aware evidence"
+      ],
+      "citation_requirement": "Cite the QAtelier document and distinguish its stated goals from interpretation."
+    },
+    {
+      "id": "assumptions",
+      "dimension": "assumptions",
+      "question": "List the assumptions made by the QAtelier plan about the frozen representation model, the shared low-dimensional compressor, parameter matching, data regimes, training and selection, and execution on real quantum hardware. Mark each item as explicit or inferred.",
+      "must_cover": [
+        "representation and frozen-backbone assumptions",
+        "compression and input-dimension assumptions",
+        "parameter and compute matching",
+        "data and distribution assumptions",
+        "hardware noise and execution assumptions"
+      ],
+      "citation_requirement": "Every explicit assumption should be traceable to a passage in the source."
+    },
+    {
+      "id": "methods",
+      "dimension": "methods",
+      "question": "Reconstruct the proposed method as an ordered protocol: representation extraction, compression, quantum and classical adapter construction, training and model selection, evaluation regimes, and hardware validation. Include the comparison ladder and controls.",
+      "must_cover": [
+        "frozen feature extraction",
+        "shared or representation-matched compression",
+        "quantum adapter and classical baselines",
+        "validation and held-out evaluation",
+        "simulation-to-hardware transition"
+      ],
+      "citation_requirement": "Cite the relevant QAtelier sections or passages for each major protocol stage."
+    },
+    {
+      "id": "risks",
+      "dimension": "risks",
+      "question": "What are the strongest confounders, risks, failure modes, and falsifiers for the QAtelier claim? Prioritize risks that could make a quantum adapter look better for reasons unrelated to its inductive bias, and state the control or measurement that addresses each risk.",
+      "must_cover": [
+        "parameter-count and optimization fairness",
+        "data leakage or selection effects",
+        "classical compression and representation effects",
+        "stochastic estimation and shot/resource costs",
+        "noise, drift, and simulator-to-hardware gaps"
+      ],
+      "citation_requirement": "Separate risks explicitly discussed in the plan from evaluation recommendations."
+    },
+    {
+      "id": "citations",
+      "dimension": "citations",
+      "question": "Create a citation and verification ledger for the QAtelier plan: identify five important externally verifiable claims, explain what evidence each claim needs, and mark whether the plan already supplies support or whether a paper, dataset, hardware, or implementation citation is still required.",
+      "must_cover": [
+        "claim text or paraphrase",
+        "evidence needed",
+        "source status",
+        "uncertainty or caveat",
+        "next citation action"
+      ],
+      "citation_requirement": "Do not invent bibliographic details; use placeholders when the plan does not provide enough information."
+    },
+    {
+      "id": "proposed-experiments",
+      "dimension": "proposed experiments",
+      "question": "Propose the first three QAtelier experiments in dependency order. For each, specify the hypothesis, data/task regime, quantum and classical baselines, metrics, resource measurements, stopping or falsification rule, and the result that would justify moving to the next experiment.",
+      "must_cover": [
+        "minimal controlled benchmark",
+        "low-data or out-of-distribution test",
+        "hardware validation or a justified hardware gate",
+        "accuracy and uncertainty metrics",
+        "parameter, runtime, shot, and energy/resource accounting"
+      ],
+      "citation_requirement": "Anchor the experiment sequence in the plan and label any proposed extension as a recommendation."
+    }
+  ]
+}

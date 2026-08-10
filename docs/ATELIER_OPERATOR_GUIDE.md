@@ -320,18 +320,17 @@ models.
 | Optional candidate — `qwen2.5-coder:7b` | 4.7 GB | not selected | alternative coding benchmark candidate |
 | Optional candidate — `gemma4:12b-it-q4_K_M` | 7.6 GB | not selected | alternative local reasoning candidate |
 
-Current configured-but-not-installed placeholders:
+Current optional and future model slots:
 
 | Role | Configured model | Purpose |
 |---|---|---|
-| Brain | `qwen3:14b` | general reasoning and larger build tasks |
+| Future brain candidate | `qwen3:14b` | larger local reasoning candidate; not installed |
 | Router target | `qwen3:4b` | future model-backed routing experiment |
 | Expert | empty | reserved capability slot |
 
-The fresh local acceptance run used `qwen3:8b` explicitly for both the cited
-paper ask and the repository coding workflow. The default configuration still
-names `qwen3:14b` as the brain placeholder, so use an explicit override when
-you want the installed 8B model:
+The current local configuration uses `qwen3:8b` for the brain and coder roles.
+`qwen3:14b` remains a future candidate, not an installed dependency. Override
+the roles explicitly when benchmarking another model:
 
 ```bash
 export ATELIER_BRAIN_MODEL=qwen3:8b
@@ -348,7 +347,7 @@ already compact and the large model files remain managed by Ollama.
 |---|---|---|
 | A — tiny worker | routing, classification, metadata, query rewriting, JSON | LFM2.5-2.6B Q6_K |
 | B — small coding agent | scripts, tests, bug fixes, repository exploration | Qwen3-8B; Qwen2.5-Coder-7B remains a candidate |
-| C — main local intelligence | mathematics, papers, optimization, quantum reasoning | Qwen3-14B is configured; Qwen3.8-27B Q4 remains a future hardware-budget decision |
+| C — main local intelligence | mathematics, papers, optimization, quantum reasoning | Qwen3-8B is temporary; Qwen3.8-27B Q4 remains a future hardware-budget decision |
 | D — frontier handoffs | architecture, implementation, long context, multimodal review | Claude = critic/architect; Codex = implementation; Gemini = large-context/multimodal |
 
 Do not load the 17 GB heavy model at the same time as every other large model
