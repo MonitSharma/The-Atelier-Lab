@@ -21,7 +21,12 @@ from typing import Any, Literal
 
 from atelier.config import settings
 from atelier.workflows import WorkflowSpec, get_workflow
-from atelier.workspace import WorkspaceError, WorkspaceManager, get_workspace_manager, workspace_scope
+from atelier.workspace import (
+    WorkspaceError,
+    WorkspaceManager,
+    get_workspace_manager,
+    workspace_scope,
+)
 
 RunStatus = Literal["queued", "running", "waiting_approval", "completed", "failed", "cancelled"]
 
@@ -76,7 +81,7 @@ class WorkflowState:
         return _jsonable(payload)
 
     @classmethod
-    def from_dict(cls, payload: dict[str, Any]) -> "WorkflowState":
+    def from_dict(cls, payload: dict[str, Any]) -> WorkflowState:
         checkpoints = [WorkflowCheckpoint(**item) for item in payload.get("checkpoints", [])]
         return cls(
             run_id=str(payload["run_id"]), workflow=str(payload["workflow"]),
@@ -261,7 +266,11 @@ class WorkflowEngine:
                 return simulate_qasm_text(text, shots=int(state.input.get("shots", 1024)))
             return {"status": "ready", "step": step}
         elif workflow == "optimization_validate":
-            from tools.science import compare_optimization_solutions, solve_optimization, validate_optimization
+            from tools.science import (
+                compare_optimization_solutions,
+                solve_optimization,
+                validate_optimization,
+            )
 
             problem = state.input.get("problem", state.input)
             if step in {"parse problem", "check feasibility", "compute objective"}:

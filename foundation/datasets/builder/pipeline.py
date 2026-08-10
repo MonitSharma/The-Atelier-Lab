@@ -1,16 +1,17 @@
-import os
 import argparse
-import sys
 import logging
+import os
 import shutil
+import sys
 
-from foundation.datasets.builder.download import download_corpora
-from foundation.datasets.builder.normalize import normalize_directory
-from foundation.datasets.builder.clean import clean_directory
-from foundation.datasets.builder.deduplicate import deduplicate_directory
-from foundation.datasets.builder.filter import filter_directory
 from foundation.datasets.builder.analyze import analyze_corpus
 from foundation.datasets.builder.build_dataset import compile_dataset
+from foundation.datasets.builder.clean import clean_directory
+from foundation.datasets.builder.deduplicate import deduplicate_directory
+from foundation.datasets.builder.download import download_corpora
+from foundation.datasets.builder.filter import filter_directory
+from foundation.datasets.builder.normalize import normalize_directory
+
 
 def setup_logger(metadata_dir):
     os.makedirs(metadata_dir, exist_ok=True)

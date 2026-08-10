@@ -1,5 +1,5 @@
-import pytest
 from foundation.datasets.builder.normalize import normalize_text
+
 
 def test_unicode_nfc():
     # Devanagari combined characters (e.g. key characters + matras)

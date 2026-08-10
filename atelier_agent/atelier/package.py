@@ -11,7 +11,7 @@ from typing import Any
 
 from atelier.runtime import runtime_layout
 
-REQUIRED_FILES = ("pyproject.toml", "requirements.txt", "README.md", "atelier/cli.py")
+REQUIRED_FILES = ("pyproject.toml", "requirements.txt", "README.md", "atelier/cli/__init__.py")
 
 
 def package_check(root: str | Path) -> dict[str, Any]:

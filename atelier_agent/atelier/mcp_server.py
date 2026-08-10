@@ -23,8 +23,8 @@ from mcp.server.stdio import stdio_server
 
 
 def build_server(include_shell: bool = False) -> Server:
-    from tools.registry import create_default_registry
     from atelier.workspace import get_workspace_manager
+    from tools.registry import create_default_registry
 
     registry = create_default_registry(
         include_shell=include_shell,

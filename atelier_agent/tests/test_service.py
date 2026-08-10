@@ -1,7 +1,7 @@
-from atelier.service import AtelierService
-from atelier.workspace import WorkspaceManager
 from agent.project_memory import ProjectMemoryStore
+from atelier.service import AtelierService
 from atelier.workflow_engine import WorkflowEngine
+from atelier.workspace import WorkspaceManager
 from tools.registry import create_default_registry
 
 

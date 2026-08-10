@@ -3,7 +3,6 @@ from typing import Any
 
 # pyrefly: ignore [missing-import]
 from agent.brain import ask_model
-
 from tools.calculator import CalculatorError, calculate
 
 SYSTEM_PROMPT = """

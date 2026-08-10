@@ -1,10 +1,15 @@
 import pytest
 
+# These imports must follow importorskip: every module below pulls in torch, so
+# importing them at the top would error out instead of skipping when torch is
+# absent (the intended behaviour on a machine without it installed).
 torch = pytest.importorskip("torch")
 
-from foundation.minillm.attention import scaled_dot_product_attention
-from foundation.minillm.model import ModelConfig, TransformerLM
-from foundation.minillm.tokenizer import ByteTokenizer, CharTokenizer
+from foundation.minillm.attention import (  # noqa: E402
+    scaled_dot_product_attention,
+)
+from foundation.minillm.model import ModelConfig, TransformerLM  # noqa: E402
+from foundation.minillm.tokenizer import ByteTokenizer, CharTokenizer  # noqa: E402
 
 
 def test_tokenizers_round_trip():

@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -63,7 +63,7 @@ class RuntimeLayout:
                 "directories": {name: str(getattr(self, name)) for name in
                                 ("library", "databases", "workspaces", "config", "cache", "logs", "backups")}}
 
-    def initialize(self) -> "RuntimeLayout":
+    def initialize(self) -> RuntimeLayout:
         self.root.mkdir(parents=True, exist_ok=True)
         for directory in self.directories():
             directory.mkdir(parents=True, exist_ok=True)

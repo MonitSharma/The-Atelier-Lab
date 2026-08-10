@@ -72,7 +72,7 @@ class RepositoryInspector:
         object.__setattr__(self, "root", root)
 
     @classmethod
-    def for_path(cls, path: str | Path, max_files: int = 5000) -> "RepositoryInspector":
+    def for_path(cls, path: str | Path, max_files: int = 5000) -> RepositoryInspector:
         path = Path(path).expanduser().resolve()
         if path.is_file():
             path = path.parent

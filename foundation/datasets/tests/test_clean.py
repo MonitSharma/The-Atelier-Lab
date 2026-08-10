@@ -1,5 +1,5 @@
-import pytest
 from foundation.datasets.builder.clean import clean_document
+
 
 def test_html_stripping():
     raw_text = "क <div>ख</div> ग <br/>"

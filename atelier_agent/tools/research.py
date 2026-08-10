@@ -7,21 +7,20 @@ checked against the active workspace before an HTTP request is made.
 
 from __future__ import annotations
 
-import json
 import hashlib
+import json
 import os
 import tempfile
-from datetime import UTC, datetime
 from collections.abc import Callable
+from datetime import UTC, datetime
 from difflib import SequenceMatcher
 from pathlib import Path
+from typing import Any
 from urllib.parse import quote, urlencode, urlparse
 from urllib.request import Request, urlopen
 from xml.etree import ElementTree
-from typing import Any
 
 from atelier.config import settings
-
 from atelier.workspace import WorkspaceError, current_workspace_context
 from tools.base import Tool
 

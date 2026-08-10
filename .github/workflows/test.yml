@@ -6,6 +6,30 @@ on:
   pull_request:
 
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      # Ruff needs no project dependencies, so this job stays fast and gives a
+      # style/dead-code signal well before the heavier test job finishes.
+      - name: Install Ruff
+        run: python -m pip install ruff==0.15.17
+
+      - name: Check lint rules
+        run: ruff check atelier_agent foundation scripts
+
+      - name: Check import sorting and formatting drift
+        run: ruff check --select I atelier_agent foundation scripts
+
   test:
     name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest

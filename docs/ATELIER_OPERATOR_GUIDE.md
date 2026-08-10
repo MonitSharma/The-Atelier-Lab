@@ -234,6 +234,15 @@ atelier handoff create --target codex --task "Review this result"
 another local program to call Atelier; it is not required for normal CLI use.
 Run it in a separate terminal and press Ctrl-C there to stop only the server.
 
+While it is running, any website you visit can also send requests to
+`127.0.0.1`, so binding to loopback is not on its own a boundary. The server
+therefore rejects requests whose `Host` is not loopback (which is what blocks
+DNS rebinding), requests carrying a foreign `Origin` or a cross-site
+`Sec-Fetch-Site`, and `POST`s that are not `Content-Type: application/json`. It
+answers no CORS preflight. A local program calling the API should send JSON and
+either no `Origin` or the server's own. Still, prefer to stop the server when
+you are not using it — it can write files and start repository work.
+
 `mcp` is different: it is a JSON-RPC bridge for an MCP host such as Claude
 Desktop/Code or another compatible client. It intentionally appears idle in a
 terminal because it waits for protocol messages on stdin. Do not run it as the

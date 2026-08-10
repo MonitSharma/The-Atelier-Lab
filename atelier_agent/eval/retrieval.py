@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -39,7 +39,7 @@ def run_local_retrieval_benchmark(k: int = 6) -> dict[str, Any]:
         rows.append(evaluate_hits(query, retrieve(query, k=k), expected))
     report = {
         "schema_version": 1,
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
         "embedding_model": settings.embed_model,
         "embedding_dimension": settings.embed_dimension,
         "rows": rows,

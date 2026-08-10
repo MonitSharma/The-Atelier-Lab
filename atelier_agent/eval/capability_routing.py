@@ -6,7 +6,6 @@ from typing import Any
 
 from agent.capability_router import CapabilityRouter
 
-
 # Labels are deliberately explicit and reviewable rather than inferred from
 # the router's own output. They form the small development set used to catch
 # routing regressions before larger model-backed evaluations.

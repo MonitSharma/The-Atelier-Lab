@@ -11,6 +11,9 @@ test = [
     "pyarrow==25.0.0",
     "torch==2.12.0",
 ]
+dev = [
+    "ruff==0.15.17",
+]
 
 [build-system]
 requires = ["setuptools>=68"]
@@ -22,3 +25,14 @@ include = ["foundation*"]
 [tool.pytest.ini_options]
 testpaths = ["foundation/minillm/tests", "atelier_agent/tests", "foundation/datasets/tests"]
 norecursedirs = ["fixtures"]
+
+# Covers foundation/ and scripts/. `atelier_agent/` is a self-contained package
+# and carries an equivalent config in its own pyproject.toml, which Ruff picks up
+# for files under that directory.
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]

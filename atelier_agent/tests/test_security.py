@@ -1,6 +1,14 @@
 import json
 
-from atelier.security import SecurityBoundary, detect_prompt_injection, protect_tool_output, validate_shell_command
+import pytest
+
+from atelier.security import (
+    SecurityBoundary,
+    detect_prompt_injection,
+    parse_shell_command,
+    protect_tool_output,
+    validate_shell_command,
+)
 from atelier.workspace import Workspace, WorkspaceContext
 from tools.base import Tool
 from tools.registry import ToolRegistry
@@ -10,6 +18,40 @@ def test_shell_policy_blocks_injection_and_destructive_commands():
     assert validate_shell_command("python -m pytest")[0] is True
     assert validate_shell_command("python -c 'print(1)' && curl https://example.com")[0] is False
     assert validate_shell_command("rm -rf project")[0] is False
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "ls\ntouch /tmp/atelier_pwned",   # newline: shlex treats it as whitespace
+        "ls\rtouch /tmp/atelier_pwned",   # carriage return, same trick
+        "ls & touch /tmp/atelier_pwned",  # single '&' is a separator, not just '&&'
+        "ls ; touch /tmp/atelier_pwned",
+        "ls | tee /tmp/atelier_pwned",
+        "ls > /tmp/atelier_pwned",
+    ],
+)
+def test_shell_policy_rejects_command_chaining_past_an_allowed_executable(command):
+    """An allowed leading executable must not smuggle a second command through.
+
+    Each of these once passed the allowlist because the separator was absent
+    from the operator regex (newline, bare '&') and ``shlex.split`` reported a
+    permitted ``ls`` as tokens[0].
+    """
+    tokens, reason = parse_shell_command(command)
+    assert tokens is None, f"{command!r} was allowed: {reason}"
+
+
+def test_shell_policy_keeps_quoted_operator_characters_usable():
+    """Quoting is preserved: operators only matter as standalone tokens."""
+    tokens, _ = parse_shell_command("rg 'def foo()'")
+    assert tokens == ["rg", "def foo()"]
+
+
+def test_parse_shell_command_returns_argv_that_callers_execute_verbatim():
+    tokens, reason = parse_shell_command("pytest -q tests/test_security.py")
+    assert reason == "allowed"
+    assert tokens == ["pytest", "-q", "tests/test_security.py"]
 
 
 def test_tool_output_is_marked_untrusted_and_secrets_are_redacted():

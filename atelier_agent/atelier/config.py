@@ -16,13 +16,14 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from typing import Any
+
 from dotenv import load_dotenv
-
-# Load .env file to populate environment variables like HF_TOKEN
-load_dotenv()
-
-from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Populate os.environ from .env before anything reads it. Settings itself also
+# declares `env_file=".env"`, but plain `os.environ` lookups below (ATELIER_HOME)
+# and third-party reads (HF_TOKEN) need the variables actually exported.
+load_dotenv()
 
 # Repo root = parent of this `atelier/` package directory.
 ROOT = Path(__file__).resolve().parent.parent

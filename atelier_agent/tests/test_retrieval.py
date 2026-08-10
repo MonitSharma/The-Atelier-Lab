@@ -1,6 +1,7 @@
 """Hybrid-retrieval unit tests: BM25 ranking + RRF fusion (no model)."""
 
-from rag.lexical import BM25Index
+import rag.lexical as lexical_module
+from rag.lexical import BM25Index, get_bm25
 from rag.retrieve import _rrf_fuse
 
 DOCS = [
@@ -33,3 +34,73 @@ def test_rrf_rewards_agreement() -> None:
     assert fused[0]["text"] == "A"
     assert fused[1]["text"] == "C"
     assert "fused_score" in fused[0]
+
+
+class _FakeStore:
+    """A vector store stand-in that counts full-corpus reads."""
+
+    def __init__(self, path, documents):
+        self.path = str(path)
+        self._documents = list(documents)
+        self.generation_value = 1
+        self.get_all_calls = 0
+
+    def count(self):
+        return len(self._documents)
+
+    def generation(self):
+        return self.generation_value
+
+    def get_all(self):
+        self.get_all_calls += 1
+        return {"documents": self._documents,
+                "metadatas": [{"source": f"d{i}.md"} for i in range(len(self._documents))]}
+
+    def edit(self, index, text):
+        """Replace a chunk's text without changing the chunk count."""
+        self._documents[index] = text
+        self.generation_value += 1
+
+
+def _reset_process_cache():
+    lexical_module._cache["index"] = None
+    lexical_module._cache["fingerprint"] = None
+
+
+def test_bm25_does_not_reread_the_corpus_on_repeat_queries(tmp_path) -> None:
+    """The hot path must not pull every document out of the store per query."""
+    _reset_process_cache()
+    store = _FakeStore(tmp_path, DOCS)
+
+    for _ in range(5):
+        get_bm25(store)
+
+    assert store.get_all_calls == 1
+
+
+def test_bm25_rebuilds_when_content_changes_but_count_does_not(tmp_path) -> None:
+    """A same-size edit must still invalidate — this is why count alone fails."""
+    _reset_process_cache()
+    store = _FakeStore(tmp_path, DOCS)
+    get_bm25(store)
+
+    store.edit(0, "penguins waddle across antarctic ice")
+    index = get_bm25(store)
+
+    assert store.get_all_calls == 2
+    hits = index.search("penguins antarctic", n=3)
+    assert hits and "penguins" in hits[0]["text"]
+
+
+def test_bm25_disk_cache_survives_a_fresh_process(tmp_path) -> None:
+    """A new process reuses the on-disk index instead of rebuilding it."""
+    _reset_process_cache()
+    store = _FakeStore(tmp_path, DOCS)
+    get_bm25(store)
+    assert store.get_all_calls == 1
+
+    _reset_process_cache()  # simulates a cold start with a warm disk cache
+    index = get_bm25(store)
+
+    assert store.get_all_calls == 1
+    assert index.search("quick fox", n=1)[0]["text"] == DOCS[0]

@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import base64
 import tempfile
-from dataclasses import dataclass, asdict
+from collections.abc import Callable
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
+from agent.project_memory import ProjectMemoryStore
 from atelier.finder import prepare_finder_action
 from atelier.handoff import create_handoff
 from atelier.package import package_check
@@ -15,10 +17,9 @@ from atelier.runtime import runtime_layout
 from atelier.security import validate_shell_command
 from atelier.service import AtelierService
 from atelier.web import render_index
-from atelier.workflows import list_workflows
 from atelier.workflow_engine import WorkflowEngine
+from atelier.workflows import list_workflows
 from atelier.workspace import WorkspaceManager, workspace_scope
-from agent.project_memory import ProjectMemoryStore
 from rag.visual import analyze_pdf
 from tools.registry import create_default_registry
 from tools.research import lookup_research
@@ -107,7 +108,6 @@ def run_clean_acceptance(root: str | Path) -> dict[str, Any]:
     memory, quantum, optimization, and local-only policy paths. Live model
     answer quality and embedding ingestion remain separate acceptance strata.
     """
-    base = Path(root).expanduser().resolve()
     checks: list[AcceptanceCheck] = []
     with tempfile.TemporaryDirectory(prefix="atelier_clean_acceptance_") as raw_temp:
         temp = Path(raw_temp)

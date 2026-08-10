@@ -29,7 +29,7 @@ import statistics
 import time
 import urllib.request
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 HOST = "http://localhost:11434"
@@ -134,7 +134,7 @@ def main() -> None:
     labels = dict(DEFAULT_MODELS)
 
     report = {
-        "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "timestamp": datetime.now(UTC).isoformat(timespec="seconds"),
         "host": "Apple M3 Pro / 36GB / macOS",
         "base_model": "qwen3:4b",
         "n_tasks": len(TASKS),

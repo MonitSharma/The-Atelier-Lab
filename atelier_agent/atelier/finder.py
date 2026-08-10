@@ -6,14 +6,14 @@ index files until the user invokes a concrete command.
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any
 import hashlib
 import shutil
+from pathlib import Path
+from typing import Any
 
+from atelier.config import settings
 from atelier.workspace import WorkspaceManager, get_workspace_manager
 from files.artifacts import profile_path
-from atelier.config import settings
 
 FINDER_ACTIONS = ("send_to_atelier", "add_to_library", "characterize_paper", "explain_file")
 

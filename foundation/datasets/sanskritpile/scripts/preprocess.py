@@ -2,6 +2,7 @@ import os
 import re
 from collections import Counter
 from pathlib import Path
+
 import pyarrow as pa
 import pyarrow.parquet as pq
 import torch
@@ -163,7 +164,7 @@ print(f"English Character-Matched: {english_char_final_bytes} bytes, {english_ch
 # 3. Quality Analysis
 # -----------------------------------------------------------------------------
 def analyze_corpus_quality(text, name):
-    lines = [l for l in text.split('\n') if l.strip()]
+    lines = [line for line in text.split('\n') if line.strip()]
     total_chars = len(text)
     
     devanagari_chars = len(re.findall(r"[\u0900-\u097F]", text))
@@ -175,7 +176,7 @@ def analyze_corpus_quality(text, name):
     pct_digits_punct = (digits_punct / total_chars) * 100 if total_chars > 0 else 0
     
     duplicate_line_rate = ((len(lines) - len(set(lines))) / len(lines) * 100) if len(lines) > 0 else 0
-    avg_line_len = sum(len(l) for l in lines) / len(lines) if len(lines) > 0 else 0
+    avg_line_len = sum(len(line) for line in lines) / len(lines) if len(lines) > 0 else 0
     
     line_counts = Counter(lines)
     top_repeated = line_counts.most_common(5)

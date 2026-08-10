@@ -1,8 +1,10 @@
-import os
 import json
-import unicodedata
+import os
 import re
+import unicodedata
+
 from tqdm import tqdm
+
 
 def normalize_text(text):
     # Normalize Unicode to NFC
@@ -40,7 +42,7 @@ def normalize_directory(input_dir, output_dir):
         
         print(f"Normalizing {filename}...")
         count = 0
-        with open(in_path, "r", encoding="utf-8") as fin, open(out_path, "w", encoding="utf-8") as fout:
+        with open(in_path, encoding="utf-8") as fin, open(out_path, "w", encoding="utf-8") as fout:
             for line in tqdm(fin, desc="Normalizing documents"):
                 doc = json.loads(line)
                 doc["text"] = normalize_text(doc["text"])

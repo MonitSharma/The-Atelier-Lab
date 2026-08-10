@@ -18,7 +18,6 @@ difficulty router) because the two adapters answer different questions.
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent

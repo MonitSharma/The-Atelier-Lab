@@ -1,13 +1,15 @@
-import os
-import json
 import hashlib
+import json
+import os
+
 from tqdm import tqdm
+
 
 def get_hash(text):
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 def deduplicate_directory(input_dir, output_dir, config_path):
-    with open(config_path, "r") as f:
+    with open(config_path) as f:
         config = json.load(f)
     filters = config.get("filters", {})
     
@@ -36,7 +38,7 @@ def deduplicate_directory(input_dir, output_dir, config_path):
         print(f"Deduplicating {filename}...")
         
         docs_written = 0
-        with open(in_path, "r", encoding="utf-8") as fin, open(out_path, "w", encoding="utf-8") as fout:
+        with open(in_path, encoding="utf-8") as fin, open(out_path, "w", encoding="utf-8") as fout:
             for line_json in tqdm(fin, desc="Deduplicating documents"):
                 stats["original_docs"] += 1
                 doc = json.loads(line_json)
