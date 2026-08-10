@@ -103,6 +103,11 @@ The following credential-free infrastructure is now implemented on `qatelier`:
   S1 remains intentionally partial until the public semantic-pair, additional
   classification, scientific retrieval, and controlled interaction-order tasks
   are implemented and locked.
+- The first additional S1 public task is now pinned as MRPC: parquet member
+  hashes, deterministic low-data/confirmation selections, and the pair
+  representation preparation path are committed. A local validation produced
+  1,522 selected pairs and 12 train-only compressors; full MRPC head evaluation
+  is still pending.
 
 Focused QAtelier verification currently passes: 69 tests plus 7 benchmark
 subtests, with Ruff clean. No provider job was submitted.

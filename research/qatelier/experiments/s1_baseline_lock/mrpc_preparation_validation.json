@@ -1,0 +1,15 @@
+{
+  "status": "prepared_pair_representation",
+  "validated_on": "2026-08-10",
+  "dataset": "MRPC",
+  "sample_count": 1522,
+  "pair_feature_dimension": 3072,
+  "pair_features_hash": "8b6405ece8ed8a72871f945bcc6c197fca496bcb42a6bf8c05eafdb55cfadc2f",
+  "encoder_revision": "6cc9279c672dc57f94445ef259b28a1b736fec8f",
+  "encoder_weights_sha256": "5fc2279bd6e503ca3543197b4ef00b615d87eebd02490f8c108aa3f35d7b705d",
+  "compressor_count": 12,
+  "compressor_fit_split": "train",
+  "provider_contacted": false,
+  "jobs_submitted": 0,
+  "artifact_storage": "external_output_directory_only"
+}

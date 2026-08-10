@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "dataset_id": "huggingface-nyu-mll-glue-mrpc",
+  "source_repository": "nyu-mll/glue",
+  "source_revision": "main",
+  "license_note": "Use and redistribution must follow the source dataset terms. The repository stores manifests, not source data.",
+  "members": {
+    "train": {
+      "url": "https://huggingface.co/datasets/nyu-mll/glue/resolve/main/mrpc/train-00000-of-00001.parquet?download=true",
+      "sha256": "61fd41301e0e244b0420c4350a170c8e7cf64740335fc875a4af2d79af0df0af",
+      "rows": 3668,
+      "columns": ["sentence1", "sentence2", "label", "idx"],
+      "label_counts": {"0": 1194, "1": 2474}
+    },
+    "validation": {
+      "url": "https://huggingface.co/datasets/nyu-mll/glue/resolve/main/mrpc/validation-00000-of-00001.parquet?download=true",
+      "sha256": "33c007dbf5bfa8463d87a13e6226df8c0fcf2596c2cd39d0f3bb79754e00f50f",
+      "rows": 408,
+      "columns": ["sentence1", "sentence2", "label", "idx"],
+      "label_counts": {"0": 129, "1": 279}
+    },
+    "test": {
+      "url": "https://huggingface.co/datasets/nyu-mll/glue/resolve/main/mrpc/test-00000-of-00001.parquet?download=true",
+      "sha256": "a623ed1cbdf445b11f8e249acbf649d7d3a5ee58c918554c40cbd8307e488693",
+      "rows": 1725,
+      "columns": ["sentence1", "sentence2", "label", "idx"],
+      "label_counts": {"0": 578, "1": 1147},
+      "local_test_policy": "not used for tuning or local confirmation"
+    }
+  }
+}
