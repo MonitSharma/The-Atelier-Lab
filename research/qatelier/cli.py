@@ -138,8 +138,9 @@ def _run_validate(args: argparse.Namespace) -> int:
     print(json.dumps(report.to_dict(), indent=2, sort_keys=True) if args.json else _report_text(report))
     if report.schema_errors:
         return 2
-    if report.placeholder_issues and not args.structure_only:
-        return 2
+    # Validation is an inspection command, not an execution command.  A
+    # structurally valid planning config may intentionally be unresolved; the
+    # report makes that state explicit and execution paths enforce the gate.
     return 0
 
 

@@ -6,11 +6,11 @@ from pathlib import Path
 from research.qatelier.cli import main
 
 
-def test_validate_reports_placeholders_and_fails_execution_readiness(capsys):
+def test_validate_reports_placeholders_without_executing(capsys):
     exit_code = main(["validate"])
 
     captured = capsys.readouterr()
-    assert exit_code == 2
+    assert exit_code == 0
     assert "execution_ready: false" in captured.out
     assert "$.representation.backbone.model_version" in captured.out
     assert "credentials" not in captured.out.lower()
