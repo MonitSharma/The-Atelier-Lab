@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">Atelier terminal interface</title>
+  <desc id="desc">A dark terminal-style mockup showing the centered Atelier banner, shell navigation, a grounded question, retrieved context, and a cited answer.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1020"/>
+      <stop offset="1" stop-color="#141b31"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#000" flood-opacity=".38"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="720" rx="24" fill="#070b15"/>
+  <rect x="40" y="35" width="1120" height="650" rx="17" fill="url(#bg)" stroke="#33476a" filter="url(#shadow)"/>
+  <rect x="40" y="35" width="1120" height="38" rx="17" fill="#1b2740"/>
+  <circle cx="68" cy="54" r="6" fill="#ff6b87"/><circle cx="88" cy="54" r="6" fill="#ffd166"/><circle cx="108" cy="54" r="6" fill="#59d48b"/>
+  <text x="600" y="59" text-anchor="middle" fill="#8ea3c3" font-family="Menlo,Monaco,monospace" font-size="13">atelier — local research workbench</text>
+
+  <g font-family="Menlo,Monaco,monospace">
+    <text x="78" y="113" fill="#d88cff" font-size="22">✦</text>
+    <text x="78" y="137" fill="#d88cff" font-size="20">╱ ╲</text>
+    <text x="78" y="159" fill="#d88cff" font-size="20">╱ ◇ A ╲</text>
+    <text x="78" y="181" fill="#d88cff" font-size="20">╱_____╲</text>
+    <text x="78" y="212" fill="#59d5e7" font-size="17" font-weight="700" letter-spacing="3">A T E L I E R  L A B</text>
+    <text x="78" y="236" fill="#758baa" font-size="13">local research atelier</text>
+    <text x="78" y="270" fill="#6e86ab" font-size="13">Core: ingest · ask · search · sources · agent · code-fix · doctor</text>
+    <text x="78" y="292" fill="#6e86ab" font-size="13">Terminal: cd · pwd · ls · find · rg · git · cat · help · exit</text>
+    <text x="78" y="330" fill="#59d5e7" font-size="15">atelier ›</text>
+    <text x="184" y="330" fill="#edf3ff" font-size="15">ask --show-context "What are the key risks in the plan?"</text>
+
+    <rect x="70" y="352" width="1060" height="142" rx="10" fill="#101a2d" stroke="#536fe8"/>
+    <text x="91" y="379" fill="#8ea4ff" font-size="13" font-weight="700">[1] QAtelier_Research_Plan.docx · heading: Risks</text>
+    <text x="91" y="405" fill="#c6d2e8" font-size="13">The claim depends on matched classical baselines, repeated trials,</text>
+    <text x="91" y="426" fill="#c6d2e8" font-size="13">hardware-aware measurements, and evidence that survives ablations.</text>
+    <text x="91" y="464" fill="#8ea4ff" font-size="13" font-weight="700">[2] QAtelier_Research_Plan.docx · table 2 · p. 4</text>
+    <text x="91" y="485" fill="#c6d2e8" font-size="13">Visual or OCR-derived claims carry a human-review flag.</text>
+
+    <rect x="70" y="516" width="1060" height="112" rx="10" fill="#101d24" stroke="#45c88a"/>
+    <text x="91" y="544" fill="#63e6a1" font-size="13" font-weight="700">Answer</text>
+    <text x="91" y="572" fill="#d3e8dc" font-size="13">The main risks are confounding, weak baselines, insufficient repetitions,</text>
+    <text x="91" y="593" fill="#d3e8dc" font-size="13">and over-interpreting noisy hardware results [1]. Verify the table values [2].</text>
+    <text x="91" y="616" fill="#708aa3" font-size="12">Sources: QAtelier_Research_Plan.docx (p. 4; table 2)</text>
+  </g>
+</svg>
