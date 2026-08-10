@@ -235,6 +235,11 @@ def _readline_input(console: Console, prompt: str, enabled: bool) -> str:
 def run_session(console: Console | None = None) -> None:
     """Run a thin interactive shell over the canonical Atelier CLI."""
     console = console or Console()
+    # Keep panels and the centered banner aligned when the user maximizes or
+    # resizes Terminal while this long-lived session is open.
+    from atelier.cli import _sync_console_width
+
+    _sync_console_width(console)
     print_banner(console)
     console.print(
         "[dim]Core: ingest · ask · search · sources · agent · code-fix · doctor[/]\n"
@@ -255,6 +260,7 @@ def run_session(console: Console | None = None) -> None:
     readline_state = _install_readline(completer)
     try:
         while True:
+            _sync_console_width(console)
             try:
                 line = _readline_input(
                     console, "\033[1;36matelier ›\033[0m ", readline_state is not None
