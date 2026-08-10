@@ -1,7 +1,6 @@
 # Steps 17–18 — Security boundary and backend service/API
 
-Status: implemented on the current feature branch; merge and CI are the
-release gate.
+Status: **complete on the current development line**
 
 ## Step 17 — Trust boundary
 
@@ -17,12 +16,15 @@ Tool calls made through `ToolRegistry` now pass through `SecurityBoundary`:
   strings (`token`, API keys, passwords, bearer values, and similar) are
   redacted before the model receives them;
 - the shell remains opt-in, and `code_exec` retains its timeout and macOS
-  network-sandbox behavior.
+  network-sandbox behavior;
+- destructive operations require a persisted, exact-match, one-use human
+  confirmation token, and confirmation requests are exposed through the
+  service/API and CLI.
 
 The boundary is intentionally conservative. A command that needs a broader
 capability is denied with a structured result rather than silently expanding
-permissions. Human-approved destructive operations are still a future UI/API
-approval flow, not an implicit model privilege.
+permissions. The web workbench exposes workflow approval actions; raw shell
+approval remains explicit and never becomes an implicit model privilege.
 
 ## Step 18 — Shared application service
 
@@ -44,7 +46,7 @@ curl -X POST http://127.0.0.1:8787/route \
 
 The server is bound to loopback by default. The service contract is the stable
 foundation for the web workbench in Step 20; authentication, external binding,
-and a hardened long-running daemon remain future release work.
+and a hardened long-running daemon remain future hardening work.
 
 ## Verification
 

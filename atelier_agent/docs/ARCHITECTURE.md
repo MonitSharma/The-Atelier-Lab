@@ -7,9 +7,9 @@ and the concise frozen baseline is [`docs/CURRENT_ARCHITECTURE.md`](../../docs/C
 ## Current system
 
 ```text
-CLI / persistent session / MCP
+CLI / Web / Finder / persistent session / MCP
               │
-       atelier application
+       Atelier service/API
           ┌───┴────┐
           │        │
     knowledge    build/general
@@ -75,6 +75,11 @@ content-addressed metadata. Paper identity and subjective characterization
 are separate strict Pydantic schemas. Memory uses a separate Chroma collection
 and SQLite migration manifest.
 
+Project memory is separate from semantic user memory. It stores explicit
+project-scoped notes with optional expiry and provenance, plus structured
+session, task, and artifact entities. Workflow task state is mirrored there;
+conversation text is not automatically promoted to durable memory.
+
 ChromaDB plus SQLite is the frozen current storage choice. LanceDB is not a
 production dependency or an alternative store in the current architecture.
 
@@ -91,18 +96,27 @@ include file reads/writes, search, repository mapping, Python execution, test
 running, AST edits, deterministic repository inspection, semantic search, and memory. File and execution tools now
 receive an explicit persisted workspace context with approved roots and
 capabilities. `LOCAL_ONLY` is the default privacy policy; this remains an
-application-level boundary until the stronger security work in Step 17.
+application-level boundary until stronger OS-level isolation is added.
 
-The future `coder` role, explicit workspace manager, capability policy, and
-multi-file transaction workflow are not yet implemented. They must be added
-without weakening this low-level execution primitive.
+Research network operations are separate and explicit: lookup results are
+cached under the external runtime home with request provenance; graph lookup,
+Crossref citation verification, and allowlisted paper download are exposed as
+distinct tools. They require an attached `CLOUD_ALLOWED` workspace with the
+network capability, and downloads write a sidecar URL/timestamp/hash record.
+
+The coder role, explicit workspace manager, capability policy, typed
+multi-file build workflow, and durable workflow engine are implemented as
+application surfaces. Workflow runs persist typed state and checkpoints under
+the external runtime home, pause at explicit approval gates, and can be
+recovered or cancelled through the service/API.
 
 ## Runtime state
 
-The current development runtime stores the local library and caches under
-`atelier_agent/data/`. This is intentionally still repository-local. Step 19
-will migrate user state to a versioned Atelier home with validation, backup,
-and rollback; the source checkout and user library are not independent yet.
+The active runtime stores user state outside the source checkout under
+`~/Atelier` by default (or `ATELIER_HOME`). Its versioned layout separates
+library, databases, workspaces, caches, logs, and backups. Development-era
+state can be copied into that layout with `atelier state migrate`; the source
+checkout remains preserved, and the migration writes a recoverable record.
 
 ## Reliability baseline
 
@@ -117,7 +131,10 @@ The frozen Scientific Library v1.0 baseline includes:
 - a model-free Test workflow and clean-clone installation path;
 - a real Gemma-backed grounded `atelier ask` smoke test.
 
-The current benchmark is a small local three-paper regression suite. It is not
-evidence of repository-scale coding reliability, multimodal understanding,
-security isolation, or general research-agent reliability. Those are separate
-future evaluation milestones.
+The current live library contains three verified papers, and the clean-state
+model-backed smoke has also been run from a fresh temporary runtime with fresh
+Qwen3-Embedding-4B ingestion and a Qwen3-8B cited answer. The frozen
+model-free v2 suite covers routing, workflows, memory isolation, security,
+research denial, quantum, and optimization. These checks still do not claim
+repository-scale statistical reliability, provider-backed Qiskit execution,
+or hardened OS-level isolation; those remain explicit extensions.

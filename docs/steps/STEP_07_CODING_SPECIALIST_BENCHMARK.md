@@ -78,3 +78,14 @@ lists Qwen2.5-Coder in 7B and 14B sizes, Qwen3 in 8B and 14B sizes, and Gemma 4
 Step 08 should wrap this role in the typed inspect → plan → edit → test → diff
 certificate workflow. The benchmark remains a regression gate; it should be
 expanded with larger repositories and repeated trials under Step 23.
+
+## Current-catalog revalidation
+
+The candidate choice was rechecked against the current primary model pages
+before the clean-state release run. The official [Qwen3-8B model
+card](https://huggingface.co/Qwen/Qwen3-8B), [Qwen2.5-Coder Ollama
+catalog](https://ollama.com/library/qwen2.5-coder), and [Google Gemma 4 model
+card](https://ai.google.dev/gemma/docs/core/model_card_4) still describe the
+families used in this comparison as coding/agentic-capable local candidates.
+This does not replace rerunning the frozen benchmark when a new candidate is
+considered.

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import asdict, dataclass
 from typing import Any, Literal
 
@@ -54,11 +55,19 @@ class CapabilityRouter:
     @staticmethod
     def _domain(task: str) -> Domain:
         lowered = task.lower()
+        def matches(hint: str) -> bool:
+            pattern = r"(?<![a-z0-9])" + re.escape(hint) + r"(?![a-z0-9])"
+            return re.search(pattern, lowered) is not None
+
         scored = {
-            domain: sum(1 for hint in hints if hint in lowered)
+            domain: sum(1 for hint in hints if matches(hint))
             for domain, hints in _DOMAIN_HINTS.items()
             if domain != "general"
         }
+        # Explicit citation/network language is research work even when the
+        # local paper is mentioned in the same sentence.
+        if any(matches(term) for term in ("citation", "doi", "arxiv", "crossref", "search the web", "search online", "internet")):
+            scored["research"] += 2
         return max(scored, key=scored.get) if scored and max(scored.values()) else "general"
 
     def decide(
@@ -93,7 +102,8 @@ class CapabilityRouter:
             reason = "Repository work benefits from the benchmarked coder and certified build workflow."
             escalations.append("escalate to brain if the coder cannot produce a green certificate")
         elif domain == "paper":
-            role, workflow = ("heavy", "paper_deep_read") if difficulty == "hard" else ("worker", "paper_fast")
+            deep_request = any(marker in lowered for marker in ("deep read", "deep analysis", "methodology and results", "section-by-section"))
+            role, workflow = ("heavy", "paper_deep_read") if difficulty == "hard" or deep_request else ("worker", "paper_fast")
             tools = ("search_notes", "read_file")
             use_memory = memory_available
             reason = "Use deterministic extraction/retrieval first, then increase reasoning only for deep reading."

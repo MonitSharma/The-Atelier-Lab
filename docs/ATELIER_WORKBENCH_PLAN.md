@@ -38,11 +38,16 @@ Scientific Library v1.0 is frozen and tagged. It provides:
 - CLI, persistent session, MCP, and Rich-safe output;
 - declared dependencies, clean-clone reproduction, CI, and protected `master`;
 - explicit persisted workspaces with capability-scoped tool contexts and
-  `LOCAL_ONLY` as the default privacy policy.
+  `LOCAL_ONLY` as the default privacy policy;
+- an active external runtime home at `~/Atelier` with migrated and verified
+  three-paper retrieval state;
+- durable workflow/task state, project/session/task/artifact memory, and a
+  shared service/API used by the CLI and replaceable web UI.
 
-The current development state is still repository-local and primarily textual.
-Runtime state migration remains future work. See
-[`CURRENT_ARCHITECTURE.md`](CURRENT_ARCHITECTURE.md).
+The deterministic foundation and the clean-state local model evidence for Step
+26 are now verified on the current macOS development line. Optional provider
+integrations, hardened OS isolation, signed artifacts, and remote publication
+remain explicitly scoped extensions. See [`CURRENT_ARCHITECTURE.md`](CURRENT_ARCHITECTURE.md).
 
 ## Dependency-ordered milestones
 
@@ -66,8 +71,9 @@ atelier workspace close NAME
 Implemented with approved roots and explicit `read`, `write`, `execute`, and
 `network` capabilities. Multiple attached roots, path and symlink escape
 rejection, `LOCAL_ONLY` default privacy, and context-aware tool dispatch are
-covered by tests. Destructive-operation confirmations and the hardened trust
-boundary remain Step 17 work.
+covered by tests. Destructive-operation confirmations, secret redaction,
+untrusted-output marking, and audit logging are implemented at the current
+capability boundary; broader OS-level isolation remains a future extension.
 
 ### Step 06 — Repository intelligence — complete
 
@@ -124,7 +130,9 @@ Classify domain first—paper, code, data, vision, research, quantum,
 optimization, or general—then choose the cheapest capable workflow. Decisions
 must include modality, tools, privacy, context, difficulty, memory, abstention,
 and escalation conditions. Implemented with the deterministic
-`CapabilityRouter`, including LOCAL_ONLY network abstention.
+`CapabilityRouter`, including LOCAL_ONLY network abstention, explicit
+escalation conditions, and a frozen 16-case human-labeled evaluation
+(`atelier route-eval`, currently 16/16).
 
 ### Step 10 — Model lifecycle — complete
 
@@ -162,114 +170,124 @@ database, image, text, notebook, spreadsheet, archive, and PDF inputs.
 ### Step 13 — Research tools — complete
 
 Added explicitly networked, provenance-tracked tools for DOI metadata, arXiv,
-Crossref, Semantic Scholar, search, citations, related work, and paper
-metadata. Unpublished local content never becomes an external query by
-default. Paper downloads remain a separately gated future operation.
+Crossref, Semantic Scholar, related/cited-by work, citation verification, and
+allowlisted paper downloads. Results are cached under the external runtime
+home; unpublished local content never becomes an external query by default.
 
 ### Step 14 — Quantum and optimization tools — complete
 
-Added deterministic OpenQASM/Qiskit-aware circuit inspection and LP/QUBO-style
-feasibility/objective verification. Qiskit is optional and unavailable in the
-current environment, so the fallback is labelled and conservative. The LLM
-explains tool results; it does not invent them. Transpilation, simulation,
-backend comparison, and solver-backed optimization remain explicit extensions.
+Added deterministic OpenQASM/Qiskit-aware circuit inspection, optional Qiskit
+transpilation with an explicit unavailable result, bounded NumPy statevector
+simulation, provider-free backend capacity comparison, SciPy LP solving when
+available, exact small-binary QUBO solving, feasibility/objective verification,
+and candidate comparison. Provider-backed backends and optional external solver
+packages remain explicit extensions.
 
 ### Step 15 — Explicit workflows — complete
 
 Introduced typed workflow specifications for `paper_fast`, `paper_deep_read`,
-`paper_compare`, `repo_inspect`, `code_fix`, `data_analyze`,
+`paper_compare`, `figure_inspect`, `repo_inspect`, `code_fix`, `data_analyze`,
 `research_verify`, `quantum_analyze`, and `optimization_validate`, including
-steps, capabilities, recovery, and human approval gates. Execution remains
-separate from the catalog; LangGraph is optional.
+steps, capabilities, recovery, and human approval gates. A durable JSON
+execution engine now persists typed state and per-step checkpoints, pauses for
+approval, and supports recovery/cancellation through the service/API.
+LangGraph remains optional.
 
 ### Step 16 — Project memory v2 — complete
 
 Separated project-scoped durable facts, task state, source-derived notes,
 artifacts, decisions, provenance, and expiration in a dedicated SQLite store.
-Added explicit remember, forget, export/import, project isolation, and CLI
-commands. Conversations are not persisted automatically.
+Added structured session/task/artifact entities, workflow task mirroring,
+explicit remember/forget/export/import, project isolation, and CLI commands.
+Conversations are not persisted automatically.
 
 ### Step 17 — Security and trust boundary — complete
 
 Made capabilities mechanically enforceable at registry dispatch. Added a shell
-allowlist, path/capability scopes, secret redaction, untrusted tool-output
-markers, prompt-injection-oriented output tests, destructive-command blocking,
-audit logs, and opt-in raw shell access. Human approval UI for destructive
-operations remains a future extension.
+allowlist, path/capability scopes, secret redaction, untrusted tool-output and
+prompt-injection markers, persisted one-use destructive confirmations, audit
+logs, and opt-in raw shell access. OS-level sandbox hardening remains future
+work.
 
 ### Step 18 — Backend service/API — complete
 
 Separated application operations from Typer behind a local service layer for
-workspaces, tasks, library, search, models, workflows, memory, and artifacts.
-Added a loopback JSON HTTP API over that service. The CLI and future UI can call
-the same backend contract; broader UI migration and daemon hardening remain
-later milestones.
+workspaces, tasks, library, search, models, workflows, memory, artifacts,
+uploads, source viewing, paper actions, repository actions, and approvals.
+Added a loopback JSON HTTP API over that service. CLI and UI use the same
+backend contract; daemon authentication and stronger process isolation remain
+later hardening work.
 
 ### Step 19 — Externalize runtime state — complete
 
-Added a versioned Atelier home with
+Added and activated a versioned Atelier home with
 separate library, databases, workspaces, config, caches, logs, and backups.
 Added `atelier init`, state planning, validation, copy migration, and
-record-scoped rollback. Existing repository state is preserved; activation of
-the external home for every runtime path is deferred to packaging/configuration
-work after review.
+record-scoped rollback. Existing repository state is preserved; the migrated
+three-paper library was reindexed and verified at 223 chunks.
 
 ### Step 20 — Web workbench — complete
 
 Built a replaceable, dependency-free local UI at `/ui` over the backend with
-workspace/privacy state, library, model status, traces, approvals, and
-workflow views, plus route and local-library search forms.
+workspace/privacy state, library, model status, traces, approvals, chat/task
+input, route/search forms, source viewing, bounded upload, paper actions, and
+repository actions.
 
 ### Step 21 — Finder integration — complete
 
-Added explicit Finder/Shortcuts-compatible action planning for Send to Atelier,
-Add to Library, Characterize Paper, and Explain File. Actions honor workspace
-permissions and never silently watch or index the Mac.
+Added explicit Finder/Shortcuts-compatible planning and an executable macOS
+entrypoint for Send to Atelier, Add to Library, Characterize Paper, and Explain
+File. Actions honor workspace permissions and never silently watch or index
+the Mac.
 
 ### Step 22 — Frontier handoff — complete
 
 Created explicit local handoff bundles for Claude, Codex, and Gemini
 containing task, selected context, evidence, constraints, and requested output.
-External approval is recorded separately and no provider call is made by bundle
-creation, keeping local operation independent of cloud access.
+Selected workspace files are validated and secret-redacted before optional
+content inclusion. External approval is recorded separately and no provider
+call is made by bundle creation.
 
 ### Step 23 — Reliability science v2 — complete
 
-Added reusable evaluation summaries for repository, visual-document, data,
-research-verification, routing, injection, memory-isolation, quantum,
-optimization, and end-to-end tasks, including Wilson confidence intervals and
-failure taxonomies. Existing frozen suites remain the source of task rows;
-repeated-trial orchestration and memory/cost collectors remain extensions.
+Added a frozen model-free cross-component reliability v2 suite covering
+routing, multi-file repository inspection, workflows, structured data,
+visual-document evidence, memory isolation/expiry, prompt injection, research
+denial, quantum, and optimization, with repeated trials, Wilson intervals, and
+failure taxonomies. Model-backed statistical trials remain an additional
+evaluation stratum.
 
 ### Step 24 — Performance engineering — complete
 
-Added trace-friendly baseline measurements for service health, workflow catalog,
-and library operations. Cold start, token, memory, model-swap, and concurrency
-collectors remain measurement expansions; optimize only from traces.
+Added trace-friendly service measurements for cold/warm health, workflows,
+library, routing, disk, platform, and peak process memory. Token, model-swap,
+host-level unified-memory, and concurrency collectors remain measurement
+expansions; optimize only from traces.
 
 ### Step 25 — Packaging and release engineering — complete
 
 Added a package-readiness check, one supported editable-install path,
-`atelier init`, runtime-home validation, model setup guidance, export/import,
-macOS smoke validation, changelog documentation, semantic version tags, and
-release-tag workflow. Full schema repair and signed-artifact automation remain
-release extensions.
+`atelier init`, runtime-home validation/repair, model setup guidance,
+runtime export/restore, macOS smoke CI, Finder action documentation, and
+incremental release tags. Protected-master settings were verified read-only;
+full schema migration automation and signed artifacts remain release
+extensions.
 
-### Step 26 — Atelier v1.0 acceptance — complete
+### Step 26 — Atelier v1.0 acceptance — complete locally
 
-Added `atelier acceptance` to verify the deterministic clean-Mac foundation:
-package readiness, runtime initialization/recovery, workspace/service surface,
-workflows, local library/service, repository-facing registry, artifact/Finder
-planning, paper/optimization/quantum checks, project memory, handoff creation,
-privacy-denied research, and the local web shell. The complete clean-Mac
-scenario remains the operator checklist: install, initialize, attach workspace,
-ingest and characterize a paper, answer with citations, inspect and modify a
-repository with tests, analyze structured data, inspect a figure, run quantum
-or optimization tools, preserve project memory, remain offline under
-`LOCAL_ONLY`, create an optional handoff, use CLI and UI, restart, recover, and
-pass the full reliability, security, and performance suites. The deterministic
-acceptance smoke and full test suite are green; model-backed paper answering
-and optional dependency paths require the user's local models/runtime.
+Added `atelier acceptance` and `atelier acceptance --clean` to verify the
+deterministic clean-Mac foundation, then completed the isolated local
+model-backed scenario: fresh runtime initialization, workspace attachment,
+paper ingestion and characterization, cited Qwen3-8B answering, test-verified
+repository modification, structured-data profiling, figure evidence, quantum
+and optimization tools, project memory, `LOCAL_ONLY` denial, handoff creation,
+shared CLI/UI service coverage, restart/recovery, and reliability/security/
+performance gates. Evidence is recorded in
+[`steps/STEP_26_ATELIER_V1_RELEASE.md`](steps/STEP_26_ATELIER_V1_RELEASE.md).
+
+The local release does not claim provider-backed quantum execution, external
+solver availability, kernel-level isolation, signed artifacts, automatic cloud
+routing, or live frontier handoffs. Those remain explicit future extensions.
 
 ## Separate expertise roadmap
 

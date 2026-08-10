@@ -14,7 +14,7 @@ RUNTIME_VERSION = 1
 
 
 def default_home() -> Path:
-    return Path(os.environ.get("ATELIER_HOME", Path.home() / ".atelier")).expanduser().resolve()
+    return Path(os.environ.get("ATELIER_HOME", Path.home() / "Atelier")).expanduser().resolve()
 
 
 @dataclass(frozen=True)
@@ -108,6 +108,53 @@ def migrate_state(source: str | Path, destination: str | Path) -> dict[str, Any]
         shutil.copy2(item["source"], target)
         copied.append(str(target))
     record = destination_path / "migration-record.json"
+    record.write_text(json.dumps({"migrated_at": datetime.now(UTC).isoformat(), "source": plan["source"], "copied": copied}, indent=2) + "\n", encoding="utf-8")
+    return {**plan, "copied": len(copied), "record": str(record)}
+
+
+def legacy_migration_plan(source: str | Path, layout: RuntimeLayout) -> dict[str, Any]:
+    """Map development-era ``data/`` paths into the active runtime layout."""
+    source_path = Path(source).expanduser().resolve()
+    mapping = {
+        "corpus": layout.library / "corpus",
+        "paper_metadata": layout.library / "paper_metadata",
+        "extracted": layout.library / "extracted",
+        "visual_cache": layout.cache / "visual",
+        "vectorstore": layout.databases / "vectorstore",
+        "memory": layout.databases / "memory",
+        "memory_backups": layout.backups / "memory",
+        "traces": layout.logs / "traces",
+        "audit": layout.logs / "audit",
+        "index_manifest.sqlite3": layout.databases / "index_manifest.sqlite3",
+        "memory_manifest.sqlite3": layout.databases / "memory_manifest.sqlite3",
+        "project_memory.sqlite3": layout.databases / "project_memory.sqlite3",
+        "workspaces.json": layout.workspaces / "registry.json",
+    }
+    files: list[dict[str, Any]] = []
+    for relative, destination in mapping.items():
+        source_item = source_path / relative
+        if source_item.is_dir():
+            for path in sorted(item for item in source_item.rglob("*") if item.is_file()):
+                files.append({"source": str(path), "destination": str(destination / path.relative_to(source_item)), "bytes": path.stat().st_size})
+        elif source_item.is_file():
+            files.append({"source": str(source_item), "destination": str(destination), "bytes": source_item.stat().st_size})
+    return {"source": str(source_path), "destination": str(layout.root), "files": files,
+            "file_count": len(files), "bytes": sum(item["bytes"] for item in files),
+            "mapping": {key: str(value) for key, value in mapping.items()}}
+
+
+def migrate_legacy_state(source: str | Path, layout: RuntimeLayout) -> dict[str, Any]:
+    layout.initialize()
+    plan = legacy_migration_plan(source, layout)
+    copied: list[str] = []
+    for item in plan["files"]:
+        target = Path(item["destination"])
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if target.exists():
+            raise FileExistsError(f"migration destination already exists: {target}")
+        shutil.copy2(item["source"], target)
+        copied.append(str(target))
+    record = layout.backups / f"legacy-migration-{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}.json"
     record.write_text(json.dumps({"migrated_at": datetime.now(UTC).isoformat(), "source": plan["source"], "copied": copied}, indent=2) + "\n", encoding="utf-8")
     return {**plan, "copied": len(copied), "record": str(record)}
 

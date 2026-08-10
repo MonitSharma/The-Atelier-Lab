@@ -49,6 +49,12 @@ handoff_app = typer.Typer(help="Create explicit frontier-model handoff bundles."
 app.add_typer(handoff_app, name="handoff")
 package_app = typer.Typer(help="Packaging and release-readiness checks.")
 app.add_typer(package_app, name="package")
+research_app = typer.Typer(help="Provenance-tracked external research operations.")
+app.add_typer(research_app, name="research")
+workflow_app = typer.Typer(help="Run durable typed workflows with checkpoints and approvals.")
+app.add_typer(workflow_app, name="workflow")
+security_app = typer.Typer(help="Manage explicit one-use destructive-operation confirmations.")
+app.add_typer(security_app, name="security")
 console = Console()
 INGEST_PATHS_ARG = typer.Argument(None, help="Files or folders to index. Defaults to data/corpus.")
 EVAL_PLOT_REPORT_OPT = typer.Option(None, "--report", help="Specific report JSON to plot.")
@@ -289,6 +295,7 @@ def profile_artifact(
 def paper_visual(
     path: Path = typer.Argument(..., exists=True, readable=True),
     render: bool = typer.Option(False, "--render", help="Render every page instead of fallback pages only."),
+    ocr: bool = typer.Option(False, "--ocr", help="Attempt opt-in OCR for poor-text pages; native text remains authoritative."),
     as_json: bool = typer.Option(False, "--json", help="Print the complete page evidence JSON."),
 ) -> None:
     """Analyze PDF text quality and figure/caption pages with citations."""
@@ -297,7 +304,7 @@ def paper_visual(
 
     try:
         approved = get_workspace_manager().context().resolve(str(path), "read").path
-        report = analyze_pdf(approved, render=render)
+        report = analyze_pdf(approved, render=render, ocr=ocr)
     except (WorkspaceError, ValueError, OSError, RuntimeError) as exc:
         console.print(f"[red]{exc}[/]")
         raise typer.Exit(code=2) from exc
@@ -338,6 +345,57 @@ def research_lookup(
     console.print_json(json.dumps(result, default=str))
     if result.get("status") != "success":
         raise typer.Exit(code=2)
+
+
+def _run_research_operation(operation: str, arguments: dict[str, object]) -> None:
+    from atelier.workspace import WorkspaceError, get_workspace_manager, workspace_scope
+    from tools.research import download_paper, research_graph, verify_citation
+
+    try:
+        context = get_workspace_manager().context()
+        with workspace_scope(context):
+            if operation == "graph":
+                result = research_graph(arguments)
+            elif operation == "verify-citation":
+                result = verify_citation(arguments)
+            else:
+                result = download_paper(arguments)
+    except WorkspaceError as exc:
+        result = {"status": "denied", "error_type": "workspace_denied", "message": str(exc)}
+    console.print_json(json.dumps(result, default=str))
+    if result.get("status") != "success":
+        raise typer.Exit(code=2)
+
+
+@research_app.command("graph")
+def research_graph_command(
+    paper_id: str | None = typer.Option(None, "--paper-id"),
+    doi: str | None = typer.Option(None, "--doi"),
+    relation: str = typer.Option("related", "--relation", help="related or cited_by"),
+    max_results: int = typer.Option(10, "--max-results", min=1, max=100),
+) -> None:
+    """Find related papers or papers citing an explicit paper identifier."""
+    _run_research_operation("graph", {"paper_id": paper_id, "doi": doi, "relation": relation, "max_results": max_results})
+
+
+@research_app.command("verify-citation")
+def research_verify_citation(
+    doi: str = typer.Option(..., "--doi"),
+    title: str = typer.Option(..., "--title"),
+    authors: str = typer.Option("", "--authors", help="Comma-separated author family names."),
+) -> None:
+    """Compare a citation against Crossref metadata."""
+    _run_research_operation("verify-citation", {"doi": doi, "title": title, "authors": [item.strip() for item in authors.split(",") if item.strip()]})
+
+
+@research_app.command("download")
+def research_download(
+    url: str = typer.Option(..., "--url"),
+    destination: str = typer.Option(..., "--destination"),
+    overwrite: bool = typer.Option(False, "--overwrite"),
+) -> None:
+    """Download an explicitly selected paper into the active cloud-approved workspace."""
+    _run_research_operation("download", {"url": url, "destination": destination, "overwrite": overwrite})
 
 
 @app.callback()
@@ -444,6 +502,17 @@ def ingest(
         console.print("[yellow]Store reset.[/]")
     else:
         bootstrap_manifest_from_store(manifest, store, targets)
+        # A development-era migration can preserve the SQLite manifest while
+        # losing an untracked Chroma database.  Never treat that combination
+        # as a clean no-op: rebuild the vectors from the manifest's source
+        # files, preserving the manifest until each file is successfully
+        # replaced by ``execute_plan``.
+        if store.count() == 0 and manifest.all() and not force:
+            force = True
+            console.print(
+                "[yellow]The manifest contains documents but the vector index is empty; "
+                "rebuilding the local index.[/]"
+            )
     plan = build_plan(targets, manifest, force=force, sync=sync)
     counts = plan.counts()
     table = Table(show_header=False)
@@ -645,7 +714,7 @@ def code_fix(
     as_json: bool = typer.Option(False, "--json", help="Print the complete certificate JSON."),
 ) -> None:
     """Run the typed inspect → edit → test → certificate coding workflow."""
-    from atelier.coding_workflow import BuildWorkflow
+    from agent.coding_workflow import BuildWorkflow
     from atelier.workspace import WorkspaceError, get_workspace_manager
 
     manager = get_workspace_manager()
@@ -979,6 +1048,54 @@ def project_memory_import(project: str = typer.Argument(...), path: Path = typer
     console.print(f"[green]Imported[/] {count} project memories into {project}")
 
 
+@project_app.command("context")
+def project_context(project: str = typer.Argument(...), as_json: bool = typer.Option(False, "--json")) -> None:
+    """Show active session, task, artifact, and non-expired memory state for a project."""
+    from agent.project_memory import ProjectMemoryStore
+
+    store = ProjectMemoryStore()
+    payload = {"project": project, "active": store.active_context(project),
+               "memory": [item.to_dict() for item in store.list(project)],
+               "sessions": store.list_entities(project, entity_type="session"),
+               "tasks": store.list_entities(project, entity_type="task"),
+               "artifacts": store.list_entities(project, entity_type="artifact")}
+    if as_json:
+        console.print_json(json.dumps(payload, default=str))
+        return
+    console.print_json(json.dumps(payload, default=str))
+
+
+@project_app.command("session-start")
+def project_session_start(
+    project: str = typer.Argument(...),
+    session_id: str | None = typer.Option(None, "--session-id"),
+) -> None:
+    """Create or activate an explicit project session."""
+    from agent.project_memory import ProjectMemoryStore
+
+    import uuid
+
+    store = ProjectMemoryStore()
+    session = session_id or f"session-{uuid.uuid4().hex[:12]}"
+    result = store.upsert_entity(project, session, "session", {"project": project}, status="active")
+    store.set_active_context(project, session)
+    console.print_json(json.dumps(result, default=str))
+
+
+@project_app.command("artifact-record")
+def project_artifact_record(
+    project: str = typer.Argument(...),
+    artifact_id: str = typer.Argument(...),
+    path: str = typer.Option(..., "--path"),
+    kind: str = typer.Option("artifact", "--kind"),
+) -> None:
+    """Record an artifact locator and its project association without indexing it."""
+    from agent.project_memory import ProjectMemoryStore
+
+    result = ProjectMemoryStore().upsert_entity(project, artifact_id, "artifact", {"path": path, "kind": kind})
+    console.print_json(json.dumps(result, default=str))
+
+
 @app.command()
 def route(
     task: str = typer.Argument(..., help="A task to classify and route."),
@@ -1014,11 +1131,116 @@ def quantum_inspect(
     if qasm is None and path is None:
         console.print("[red]Provide --qasm or --path.[/]")
         raise typer.Exit(code=2)
-    result = run_quantum_inspect({"qasm": qasm, "path": str(path) if path else None})
+    if qasm is None:
+        from atelier.workspace import WorkspaceError, get_workspace_manager
+
+        try:
+            approved = get_workspace_manager().context().resolve(str(path), "read").path
+            qasm = approved.read_text(encoding="utf-8")
+        except (WorkspaceError, OSError) as exc:
+            console.print(f"[red]{exc}[/]")
+            raise typer.Exit(code=2) from exc
+    result = run_quantum_inspect({"qasm": qasm})
     if as_json:
         console.print_json(json.dumps(result, default=str))
         return
     console.print_json(json.dumps(result, default=str))
+
+
+@quantum_app.command("simulate")
+def quantum_simulate(
+    qasm: str | None = typer.Option(None, "--qasm", help="Inline OpenQASM 2 source."),
+    path: Path | None = typer.Option(None, "--path", exists=True, readable=True),
+    shots: int = typer.Option(1024, "--shots", min=1, max=1_000_000),
+) -> None:
+    """Simulate a small common-gate circuit with the local NumPy statevector fallback."""
+    from tools.science import simulate_qasm_text
+
+    if qasm is None and path is None:
+        console.print("[red]Provide --qasm or --path.[/]")
+        raise typer.Exit(code=2)
+    if qasm is not None:
+        text = qasm
+    else:
+        from atelier.workspace import WorkspaceError, get_workspace_manager
+
+        try:
+            approved = get_workspace_manager().context().resolve(str(path), "read").path
+            text = approved.read_text(encoding="utf-8")
+        except (WorkspaceError, OSError) as exc:
+            console.print(f"[red]{exc}[/]")
+            raise typer.Exit(code=2) from exc
+    result = simulate_qasm_text(text, shots=shots)
+    console.print_json(json.dumps(result, default=str))
+    if result.get("status") != "success":
+        raise typer.Exit(code=2)
+
+
+@quantum_app.command("transpile")
+def quantum_transpile(
+    qasm: str | None = typer.Option(None, "--qasm", help="Inline OpenQASM 2 source."),
+    path: Path | None = typer.Option(None, "--path", exists=True, readable=True),
+    optimization_level: int = typer.Option(1, "--optimization-level", min=0, max=3),
+) -> None:
+    """Transpile with optional Qiskit and report an explicit fallback when absent."""
+    from tools.science import transpile_qasm_text
+
+    if qasm is None and path is None:
+        console.print("[red]Provide --qasm or --path.[/]")
+        raise typer.Exit(code=2)
+    if qasm is not None:
+        text = qasm
+    else:
+        from atelier.workspace import WorkspaceError, get_workspace_manager
+
+        try:
+            approved = get_workspace_manager().context().resolve(str(path), "read").path
+            text = approved.read_text(encoding="utf-8")
+        except (WorkspaceError, OSError) as exc:
+            console.print(f"[red]{exc}[/]")
+            raise typer.Exit(code=2) from exc
+    result = transpile_qasm_text(text, optimization_level=optimization_level)
+    console.print_json(json.dumps(result, default=str))
+    if result.get("status") == "error":
+        raise typer.Exit(code=2)
+
+
+@quantum_app.command("compare-backends")
+def quantum_compare_backends(
+    profile: Path = typer.Argument(..., exists=True, readable=True, help="JSON list of backend capacity profiles."),
+    qasm: str | None = typer.Option(None, "--qasm", help="Inline OpenQASM 2 source."),
+    path: Path | None = typer.Option(None, "--path", exists=True, readable=True),
+) -> None:
+    """Compare circuit resource needs against explicit provider-free profiles."""
+    from tools.science import compare_quantum_backends
+
+    try:
+        from atelier.workspace import WorkspaceError, get_workspace_manager
+
+        approved_profile = get_workspace_manager().context().resolve(str(profile), "read").path
+        payload = json.loads(approved_profile.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, WorkspaceError) as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    backends = payload.get("backends") if isinstance(payload, dict) else payload
+    if qasm is None and path is None:
+        console.print("[red]Provide --qasm or --path.[/]")
+        raise typer.Exit(code=2)
+    if qasm is not None:
+        text = qasm
+    else:
+        from atelier.workspace import WorkspaceError, get_workspace_manager
+
+        try:
+            approved = get_workspace_manager().context().resolve(str(path), "read").path
+            text = approved.read_text(encoding="utf-8")
+        except (WorkspaceError, OSError) as exc:
+            console.print(f"[red]{exc}[/]")
+            raise typer.Exit(code=2) from exc
+    result = compare_quantum_backends(text, backends)
+    console.print_json(json.dumps(result, default=str))
+    if result.get("status") != "success":
+        raise typer.Exit(code=2)
 
 
 @optimize_app.command("validate")
@@ -1038,6 +1260,39 @@ def optimize_validate(
     console.print_json(json.dumps(result, default=str))
     if result.get("status") == "success" and not result.get("feasible"):
         raise typer.Exit(code=1)
+
+
+def _optimization_json(path: Path) -> dict[str, object]:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+
+
+@optimize_app.command("solve")
+def optimize_solve(path: Path = typer.Argument(..., exists=True, readable=True)) -> None:
+    """Solve a small LP or binary QUBO locally and print the candidate solution."""
+    from tools.science import solve_optimization
+
+    result = solve_optimization(_optimization_json(path))
+    console.print_json(json.dumps(result, default=str))
+    if result.get("status") != "success":
+        raise typer.Exit(code=2)
+
+
+@optimize_app.command("compare")
+def optimize_compare(
+    path: Path = typer.Argument(..., exists=True, readable=True),
+    solutions: Path = typer.Option(..., "--solutions", exists=True, readable=True),
+) -> None:
+    """Rank explicit candidate solutions against a problem's constraints and objective."""
+    from tools.science import compare_optimization_solutions
+
+    problem = _optimization_json(path)
+    candidates = _optimization_json(solutions)
+    result = compare_optimization_solutions(problem, candidates if isinstance(candidates, list) else candidates.get("solutions", []))
+    console.print_json(json.dumps(result, default=str))
 
 
 @app.command("workflows")
@@ -1063,6 +1318,80 @@ def workflows_list(
     for row in rows:
         table.add_row(row.name, row.purpose, ", ".join(row.required_capabilities), row.approval_gate, row.recovery)
     console.print(table)
+
+
+def _workflow_service():
+    from atelier.service import AtelierService
+    from atelier.workspace import get_workspace_manager
+
+    manager = get_workspace_manager()
+    return AtelierService(manager=manager), manager
+
+
+@workflow_app.command("run")
+def workflow_run(
+    name: str = typer.Argument(..., help="Workflow name from `atelier workflows`."),
+    input_json: str | None = typer.Option(None, "--input-json", help="Workflow input as a JSON object."),
+    input_path: Path | None = typer.Option(None, "--input", exists=True, readable=True, help="JSON file containing workflow input."),
+    approved: bool = typer.Option(False, "--approved", help="Pre-approve gates for this run."),
+) -> None:
+    """Start a durable workflow and run until completion or an approval gate."""
+    if input_json and input_path:
+        console.print("[red]Use only one of --input-json or --input.[/]")
+        raise typer.Exit(code=2)
+    try:
+        payload = json.loads(input_path.read_text(encoding="utf-8")) if input_path else json.loads(input_json or "{}")
+        if not isinstance(payload, dict):
+            raise ValueError("workflow input must be a JSON object")
+        service, _ = _workflow_service()
+        result = service.workflow_start(name, payload, approved=approved)
+    except (OSError, json.JSONDecodeError, ValueError, KeyError) as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    console.print_json(json.dumps(result, default=str))
+
+
+@workflow_app.command("status")
+def workflow_status(run_id: str = typer.Argument(...)) -> None:
+    """Show persisted workflow state, evidence, and checkpoints."""
+    try:
+        result = _workflow_service()[0].workflow_get(run_id)
+    except (KeyError, ValueError) as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    console.print_json(json.dumps(result, default=str))
+
+
+@workflow_app.command("approve")
+def workflow_approve(
+    run_id: str = typer.Argument(...),
+    decline: bool = typer.Option(False, "--decline", help="Decline the pending approval and cancel the run."),
+) -> None:
+    """Approve or decline a workflow gate and continue the run."""
+    try:
+        result = _workflow_service()[0].workflow_approve(run_id, approved=not decline)
+    except (KeyError, ValueError) as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    console.print_json(json.dumps(result, default=str))
+
+
+@workflow_app.command("recover")
+def workflow_recover(run_id: str = typer.Argument(...)) -> None:
+    """Resume a failed or interrupted workflow from its last checkpoint."""
+    try:
+        result = _workflow_service()[0].workflow_recover(run_id)
+    except (KeyError, ValueError) as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    console.print_json(json.dumps(result, default=str))
+
+
+@security_app.command("request")
+def security_request(operation: str = typer.Argument(..., help="Exact destructive command or operation to approve once.")) -> None:
+    """Issue a one-use confirmation token; the token must match the exact operation."""
+    service, _ = _workflow_service()
+    console.print_json(json.dumps(service.issue_security_confirmation(operation), default=str))
 
 
 @models_app.command("list")
@@ -1173,25 +1502,24 @@ def state_validate(home: Path | None = typer.Option(None, "--home")) -> None:
 
 @state_app.command("plan")
 def state_plan(
-    source: Path = typer.Option(settings.data_dir, "--source", exists=True, file_okay=False),
+    source: Path = typer.Option(settings.legacy_data_dir, "--source", exists=True, file_okay=False),
     home: Path | None = typer.Option(None, "--home"),
 ) -> None:
     """Show a non-mutating plan for importing current repository state."""
-    from atelier.runtime import migration_plan, runtime_layout
+    from atelier.runtime import legacy_migration_plan, runtime_layout
 
-    console.print_json(json.dumps(migration_plan(source, runtime_layout(home).library)))
+    console.print_json(json.dumps(legacy_migration_plan(source, runtime_layout(home))))
 
 
 @state_app.command("migrate")
 def state_migrate(
-    source: Path = typer.Option(settings.data_dir, "--source", exists=True, file_okay=False),
+    source: Path = typer.Option(settings.legacy_data_dir, "--source", exists=True, file_okay=False),
     home: Path | None = typer.Option(None, "--home"),
 ) -> None:
     """Copy current state into a runtime home and write a rollback record."""
-    from atelier.runtime import migrate_state, runtime_layout
+    from atelier.runtime import migrate_legacy_state, runtime_layout
 
-    layout = runtime_layout(home).initialize()
-    result = migrate_state(source, layout.library / "legacy_import")
+    result = migrate_legacy_state(source, runtime_layout(home))
     console.print_json(json.dumps(result))
 
 
@@ -1201,6 +1529,18 @@ def state_rollback(record: Path = typer.Argument(..., exists=True, readable=True
     from atelier.runtime import rollback_migration
 
     console.print_json(json.dumps(rollback_migration(record)))
+
+
+@state_app.command("repair")
+def state_repair(home: Path | None = typer.Option(None, "--home")) -> None:
+    """Create missing runtime directories and revalidate the active home."""
+    from atelier.runtime import runtime_layout
+
+    layout = runtime_layout(home).initialize()
+    result = layout.validate()
+    console.print_json(json.dumps({"status": "repaired" if result["valid"] else "failed", **result}))
+    if not result["valid"]:
+        raise typer.Exit(code=1)
 
 
 @finder_app.command("plan")
@@ -1214,6 +1554,24 @@ def finder_plan(
 
     try:
         result = prepare_finder_action(action, path)
+    except (ValueError, WorkspaceError, OSError) as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    console.print_json(json.dumps(result, default=str))
+
+
+@finder_app.command("execute")
+def finder_execute(
+    action: str = typer.Argument(..., help="send_to_atelier, add_to_library, characterize_paper, or explain_file"),
+    path: Path = typer.Argument(..., exists=True, readable=True),
+    task: str | None = typer.Option(None, "--task", help="Optional task for send_to_atelier."),
+) -> None:
+    """Execute one explicit Finder action through the local Atelier service."""
+    from atelier.finder import execute_finder_action
+    from atelier.workspace import WorkspaceError
+
+    try:
+        result = execute_finder_action(action, path, task=task)
     except (ValueError, WorkspaceError, OSError) as exc:
         console.print(f"[red]{exc}[/]")
         raise typer.Exit(code=2) from exc
@@ -1250,11 +1608,17 @@ def handoff_create(
 def reliability_report(
     input_path: Path | None = typer.Option(None, "--input", exists=True, readable=True, help="JSON list of trial rows."),
     suite: str = typer.Option("manual", "--suite"),
+    repetitions: int = typer.Option(3, "--repetitions", min=1, max=20),
 ) -> None:
     """Summarize trial outcomes with Wilson confidence intervals and failure taxonomy."""
     from atelier.reliability import summarize_trials
 
     try:
+        if suite == "v2":
+            from eval.reliability_v2 import run_reliability_v2
+
+            console.print_json(json.dumps(run_reliability_v2(repetitions=repetitions), default=str))
+            return
         rows = json.loads(input_path.read_text(encoding="utf-8")) if input_path else []
         if not isinstance(rows, list):
             raise ValueError("input must be a JSON list")
@@ -1262,6 +1626,17 @@ def reliability_report(
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         console.print(f"[red]{exc}[/]")
         raise typer.Exit(code=2) from exc
+
+
+@app.command("route-eval")
+def route_eval_command() -> None:
+    """Run the frozen human-labeled capability-routing evaluation."""
+    from eval.capability_routing import run_capability_eval
+
+    result = run_capability_eval()
+    console.print_json(json.dumps(result, default=str))
+    if result["successes"] != result["cases"]:
+        raise typer.Exit(code=1)
 
 
 @app.command("performance")
@@ -1286,12 +1661,46 @@ def package_check_command(
         raise typer.Exit(code=1)
 
 
-@app.command("acceptance")
-def acceptance_command() -> None:
-    """Run the deterministic offline acceptance smoke without model or network calls."""
-    from atelier.acceptance import run_acceptance
+@package_app.command("export")
+def package_export(
+    output: Path = typer.Option(..., "--output"),
+    home: Path | None = typer.Option(None, "--home"),
+) -> None:
+    """Export external runtime state to a portable ZIP backup."""
+    from atelier.package import export_runtime
+    from atelier.runtime import default_home
 
-    result = run_acceptance(Path(__file__).resolve().parent.parent)
+    try:
+        result = export_runtime(home or default_home(), output)
+    except (OSError, ValueError) as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    console.print_json(json.dumps(result, default=str))
+
+
+@package_app.command("restore")
+def package_restore(
+    archive: Path = typer.Option(..., "--archive", exists=True, readable=True),
+    home: Path = typer.Option(..., "--home"),
+    overwrite: bool = typer.Option(False, "--overwrite"),
+) -> None:
+    """Restore an explicit runtime ZIP backup after path-safety validation."""
+    from atelier.package import restore_runtime
+
+    try:
+        result = restore_runtime(archive, home, overwrite=overwrite)
+    except (OSError, ValueError) as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    console.print_json(json.dumps(result, default=str))
+
+
+@app.command("acceptance")
+def acceptance_command(clean: bool = typer.Option(False, "--clean", help="Run the fresh-runtime end-to-end acceptance scenario.")) -> None:
+    """Run deterministic offline acceptance checks without model or network calls."""
+    from atelier.acceptance import run_acceptance, run_clean_acceptance
+
+    result = (run_clean_acceptance if clean else run_acceptance)(Path(__file__).resolve().parent.parent)
     console.print_json(json.dumps(result, default=str))
     if result["status"] != "passed":
         raise typer.Exit(code=1)

@@ -12,10 +12,21 @@ renders. The CLI is:
 ```bash
 atelier paper-visual paper.pdf --json
 atelier paper-visual paper.pdf --render
+atelier paper-visual paper.pdf --ocr --json
 ```
 
 The output is deterministic and local. It does not silently send a page or
 unpublished paper to an external vision service.
+
+Page evidence also reports optional table headers/counts and an explicit OCR
+status. OCR is opt-in for poor-text pages and never replaces native extraction
+silently.
+
+The typed `figure_inspect` workflow now exposes the same sequence as a durable
+operation: locate pages → render evidence → approval-gated visual
+interpretation → page citations. If no multimodal model input is approved, the
+workflow returns the rendered evidence and an explicit interpretation-needed
+status rather than inventing a visual conclusion.
 
 ## Typed file profiles
 

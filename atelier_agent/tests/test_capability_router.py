@@ -1,4 +1,5 @@
 from agent.capability_router import CapabilityRouter
+from eval.capability_routing import run_capability_eval
 
 
 def test_code_routes_to_benchmarked_coder_workflow() -> None:
@@ -21,3 +22,12 @@ def test_paper_route_uses_memory() -> None:
     decision = CapabilityRouter(backend="heuristic").decide("Summarize this paper's methodology")
     assert decision.domain == "paper"
     assert decision.use_memory
+
+
+def test_frozen_capability_routing_evaluation_passes():
+    report = run_capability_eval()
+    assert report["cases"] == 16
+    assert report["successes"] == 16
+    assert report["domain_accuracy"] == 1.0
+    assert report["workflow_accuracy"] == 1.0
+    assert report["abstention_accuracy"] == 1.0

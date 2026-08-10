@@ -38,6 +38,17 @@ The benchmark command is explicit and one-model-at-a-time. A model is not
 downloaded merely to populate the registry; placeholders remain visible as
 missing rather than being silently installed.
 
+The capability layer also has a frozen 16-case human-labeled evaluation:
+
+```bash
+atelier route-eval
+```
+
+The current heuristic router scores 16/16 for domain, workflow, and
+`LOCAL_ONLY` abstention on that development set. The set is intentionally
+small and frozen; larger held-out routing cases remain part of reliability
+expansion.
+
 ## Verification
 
 Tests cover code routing to the benchmarked coder, LOCAL_ONLY abstention, paper

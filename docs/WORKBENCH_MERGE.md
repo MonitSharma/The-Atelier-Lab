@@ -16,7 +16,8 @@ runtime.
   queries; document passages remain unmodified.
 - PDFs use the scientific page/section-aware adapter with SHA-256 document IDs,
   page metadata, section metadata, and 1,800/250-character paper chunks.
-- Fast Paper characterization is cached in `data/paper_metadata/` by content
+- Fast Paper characterization is cached in `~/Atelier/library/paper_metadata/`
+  by content
   hash and exposed through `atelier paper PATH`.
 - `atelier search QUERY` exposes retrieval without synthesis.
 - Re-ingestion replaces a source's existing chunks, preventing stale tail
@@ -35,14 +36,16 @@ runtime.
 
 ## Local prototype corpus
 
-The three prototype PDFs and their SHA-keyed metadata were copied into:
+The three prototype PDFs and their SHA-keyed metadata were migrated into:
 
 ```text
-atelier_agent/data/corpus/papers/
-atelier_agent/data/paper_metadata/
+~/Atelier/library/corpus/papers/
+~/Atelier/library/paper_metadata/
 ```
 
-These are local runtime artifacts and are intentionally ignored by Git.
+The original repository-local source is preserved as migration input; active
+runtime artifacts are external to the checkout and intentionally ignored by
+Git.
 
 ## Embedding migration note
 

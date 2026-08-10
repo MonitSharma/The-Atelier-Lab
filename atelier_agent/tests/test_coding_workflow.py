@@ -68,3 +68,34 @@ def test_workflow_emits_accepted_certificate(monkeypatch, tmp_path: Path) -> Non
     assert result.accepted
     assert result.certificate.attempts == 1
     assert [stage.name for stage in result.certificate.stages].count("certificate") == 1
+
+
+def test_certificate_changed_files_exclude_runtime_artifacts(monkeypatch, tmp_path: Path) -> None:
+    source = tmp_path / "main.py"
+    source.write_text("value = 1\n", encoding="utf-8")
+
+    def fake_tests(_arguments):
+        (tmp_path / "__pycache__").mkdir(exist_ok=True)
+        (tmp_path / "__pycache__" / "main.cpython-311.pyc").write_bytes(b"cache")
+        (tmp_path / ".pytest_cache").mkdir(exist_ok=True)
+        (tmp_path / ".pytest_cache" / "state").write_text("cache", encoding="utf-8")
+        return {"status": "success", "passed_clean": True, "summary": "1 passed"}
+
+    class FakeAgent:
+        def __init__(self, *_args, **_kwargs):
+            pass
+
+        def run(self, _prompt):
+            source.write_text("value = 2\n", encoding="utf-8")
+            return AgentResult(
+                answer="verified", success=True, steps=1,
+                trace=[{"decision": {"tool": "edit_file"}}, {"decision": {"tool": "test_runner"}}],
+            )
+
+    monkeypatch.setattr("agent.coding_workflow.run_tests", fake_tests)
+    workflow = BuildWorkflow(tmp_path, agent_factory=FakeAgent)
+    monkeypatch.setattr(workflow, "_diff_review", lambda _inspector: {"passed": True, "files": [], "stat": ""})
+    result = workflow.run("make the change", escalation_role=None)
+
+    assert result.accepted
+    assert result.certificate.changed_files == ("main.py",)
