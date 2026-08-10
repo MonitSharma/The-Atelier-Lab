@@ -91,6 +91,16 @@ def _path_completion_request(line: str, begin: int) -> tuple[bool, bool]:
     return False, False
 
 
+def _path_completion_input(line: str, begin: int, text: str) -> tuple[str, str]:
+    """Reconstruct a slash-delimited path and its readline replacement prefix."""
+    before = line[:begin]
+    if before and not before[-1].isspace():
+        path_prefix = before.rsplit(None, 1)[-1]
+    else:
+        path_prefix = ""
+    return path_prefix + text, path_prefix
+
+
 def _path_completions(
     text: str,
     *,
@@ -169,7 +179,15 @@ class _AtelierCompleter:
         else:
             is_path, directories_only = _path_completion_request(line, begin)
             if is_path:
-                candidates = _path_completions(text, directories_only=directories_only)
+                lookup_text, replacement_prefix = _path_completion_input(line, begin, text)
+                candidates = _path_completions(lookup_text, directories_only=directories_only)
+                if replacement_prefix:
+                    candidates = [
+                        candidate[len(replacement_prefix):]
+                        if candidate.startswith(replacement_prefix)
+                        else candidate
+                        for candidate in candidates
+                    ]
             elif tokens and len(tokens) == 1 and tokens[0] == "atelier":
                 candidates = _command_completions(text)
             else:
