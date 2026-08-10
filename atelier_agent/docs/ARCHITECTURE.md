@@ -42,6 +42,7 @@ required by the scientific-library runtime on Linux.
 | `brain` | `qwen3:8b` | installed; temporary default | general reasoning and build mode |
 | `coder` | `qwen3:8b` | installed and benchmarked | repository edits, tests, and small coding tasks |
 | `heavy` | `gemma4:26b` | installed | hard reasoning and end-to-end local synthesis |
+| `vision` | `gemma4:26b` | installed; multimodal | handwriting, diagrams, equations, and embedded document images |
 | `expert` | empty | intentionally unconfigured | reserved capability slot |
 | `router` | `qwen3:4b` | configuration placeholder | future routing experiment |
 | embedding | `qwen3-embedding:4b` | installed | 2,560-dimensional query/document embeddings |

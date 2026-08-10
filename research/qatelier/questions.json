@@ -71,6 +71,32 @@
       "citation_requirement": "Do not invent bibliographic details; use placeholders when the plan does not provide enough information."
     },
     {
+      "id": "equations",
+      "dimension": "equations",
+      "question": "Find the most important mathematical expressions in the QAtelier plan. Transcribe each faithfully in plain text or LaTeX, explain the variables and the role of the expression in the research design, and mark any symbol that is uncertain or reconstructed.",
+      "must_cover": [
+        "faithful transcription",
+        "variables and operators",
+        "role in the hypothesis or protocol",
+        "uncertainty markers",
+        "source location"
+      ],
+      "citation_requirement": "Never silently normalize an unreadable equation; cite the relevant heading, page, or image location."
+    },
+    {
+      "id": "embedded-visuals",
+      "dimension": "embedded visuals",
+      "question": "Inspect the QAtelier DOCX for embedded images, diagrams, tables, or handwritten annotations. Describe what each visual contributes to the plan and cite its document location. If no such visual is present, say so explicitly rather than inventing one.",
+      "must_cover": [
+        "embedded image inventory",
+        "diagram or table interpretation",
+        "handwriting handling",
+        "explicit abstention when absent",
+        "location citation"
+      ],
+      "citation_requirement": "Use image, table, heading, or archive-member citations and flag visuals requiring human review."
+    },
+    {
       "id": "proposed-experiments",
       "dimension": "proposed experiments",
       "question": "Propose the first three QAtelier experiments in dependency order. For each, specify the hypothesis, data/task regime, quantum and classical baselines, metrics, resource measurements, stopping or falsification rule, and the result that would justify moving to the next experiment.",

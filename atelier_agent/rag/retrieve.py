@@ -9,7 +9,6 @@ from atelier.config import settings
 from rag.embed import get_embedder
 from rag.store import VectorStore
 
-
 REFERENCE_TERMS = {
     "reference", "references", "bibliography", "citation", "citations", "cited",
     "papers", "prior", "related", "literature", "sources",
@@ -149,8 +148,27 @@ def format_context(hits: list[dict[str, Any]], max_chars: int | None = None) -> 
     for i, hit in enumerate(hits, start=1):
         src = hit["metadata"].get("source", "?")
         name = Path(src).name if src != "?" else "?"
-        section = hit["metadata"].get("section", "")
-        header = f"[{i}] {name}" + (f"  ({section})" if section else "")
+        meta = hit["metadata"]
+        location: list[str] = []
+        if meta.get("page") is not None:
+            location.append(f"p. {meta['page']}")
+        if meta.get("slide") is not None:
+            location.append(f"slide {meta['slide']}")
+        if meta.get("heading"):
+            location.append(f"heading: {meta['heading']}")
+        if meta.get("section"):
+            location.append(f"section: {meta['section']}")
+        if meta.get("table") is not None:
+            location.append(f"table {meta['table']}")
+        if meta.get("speaker_notes"):
+            location.append("speaker notes")
+        if meta.get("image_member"):
+            location.append(f"image: {meta['image_member']}")
+        if meta.get("archive_member"):
+            location.append(f"archive: {meta['archive_member']}")
+        if meta.get("human_review"):
+            location.append("HUMAN REVIEW FLAG")
+        header = f"[{i}] {name}" + (f"  ({'; '.join(location)})" if location else "")
         body = hit["text"]
         block = f"{header}\n{body}"
         if used + len(block) > max_chars and blocks:
@@ -161,10 +179,21 @@ def format_context(hits: list[dict[str, Any]], max_chars: int | None = None) -> 
 
 
 def citations(hits: list[dict[str, Any]]) -> list[str]:
-    """Short, de-duplicated source list for display under an answer."""
+    """De-duplicated source-location citations for display under an answer."""
     seen: list[str] = []
     for hit in hits:
-        name = Path(hit["metadata"].get("source", "?")).name
-        if name not in seen:
-            seen.append(name)
+        meta = hit["metadata"]
+        name = Path(meta.get("source", "?")).name
+        location: list[str] = []
+        if meta.get("page") is not None:
+            location.append(f"p. {meta['page']}")
+        if meta.get("slide") is not None:
+            location.append(f"slide {meta['slide']}")
+        if meta.get("table") is not None:
+            location.append(f"table {meta['table']}")
+        if meta.get("archive_member"):
+            location.append(f"archive:{meta['archive_member']}")
+        label = f"{name} ({'; '.join(location)})" if location else name
+        if label not in seen:
+            seen.append(label)
     return seen
