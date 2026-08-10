@@ -5,6 +5,8 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import shutil
+import subprocess
 from pathlib import Path
 from typing import Any, Literal
 
@@ -115,12 +117,47 @@ def _extract_pages(path: Path) -> list[dict[str, Any]]:
     for index, item in enumerate(result, start=1):
         raw = item.get("text", "")
         metadata = item.get("metadata", {}) or {}
+        page_number = metadata.get("page", index)
+        text = clean_retrieval_text(raw)
+        extraction = "native"
+        if len(text) < 40:
+            ocr_text = _ocr_pdf_page(path, int(page_number))
+            if len(ocr_text) > len(text):
+                text = clean_retrieval_text(ocr_text)
+                extraction = "tesseract_ocr"
         pages.append({
-            "page": metadata.get("page", index),
+            "page": page_number,
             "raw_text": raw,
-            "text": clean_retrieval_text(raw),
+            "text": text,
+            "extraction": extraction,
         })
     return pages
+
+
+def _ocr_pdf_page(path: Path, page_number: int) -> str:
+    """Best-effort OCR for image-only or handwritten PDF pages."""
+    tesseract = shutil.which("tesseract")
+    if not tesseract:
+        return ""
+    try:
+        import fitz
+
+        document = fitz.open(path)
+        page = document.load_page(max(0, page_number - 1))
+        longest_side = max(float(page.rect.width), float(page.rect.height))
+        scale = min(2.0, max(1.0, 5000.0 / max(longest_side, 1.0)))
+        pixels = page.get_pixmap(matrix=fitz.Matrix(scale, scale), alpha=False)
+        result = subprocess.run(
+            [tesseract, "stdin", "stdout", "--psm", "11"],
+            input=pixels.tobytes("png"),
+            capture_output=True,
+            text=False,
+            timeout=120,
+            check=False,
+        )
+        return result.stdout.decode("utf-8", errors="replace").strip() if result.returncode == 0 else ""
+    except (OSError, RuntimeError, subprocess.SubprocessError, ValueError):
+        return ""
 
 
 def extract_pdf_pages(path: Path, document_id: str | None = None) -> list[dict[str, Any]]:
@@ -131,11 +168,11 @@ def extract_pdf_pages(path: Path, document_id: str | None = None) -> list[dict[s
     cache_path = settings.extracted_dir / f"{document_id}.json"
     if cache_path.exists():
         payload = json.loads(cache_path.read_text(encoding="utf-8"))
-        if payload.get("document_id") == document_id:
+        if payload.get("schema_version") == 2 and payload.get("document_id") == document_id:
             return payload.get("pages", [])
     pages = _extract_pages(path)
     cache_path.write_text(
-        json.dumps({"schema_version": 1, "document_id": document_id, "pages": pages},
+        json.dumps({"schema_version": 2, "document_id": document_id, "pages": pages},
                    ensure_ascii=False),
         encoding="utf-8",
     )

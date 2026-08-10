@@ -1,7 +1,7 @@
 """Atelier command-line interface.
 
     atelier doctor                 check models, store, and embeddings
-    atelier ingest PATH...         index notes/PDFs/code into the vector store
+    atelier ingest PATH...         index documents, notes, images, and code
     atelier ask "question"         grounded answer over your knowledge base
     atelier sources                list what's currently indexed
     atelier chat                   interactive knowledge-mode session
@@ -501,7 +501,7 @@ def ingest(
     dry_run: bool = typer.Option(False, "--dry-run", help="Show the plan without modifying local state."),
     sync: bool = typer.Option(False, "--sync", help="Reconcile files removed from the supplied roots."),
 ) -> None:
-    """Incrementally index notes/PDFs/code into the local vector store."""
+    """Incrementally index supported documents, notes, images, archives, and code."""
     from rag.ingest import bootstrap_manifest_from_store, build_plan, execute_plan
     from rag.manifest import IndexManifest
     from rag.store import VectorStore
