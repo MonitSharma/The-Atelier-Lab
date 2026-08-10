@@ -21,22 +21,21 @@ from rich.console import Console
 from atelier.banner import print_banner
 
 _ATELIER_COMMANDS = (
+    "guide",
+    "advanced-help",
     "search",
     "ask",
     "paper",
-    "paper-visual",
     "ingest",
     "sources",
     "doctor",
     "agent",
     "workspace",
-    "serve",
-    "mcp",
     "remember",
     "recall",
-    "models",
     "repo",
     "code-fix",
+    "models",
 )
 _TERMINAL_COMMANDS = (
     "cd",
@@ -192,8 +191,9 @@ def run_session(console: Console | None = None) -> None:
     console = console or Console()
     print_banner(console)
     console.print(
-        "[dim]Atelier: search · ask · paper · ingest · sources · doctor · agent · "
-        "workspace · serve · mcp · remember · recall[/]\n"
+        "[dim]Core: ingest · ask · search · sources · agent · code-fix · doctor[/]\n"
+        "[dim]Also: paper · remember · recall · workspace · repo · models[/]\n"
+        "[dim]Advanced commands remain available: type advanced-help[/]\n"
         "[dim]Terminal: cd · pwd · ls · find · rg · git · cat · ollama · help · exit[/]\n"
         "[dim]Tab completes Atelier commands and local paths.[/]\n"
     )
@@ -225,7 +225,7 @@ def run_session(console: Console | None = None) -> None:
                 print_banner(console)
                 continue
             if line.lower() == "help":
-                subprocess.run([*command, "--help"], env=env, check=False)
+                subprocess.run([*command, "guide"], env=env, check=False)
                 continue
 
             try:

@@ -7,23 +7,20 @@ import os
 from rich.console import Console
 
 _LOGO = r"""
-                              ✦
-                             / \
-                            /   \
-                       _.-'  ✧  `-._
-                   _.-'      ◇       `-._
-               _.-'    ·  .-^- .  ✦      `-._
-             .'       .-'  A   `-.           `.
-            /_____.-'____________`-.___✧______\
-           /         ◇       ✦       ◇          \
-      .-================================================-.
-    .'       ✦       ·       ◇       ·       ✦          `.
-   /______________________________________________________\
+                         ✦
+                        ╱ ╲
+                       ╱   ╲
+                  ✧   ╱ ◇ A ╲   ✧
+                     ╱       ╲
+                    ╱_________╲
+                .─────────────────.
+               /   ·   ✦   ◇   ✦   \
+              /_____________________\
 """
 
-_WORDMARK = "       A T E L I E R  ·  L A B"
-_RULE = "       ──────── ◈ ────────"
-_TAGLINE = "       local research workbench"
+_WORDMARK = "             A T E L I E R   L A B"
+_RULE = "             ──────── ◈ ────────"
+_TAGLINE = "             local research atelier"
 
 
 def print_banner(console: Console | None = None) -> None:

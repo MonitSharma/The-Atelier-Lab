@@ -4,6 +4,9 @@ This is the practical guide to the current Atelier release. It explains what
 the system does, how to run it, how data moves through it, which models are
 installed, and what each model is responsible for.
 
+For the shorter task-oriented guide with worked examples, start with
+[`ATELIER_USER_GUIDE.md`](ATELIER_USER_GUIDE.md).
+
 The active implementation lives in
 [`atelier_agent/`](../atelier_agent/). User data and runtime state live outside
 the Git checkout under `~/Atelier`, so updating the code does not overwrite the

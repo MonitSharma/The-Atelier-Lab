@@ -27,34 +27,34 @@ from atelier.config import settings
 app = typer.Typer(
     add_completion=False,
     invoke_without_command=True,
-    help="Atelier — local research workbench.",
+    help="Atelier — a local research and coding workbench. Start with: ingest → ask.",
 )
 workspace_app = typer.Typer(help="Manage approved local workspace roots and capabilities.")
-app.add_typer(workspace_app, name="workspace")
+app.add_typer(workspace_app, name="workspace", rich_help_panel="Core setup")
 repo_app = typer.Typer(help="Deterministic repository inspection and verification.")
-app.add_typer(repo_app, name="repo")
+app.add_typer(repo_app, name="repo", rich_help_panel="Core coding")
 models_app = typer.Typer(help="Inspect configured models, local residency, and benchmarks.")
-app.add_typer(models_app, name="models")
+app.add_typer(models_app, name="models", rich_help_panel="Core setup")
 project_app = typer.Typer(help="Manage explicit project-scoped memory.")
-app.add_typer(project_app, name="project")
+app.add_typer(project_app, name="project", hidden=True)
 quantum_app = typer.Typer(help="Deterministic quantum-circuit inspection.")
-app.add_typer(quantum_app, name="quantum")
+app.add_typer(quantum_app, name="quantum", hidden=True)
 optimize_app = typer.Typer(help="Deterministic optimization validation.")
-app.add_typer(optimize_app, name="optimize")
+app.add_typer(optimize_app, name="optimize", hidden=True)
 state_app = typer.Typer(help="Initialize, validate, and migrate Atelier runtime state.")
-app.add_typer(state_app, name="state")
+app.add_typer(state_app, name="state", hidden=True)
 finder_app = typer.Typer(help="Opt-in Finder/Shortcuts action plans.")
-app.add_typer(finder_app, name="finder")
+app.add_typer(finder_app, name="finder", hidden=True)
 handoff_app = typer.Typer(help="Create explicit frontier-model handoff bundles.")
-app.add_typer(handoff_app, name="handoff")
+app.add_typer(handoff_app, name="handoff", hidden=True)
 package_app = typer.Typer(help="Packaging and release-readiness checks.")
-app.add_typer(package_app, name="package")
+app.add_typer(package_app, name="package", hidden=True)
 research_app = typer.Typer(help="Provenance-tracked external research operations.")
-app.add_typer(research_app, name="research")
+app.add_typer(research_app, name="research", hidden=True)
 workflow_app = typer.Typer(help="Run durable typed workflows with checkpoints and approvals.")
-app.add_typer(workflow_app, name="workflow")
+app.add_typer(workflow_app, name="workflow", hidden=True)
 security_app = typer.Typer(help="Manage explicit one-use destructive-operation confirmations.")
-app.add_typer(security_app, name="security")
+app.add_typer(security_app, name="security", hidden=True)
 console = Console()
 INGEST_PATHS_ARG = typer.Argument(None, help="Files or folders to index. Defaults to data/corpus.")
 EVAL_PLOT_REPORT_OPT = typer.Option(None, "--report", help="Specific report JSON to plot.")
@@ -265,7 +265,7 @@ def repo_tests(
         raise typer.Exit(code=result.returncode)
 
 
-@app.command("profile")
+@app.command("profile", hidden=True)
 def profile_artifact(
     path: Path = typer.Argument(..., exists=True, readable=True),
     as_json: bool = typer.Option(False, "--json", help="Print the complete artifact profile."),
@@ -291,7 +291,7 @@ def profile_artifact(
     console.print(table)
 
 
-@app.command("paper-visual")
+@app.command("paper-visual", hidden=True)
 def paper_visual(
     path: Path = typer.Argument(..., exists=True, readable=True),
     render: bool = typer.Option(False, "--render", help="Render every page instead of fallback pages only."),
@@ -323,7 +323,7 @@ def paper_visual(
     console.print(f"Visual fallback needed: {'yes' if report['visual_fallback'] else 'no'}")
 
 
-@app.command("research-lookup")
+@app.command("research-lookup", hidden=True)
 def research_lookup(
     query: str | None = typer.Argument(None, help="Explicit bibliographic query."),
     source: str = typer.Option("crossref", "--source", help="crossref, arxiv, or semantic_scholar."),
@@ -423,6 +423,69 @@ def _root(
         from atelier.session import run_session
 
         run_session(console)
+
+
+def _print_guide() -> None:
+    console.print(Panel(
+        "[bold cyan]The daily Atelier loop[/]\n\n"
+        "[bold]1. ingest[/] a paper, document, image, archive, or code folder\n"
+        "[bold]2. ask[/] questions grounded in your indexed material\n"
+        "[bold]3. agent[/] ask Atelier to inspect or change an approved repository\n"
+        "[bold]4. code-fix[/] run the certified inspect → edit → test workflow\n\n"
+        "Everything is local by default. Use [bold]doctor[/] when something is unclear.",
+        title="Atelier quick guide", border_style="cyan",
+    ))
+    table = Table(title="Core commands", show_header=True, header_style="bold")
+    table.add_column("Command", style="bold cyan")
+    table.add_column("Use it for")
+    table.add_row("ingest PATH", "Index a file or folder for retrieval")
+    table.add_row("sources", "See what is currently indexed")
+    table.add_row("search QUERY", "Inspect matching passages without model synthesis")
+    table.add_row("ask QUESTION", "Get a grounded answer with citations")
+    table.add_row("paper PDF", "Create a cached scientific-paper characterization")
+    table.add_row("agent TASK", "Combine research lookup with repository work")
+    table.add_row("code-fix TASK", "Make and test a controlled code change")
+    table.add_row("remember / recall", "Store or retrieve durable project facts")
+    table.add_row("doctor", "Check models, index, memory, and workspaces")
+    console.print(table)
+    console.print(
+        "[dim]Examples: atelier ingest ~/Downloads/QAtelier_Quantum_Adapters_Research_Plan.docx  ·  "
+        "atelier ask \"What are the plan's falsifiers?\"[/]"
+    )
+    console.print("[dim]Less common integrations and diagnostics: atelier advanced-help[/]")
+
+
+@app.command("guide", rich_help_panel="Help")
+def guide() -> None:
+    """Show the short daily-use guide."""
+    _print_guide()
+
+
+@app.command("help", hidden=True)
+def help_command() -> None:
+    """Alias for `atelier guide`, useful inside the interactive session."""
+    _print_guide()
+
+
+@app.command("advanced-help", rich_help_panel="Help")
+def advanced_help() -> None:
+    """List advanced commands that are intentionally hidden from the daily help."""
+    console.print(Panel(
+        "These commands remain available for specific workflows; they are not required for normal research use.",
+        title="Advanced Atelier commands", border_style="magenta",
+    ))
+    table = Table(show_header=True, header_style="bold")
+    table.add_column("Area", style="bold")
+    table.add_column("Commands")
+    table.add_row("Visual / research", "paper-visual, profile, research-lookup")
+    table.add_row("Model / retrieval evaluation", "eval, benchmark-coding, benchmark-retrieval, eval-plots")
+    table.add_row("Local services", "serve, mcp, tools")
+    table.add_row("Projects / science", "project, quantum, optimize")
+    table.add_row("Runtime / workflows", "init, state, workflow, security, acceptance")
+    table.add_row("Diagnostics", "route, route-eval, reliability, performance, models bench")
+    table.add_row("External integrations", "finder, handoff, package, research")
+    console.print(table)
+    console.print("[dim]Full reference: docs/ATELIER_USER_GUIDE.md[/]")
 
 
 @app.command()
@@ -773,7 +836,7 @@ def code_fix(
         raise typer.Exit(code=1)
 
 
-@app.command()
+@app.command(hidden=True)
 def eval(
     mode: str = typer.Option("all", "--mode", help="all | docqa | code | combined"),
     judge: bool = typer.Option(False, "--judge", help="Add the local LLM-as-judge (slower)."),
@@ -861,7 +924,7 @@ def eval(
             console.print("[green]Gate: no regressions vs. last report.[/]")
 
 
-@app.command("benchmark-coding")
+@app.command("benchmark-coding", hidden=True)
 def benchmark_coding(
     models: list[str] | None = typer.Option(
         None, "--model", help="Candidate model ID; repeat for multiple candidates."
@@ -896,7 +959,7 @@ def benchmark_coding(
     console.print(f"Report: {path}")
 
 
-@app.command("eval-plots")
+@app.command("eval-plots", hidden=True)
 def eval_plots(
     report: Path | None = EVAL_PLOT_REPORT_OPT,
     out: Path | None = EVAL_PLOT_OUT_OPT,
@@ -917,7 +980,7 @@ def eval_plots(
     console.print(table)
 
 
-@app.command("benchmark-retrieval")
+@app.command("benchmark-retrieval", hidden=True)
 def benchmark_retrieval(
     k: int = typer.Option(6, "-k", help="Number of passages per query."),
 ) -> None:
@@ -968,7 +1031,7 @@ def recall(
     console.print(table)
 
 
-@app.command("memory-migrate")
+@app.command("memory-migrate", hidden=True)
 def memory_migrate() -> None:
     """Back up and re-embed semantic memory into a compatible collection."""
     from agent.memory import migrate_memory
@@ -1114,7 +1177,7 @@ def project_artifact_record(
     console.print_json(json.dumps(result, default=str))
 
 
-@app.command()
+@app.command(hidden=True)
 def route(
     task: str = typer.Argument(..., help="A task to classify and route."),
     backend: str = typer.Option("auto", "--backend", help="auto | finetuned | heuristic"),
@@ -1313,7 +1376,7 @@ def optimize_compare(
     console.print_json(json.dumps(result, default=str))
 
 
-@app.command("workflows")
+@app.command("workflows", hidden=True)
 def workflows_list(
     name: str | None = typer.Option(None, "--name", help="Describe one workflow."),
     as_json: bool = typer.Option(False, "--json"),
@@ -1461,7 +1524,7 @@ def models_bench(
     )
 
 
-@app.command()
+@app.command(hidden=True)
 def mcp(shell: bool = typer.Option(False, "--shell", help="Expose the shell tool too.")) -> None:
     """Run the MCP tool bridge for an external MCP client; not for interactive use."""
     from atelier.mcp_server import main as mcp_main
@@ -1469,7 +1532,7 @@ def mcp(shell: bool = typer.Option(False, "--shell", help="Expose the shell tool
     mcp_main(include_shell=shell)
 
 
-@app.command(name="tools")
+@app.command(name="tools", hidden=True)
 def list_tools(shell: bool = typer.Option(False, "--shell")) -> None:
     """List the tools the agent can use."""
     from tools.registry import create_default_registry
@@ -1483,7 +1546,7 @@ def list_tools(shell: bool = typer.Option(False, "--shell")) -> None:
     console.print(table)
 
 
-@app.command()
+@app.command(hidden=True)
 def serve(
     host: str = typer.Option("127.0.0.1", "--host", help="Bind only to localhost by default."),
     port: int = typer.Option(8787, "--port", min=1, max=65535),
@@ -1495,7 +1558,7 @@ def serve(
     run_server(host=host, port=port)
 
 
-@app.command()
+@app.command(hidden=True)
 def init(
     home: Path | None = typer.Option(None, "--home", help="Runtime home (default ~/.atelier or ATELIER_HOME)."),
 ) -> None:
@@ -1622,7 +1685,7 @@ def handoff_create(
     console.print(f"[green]Handoff bundle written:[/] {path}")
 
 
-@app.command("reliability")
+@app.command("reliability", hidden=True)
 def reliability_report(
     input_path: Path | None = typer.Option(None, "--input", exists=True, readable=True, help="JSON list of trial rows."),
     suite: str = typer.Option("manual", "--suite"),
@@ -1646,7 +1709,7 @@ def reliability_report(
         raise typer.Exit(code=2) from exc
 
 
-@app.command("route-eval")
+@app.command("route-eval", hidden=True)
 def route_eval_command() -> None:
     """Run the frozen human-labeled capability-routing evaluation."""
     from eval.capability_routing import run_capability_eval
@@ -1657,7 +1720,7 @@ def route_eval_command() -> None:
         raise typer.Exit(code=1)
 
 
-@app.command("performance")
+@app.command("performance", hidden=True)
 def performance_report() -> None:
     """Measure baseline latency for shared local service operations."""
     from atelier.performance import service_baseline
@@ -1713,7 +1776,7 @@ def package_restore(
     console.print_json(json.dumps(result, default=str))
 
 
-@app.command("acceptance")
+@app.command("acceptance", hidden=True)
 def acceptance_command(clean: bool = typer.Option(False, "--clean", help="Run the fresh-runtime end-to-end acceptance scenario.")) -> None:
     """Run deterministic offline acceptance checks without model or network calls."""
     from atelier.acceptance import run_acceptance, run_clean_acceptance
