@@ -1,0 +1,11 @@
+{
+  "config_sha256": "2fb5ebb303998f441ff253b74c365681cd4327418fcd82bd5fbed0e8eb77b179",
+  "experiment_id": "qatelier-s1-scientific-retrieval",
+  "jobs_submitted": 0,
+  "preparation_manifest_sha256": "38af179fa46652e6f6e14f9392b7a5f8e823654cb497000eabf2745cc5b43e44",
+  "provider_contacted": false,
+  "row_count": 360,
+  "schema_version": 1,
+  "status": "completed_classical_reference_panel",
+  "test_qrels_used": false
+}

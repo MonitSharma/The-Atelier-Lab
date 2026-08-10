@@ -127,6 +127,18 @@ def lock_all(*, config_path: str | Path, output_dir: str | Path) -> Path:
         )
         source_records.append({"task": task, "results_sha256": _sha256(results_path), "row_count": len(document["rows"])})
 
+    for task in ("scientific_retrieval", "controlled_interaction_order"):
+        raw_dir = root / config["raw_results"][task]
+        results_path = raw_dir / "results.json"
+        manifest_path = raw_dir / "run_manifest.json"
+        document = json.loads(results_path.read_text())
+        manifest = json.loads(manifest_path.read_text())
+        if manifest["row_count"] != len(document["rows"]):
+            raise ValueError(f"{task} run manifest row count mismatch")
+        if manifest["provider_contacted"] or manifest["jobs_submitted"]:
+            raise ValueError(f"{task} S1 classical lock unexpectedly contacted a provider")
+        source_records.append({"task": task, "results_sha256": _sha256(results_path), "row_count": len(document["rows"])})
+
     unresolved = [name for name, task in config["public_tasks"].items() if task["status"] not in {"locked_from_s0", "reference_locked"}]
     lock = {
         "schema_version": 1,

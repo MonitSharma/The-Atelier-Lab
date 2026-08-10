@@ -20,12 +20,14 @@ additional_classification:
 raw_results:
   mrpc: raw/mrpc
   cola: raw/cola
+  scientific_retrieval: scientific_retrieval/raw
+  controlled_interaction_order: controlled_interaction_order/raw
 scientific_retrieval:
   definition_dir: scientific_retrieval
-  status: definition_ready
+  status: reference_locked
 controlled_interaction_order:
   definition_dir: controlled_interaction_order
-  status: definition_ready
+  status: panel_archived
 public_tasks:
   sst2:
     status: locked_from_s0
@@ -37,11 +39,11 @@ public_tasks:
     status: reference_locked
     requirement: public_classification_task_with_distinct_label_geometry
   scientific_retrieval:
-    status: definition_ready
+    status: reference_locked
     definition: scientific_retrieval
     requirement: public_scientific_reranking_benchmark
   controlled_interaction_order:
-    status: definition_ready
+    status: panel_archived
     definition: controlled_interaction_order
     requirement: qatelier_benchmark_with_orders_1_through_6
 baseline_groups:

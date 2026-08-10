@@ -1,0 +1,14 @@
+{
+  "corpus_count": 5183,
+  "corpus_embeddings_hash": "12234be441e7ca51949123c2ee2baebf0d5247f61a70ddb986ac3efebef43d92",
+  "embedding_dimension": 768,
+  "encoder_weights_sha256": "5fc2279bd6e503ca3543197b4ef00b615d87eebd02490f8c108aa3f35d7b705d",
+  "jobs_submitted": 0,
+  "preparation_manifest_sha256": "38af179fa46652e6f6e14f9392b7a5f8e823654cb497000eabf2745cc5b43e44",
+  "provider_contacted": false,
+  "query_count": 1109,
+  "query_embeddings_hash": "b49e3e608dd992ad959f315cbfdb23d78c452d909bad959d9e4738e707084b13",
+  "representations_count": 9,
+  "schema_version": 1,
+  "status": "validated_external_preparation"
+}

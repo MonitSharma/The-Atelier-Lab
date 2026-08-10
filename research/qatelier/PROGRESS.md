@@ -119,8 +119,10 @@ The following credential-free infrastructure is now implemented on `qatelier`:
   order definition also has a completed classical panel under its `raw/`
   directory: 14,400 rows across 24 problems, five budgets, five confirmation
   seeds, and eight heads, with zero provider jobs. Scientific-retrieval head
-  evaluation remains pending because its corpus/embedding preparation is not
-  vendored.
+  preparation is now validated externally at 768 dimensions with nine
+  train-only PCA representations, and its full 360-row classical ranking panel
+  is archived under `scientific_retrieval/raw/`; reserved test qrels were not
+  used.
 - The initial S2 mechanism screen is implemented with kernel alignment,
   effective-rank, spectrum, and finite-difference gradient diagnostics. A
   bounded screen over four interaction families and orders 1–4 is archived
@@ -154,7 +156,7 @@ may not silently revise an earlier stage's split, baseline, or selection rule.
 | Stage | Purpose | Required controls | Advance rule | Status |
 | --- | --- | --- | --- | --- |
 | S0 — reproduction/calibration | Reproduce a compact published-style frozen-embedding quantum-head setup and resolve discrepancies. | Same embeddings and splits for LR/SVM and the quantum head; record simulator and seed. | Basic behavior is reproduced or the discrepancy is explained. | Complete; negative calibration result archived |
-| S1 — classical baseline lock | Establish the reference numbers before quantum screening. | Shared compressor, full nonlinear baseline ladder, equal validation/search budgets. | Search spaces, metrics, seeds, and reference outputs are frozen. | Partial multi-task lock: SST-2, MRPC, CoLA heads locked; controlled-order panel archived; retrieval head pending |
+| S1 — classical baseline lock | Establish the reference numbers before quantum screening. | Shared compressor, full nonlinear baseline ladder, equal validation/search budgets. | Search spaces, metrics, seeds, and reference outputs are frozen. | Reference panels archived for SST-2, MRPC, CoLA, SciFact, and controlled-order; aggregate lock table remains partial for heterogeneous metrics |
 | S2 — mechanism screen | Test QIA-P/L/X/A across low-data and controlled interaction-order conditions. | Matched `q`, depth, trainable-parameter bands, optimization budget, and paired seeds; include aligned and deliberately misaligned tasks. | Retain only Pareto candidates with stable validation utility and non-pathological gradients. | Bounded orders 1–6 q=2/4 panel archived; candidate freeze pending |
 | S3 — held-out simulator | Evaluate the frozen candidates on all predeclared public/OOD tasks. | No test tuning; report paired effect sizes and bootstrap intervals across seeds/tasks. | C1/C2 evidence exists, or a rigorous negative result explains the loss. | Planned |
 | S4 — noise/shot screen | Estimate finite-shot and device-noise degradation. | Fixed shot budgets, noise-model versions, and candidate list; report gradient and resource costs. | Select 2–4 candidates only if signal is stable enough to justify QPU spend. | Planned |
@@ -201,9 +203,8 @@ may not silently revise an earlier stage's split, baseline, or selection rule.
 
 ## Immediate next actions
 
-1. Prepare and lock the S1 scientific-retrieval classical reference heads; do
-   not use confirmation results for quantum tuning. The controlled-order panel
-   is already archived.
+1. Integrate heterogeneous retrieval and controlled-order summaries into the
+   final S1 audit table; do not use confirmation results for quantum tuning.
 2. Add the remaining S2 ablations and paired-seed analysis, using the locked
    classical tables as the comparison reference; no candidate is frozen yet.
 3. Keep IBM/Helios-1E execution gated until S2–S4 produce frozen candidates and

@@ -29,10 +29,12 @@ def test_s1_multitask_lock_has_three_reference_tasks_and_no_jobs():
     assert document["claim_level"] == "classical_reference"
     assert len(document["summaries"]) == 32
     assert {record["task"] for record in document["summaries"]} == {"sst2", "mrpc", "cola"}
-    assert set(document["unresolved_s1_tasks"]) == {"scientific_retrieval", "controlled_interaction_order"}
+    assert set(document["unresolved_s1_tasks"]) == {"controlled_interaction_order"}
     for task in ("mrpc", "cola"):
         record = next(record for record in document["source_records"] if record["task"] == task)
         assert record["row_count"] == 480
+    assert next(record for record in document["source_records"] if record["task"] == "scientific_retrieval")["row_count"] == 360
+    assert next(record for record in document["source_records"] if record["task"] == "controlled_interaction_order")["row_count"] == 14400
 
 
 def test_s1_archived_public_task_panels_are_classical_only_and_complete():

@@ -14,7 +14,7 @@
     ]
   },
   "claim_level": "classical_reference",
-  "config_sha256": "b12525591ca87421b71df48ca0ce4ecfe9e2591d5231fdbb008296e2f730262a",
+  "config_sha256": "c65195d6409b406bb921ccaac0e3ae8433992c91c7ebacc1f2e98e91b2ad36fa",
   "public_task_status": {
     "additional_classification": {
       "requirement": "public_classification_task_with_distinct_label_geometry",
@@ -23,12 +23,12 @@
     "controlled_interaction_order": {
       "definition": "controlled_interaction_order",
       "requirement": "qatelier_benchmark_with_orders_1_through_6",
-      "status": "definition_ready"
+      "status": "panel_archived"
     },
     "scientific_retrieval": {
       "definition": "scientific_retrieval",
       "requirement": "public_scientific_reranking_benchmark",
-      "status": "definition_ready"
+      "status": "reference_locked"
     },
     "semantic_pair": {
       "requirement": "public_pair_task_with_frozen_pair_representation",
@@ -55,6 +55,16 @@
       "results_sha256": "349b05cb2b7b7bed69974c88ef557c96cdd20adffa53f74cdd7d75e53d3e3552",
       "row_count": 480,
       "task": "cola"
+    },
+    {
+      "results_sha256": "b717f3f0643753e2c2a04b1f971ee933d3887b2b5511dc4d39af72df6ab5c1a8",
+      "row_count": 360,
+      "task": "scientific_retrieval"
+    },
+    {
+      "results_sha256": "08018ab0d2de7c925789a23caf223d47abbbd234b14d42dcd68383014e3b9d9b",
+      "row_count": 14400,
+      "task": "controlled_interaction_order"
     }
   ],
   "status": "partial_multitask_reference_lock",
@@ -446,7 +456,6 @@
   ],
   "test_tuning_allowed": false,
   "unresolved_s1_tasks": [
-    "scientific_retrieval",
     "controlled_interaction_order"
   ]
 }

@@ -87,8 +87,31 @@ the member paths in `data_manifest.json` and pass `--data-dir`:
   --data-dir /path/to/scifact-files
 ```
 
-The validator performs no network access. A future preparation runner may use
-the pinned URLs, verify all four hashes before reading any rows, encode with
-the pinned S0 model, and write a preparation manifest under a later scoped
-artifact directory.
+The validator performs no network access. The preparation runner
+[`prepare.py`](prepare.py) verifies all four hashes before reading any rows,
+encodes with the pinned S0 model, and writes train-only compressors. Its
+external preparation evidence is summarized in
+[`artifacts/preparation_validation.json`](artifacts/preparation_validation.json)
+and hash-linked by
+[`artifacts/preparation_manifest.json`](artifacts/preparation_manifest.json).
 
+```bash
+PYTHONPATH=. .venv/bin/python \
+  research/qatelier/experiments/s1_baseline_lock/scientific_retrieval/prepare.py \
+  --config research/qatelier/experiments/s1_baseline_lock/scientific_retrieval/config.yaml \
+  --data-dir /path/to/scifact-files \
+  --encoder-path /path/to/pinned/paraphrase-mpnet-base-v2 \
+  --output-dir /path/to/new/scifact-prepared
+```
+
+The validated external preparation encoded 5,183 corpus documents and 1,109
+queries at 768 dimensions and produced nine train-only PCA representations
+(three training seeds × three query budgets). The embedding arrays remain
+outside the repository; only their hashes and the preparation manifest are
+committed.
+
+The classical retrieval head panel is archived under [`raw/`](raw/). It has
+360 rows: nine train-only representations × five confirmation seeds × eight
+heads. Each row averages nDCG@10, MRR@10, and Recall@10 over 64 confirmation
+queries. The reserved test qrels were not read by the runner, and the raw
+manifest records zero provider jobs.
