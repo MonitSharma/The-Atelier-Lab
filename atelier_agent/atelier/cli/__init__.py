@@ -13,6 +13,10 @@ The commands live in sibling modules grouped by concern (``knowledge``,
 Typer app, so the import list below is load-bearing, not decorative.
 """
 
+# Command-module import order is part of the public help surface. Keep this
+# deliberate order stable; Ruff's isort rule cannot express registration order.
+# ruff: noqa: I001
+
 from __future__ import annotations
 
 from pathlib import Path

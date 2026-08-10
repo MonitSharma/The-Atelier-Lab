@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import re
 from datetime import date
 from pathlib import Path
-import re
 from typing import Any
 
 from atelier.config import settings
@@ -88,7 +88,7 @@ def _recent_candidates(store: VectorStore, query: str, limit: int) -> list[dict[
     metadatas = payload.get("metadatas", [])
     groups: dict[str, list[tuple[str, dict[str, Any], date]]] = {}
     terms = _source_query_terms(query)
-    for text, metadata in zip(documents, metadatas):
+    for text, metadata in zip(documents, metadatas, strict=True):
         metadata = dict(metadata or {})
         published = source_date(metadata)
         if published is None or not _source_matches_query(metadata, query):
