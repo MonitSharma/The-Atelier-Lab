@@ -11,13 +11,38 @@ test = [
     "pyarrow==25.0.0",
     "torch==2.12.0",
 ]
+qatelier-core = [
+    "numpy==2.4.6",
+    "PyYAML==6.0.2",
+    "jsonschema==4.25.1",
+    "scikit-learn==1.7.2",
+]
+qatelier-simulator = [
+    "qiskit==2.5.1",
+    "qiskit-aer==0.17.2",
+]
+qatelier-ibm = [
+    "qiskit-ibm-runtime==0.48.0",
+]
+qatelier-quantinuum = [
+    "python-dotenv==1.2.2",
+    "pytket==2.18.1",
+    "pytket-qiskit==0.77.0",
+    "pytket-quantinuum==0.59.2",
+    "qnexus==0.48.0",
+    "selene-core==0.3.0",
+]
+qatelier-dev = [
+    "pytest==9.0.3",
+    "ruff==0.12.7",
+]
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["foundation*"]
+include = ["foundation*", "research*"]
 
 [tool.pytest.ini_options]
 testpaths = ["foundation/minillm/tests", "atelier_agent/tests", "foundation/datasets/tests"]

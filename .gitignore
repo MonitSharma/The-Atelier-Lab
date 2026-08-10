@@ -8,6 +8,7 @@ dist/
 
 # Virtual envs
 .venv/
+.venv-qatelier/
 venv/
 env/
 

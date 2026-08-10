@@ -25,6 +25,7 @@ representation:
     model_id: record_exact_model_identifier_before_run
     model_version: record_exact_version_before_run
     weights_digest: record_digest_before_run
+    lock_state: unresolved
     trainable: false
     extraction_split: train_only_for_fitting_downstream_transforms
     output_artifact: representation_manifest_and_digest
@@ -165,8 +166,18 @@ staged_gates:
     advancement_artifacts: [hardware_run_metadata, hardware_results, simulator_hardware_comparison]
 
 hardware:
-  scope: metadata_only
+  scope: simulator_and_emulator_until_explicit_hardware_gate
   allowed_execution_modes: [simulator, emulator, hardware]
   candidate_providers: [IBM Quantum, Quantinuum]
-  backend_selection: record_public_backend_name_and_run_context_at_execution_time
+  backend_selection: null
   secret_material: never_serialized_in_this_experiment_metadata
+  ibm:
+    physical_execution_allowed: true
+    frozen_candidate_gate_required: true
+    hardware_is_validation_only: true
+  quantinuum:
+    physical_execution_allowed: false
+    syntax_check_required: true
+    cost_check_required: true
+    allowed_backends: [Helios-1E]
+    emulator_only_until_review: true

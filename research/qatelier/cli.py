@@ -96,6 +96,9 @@ def _parser() -> argparse.ArgumentParser:
         ("baseline", "reserved classical-baseline command"),
         ("quantum", "reserved quantum execution command"),
         ("analyze", "reserved analysis command"),
+        ("paper", "reserved manuscript packaging command"),
+        ("audit", "reserved reproducibility audit command"),
+        ("reproduce", "reserved credential-free reproduction command"),
         ("hardware-preflight", "reserved provider preflight command"),
     ):
         stage_parser = subparsers.add_parser(name, help=help_text)

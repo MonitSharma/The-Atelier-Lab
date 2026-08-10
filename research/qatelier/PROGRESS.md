@@ -1,8 +1,7 @@
 # QAtelier progress
 
-> Status: planned. This is the initial documentation checkpoint for the
-> parallel QAtelier research branch. No experiment result or production change
-> is claimed here.
+> Status: infrastructure hardening in progress. No scientific experiment result
+> or production Atelier change is claimed here.
 
 ## Initial branch status
 
@@ -42,6 +41,42 @@ Snapshot taken on 2026-08-10 when the `qatelier` branch was created:
   [`HARDWARE_ACCESS.md`](HARDWARE_ACCESS.md): IBM authentication succeeded;
   Quantinuum authentication and project access succeeded; no jobs were
   submitted; and hardware HQC authorization remains unverified.
+
+## P0 infrastructure checkpoint — 2026-08-10
+
+The following credential-free infrastructure is now implemented on `qatelier`:
+
+- explicit CLI/config/schema validation in [`cli.py`](cli.py),
+  [`config.py`](config.py), and `schemas/config.schema.json`; unresolved
+  scientific locks refuse execution;
+- deterministic toy smoke output from raw synthetic data to JSON, exposed by
+  `make qatelier-smoke`;
+- an executable NumPy PQC simulator with exact and finite-shot paths, QIA-P/L/X/A
+  schedules, parameter-order serialization, disjoint two-qubit rounds, and
+  optional Qiskit Aer cross-validation under [`simulation/`](simulation/);
+- a reusable latent interaction benchmark whose target function and threshold
+  are fixed once per problem and reused across independent splits;
+- executable representation-matched classical controls under
+  [`classical/`](classical/) for linear, SVM, random-feature, MLP, bilinear,
+  finite-RBF, and spectrum-matched families; MPS remains an explicit unavailable
+  optional backend rather than a fabricated result;
+- read-only IBM preflight/frozen-panel gates and a Quantinuum policy that allows
+  only the exact `Helios-1E` emulator, requires an accepted exact-match cost
+  manifest, and rejects all physical Quantinuum execution;
+- a 26-source literature/novelty audit under [`literature/`](literature/);
+- train-only PCA/whitening artifacts, frozen encoder identity manifests, and
+  pair-representation construction under [`data/`](data/);
+- explicit QAtelier test and credential-free smoke steps in CI.
+
+Focused QAtelier verification currently passes: 66 tests plus 7 benchmark
+subtests, with Ruff clean. No provider job was submitted.
+
+The repository-wide verification has two pre-existing/unrelated blockers in the
+current local environment: excluding the known `pyarrow` build-test crash, 176
+tests pass and three Atelier science-tool tests fail in QASM fallback/transpile
+behavior; the full run then terminates with a native `pyarrow` segmentation fault
+in `foundation/datasets/tests/test_build.py`. Those production failures are not
+being silently changed in the QAtelier branch.
 
 ## Staged experiment plan
 
@@ -98,14 +133,11 @@ may not silently revise an earlier stage's split, baseline, or selection rule.
 
 ## Immediate next actions
 
-1. Confirm the primary frozen encoder, first public task, split policy, and
-   source/reference citation set.
-2. Add a simulator smoke runner that connects the circuit contract to one
-   controlled benchmark; keep optional quantum dependencies out of production
-   imports.
-3. Create the first named experiment from the standard repository template and
-   write its falsifiable hypothesis before running it.
-4. Run S0, then lock the classical search spaces and baseline artifacts in S1.
+1. Pin the public frozen encoder revision/weights digest and create the first
+   dataset/split manifest; current config locks intentionally refuse execution.
+2. Create the first named S0 experiment from the standard repository template,
+   with its falsifiable hypothesis and reproduction command.
+3. Run S0, then lock the classical search spaces and baseline artifacts in S1.
 
 The optional provider dependencies and access checks are complete, but they do
 not advance the staged experiment plan. Hardware remains gated behind the

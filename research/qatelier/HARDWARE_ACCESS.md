@@ -1,6 +1,6 @@
 # Quantum provider access checkpoint
 
-> Checked: 2026-08-10 11:01 +08, on branch `qatelier`.
+> Checked: 2026-08-10 11:47 +08, on branch `qatelier`.
 >
 > No quantum circuit was submitted. No QPU shots or HQCs were consumed.
 
@@ -29,9 +29,9 @@ instance can list three IBM hardware backends:
 
 | Backend | Operational flag | Reported status | Pending jobs |
 | --- | ---: | --- | ---: |
-| `ibm_fez` | true | active | 438 |
-| `ibm_marrakesh` | true | maintenance | 30 |
-| `ibm_kingston` | true | active | 368 |
+| `ibm_fez` | true | active | 445 |
+| `ibm_marrakesh` | true | maintenance | 31 |
+| `ibm_kingston` | true | active | 382 |
 
 This verifies that the IBM credentials are valid and that the instance can
 see hardware metadata. It does not reserve a device or guarantee immediate
@@ -43,6 +43,12 @@ queue access; queue lengths and maintenance state are time-dependent.
 token is already available. The account query also returned 21 accessible
 projects. The device catalogue exposes both the `H2-2` and `Helios-1`
 hardware families, along with their emulators and syntax checkers.
+
+The exact emulator identifier was verified through the configured Nexus API as
+`Helios-1E` (`backend_name=Quantinuum`, `system_type=emulator`). Its current
+provider metadata reports a 20-qubit emulator capacity. This is not a physical
+QPU capacity claim and must not be conflated with the 98-node Helios hardware
+family metadata.
 
 The non-submitting real-time status checks returned:
 
