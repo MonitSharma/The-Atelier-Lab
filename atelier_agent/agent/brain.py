@@ -125,6 +125,7 @@ def health() -> dict[str, Any]:
         "coder": settings.coder_model,
         "worker": settings.worker_model,
         "heavy": settings.heavy_model,
+        "vision": settings.vision_model,
         "expert": settings.expert_model,
         "router": settings.router_model,
     }

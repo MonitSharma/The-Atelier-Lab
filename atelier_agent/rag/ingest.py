@@ -136,7 +136,7 @@ def chunk_file(path: Path, *, document_id: str | None = None) -> list[Chunk]:
             metadata = {**base_meta, **section_meta}
             pieces = split_plain(section_text, str(path), base_meta=metadata)
             for piece in pieces:
-                piece.chunk_index += len(chunks)
+                piece.chunk_index = len(chunks)
                 chunks.append(piece)
         return chunks
     return split_plain(_read_text(path), str(path), base_meta=base_meta)

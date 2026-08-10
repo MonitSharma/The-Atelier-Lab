@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from atelier.config import settings
 from rag.chunk import Chunk, split_plain
+from rag.vision import analyze_image_bytes
 
 _HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 MAX_CHARACTERIZATION_CHARS = 18_000
@@ -120,25 +121,41 @@ def _extract_pages(path: Path) -> list[dict[str, Any]]:
         page_number = metadata.get("page", index)
         text = clean_retrieval_text(raw)
         extraction = "native"
+        ocr_confidence = -1.0
+        human_review = False
+        vision_meta: dict[str, Any] = {}
         if len(text) < 40:
-            ocr_text = _ocr_pdf_page(path, int(page_number))
+            ocr_result = _ocr_pdf_page(path, int(page_number))
+            ocr_text = ocr_result["text"]
+            ocr_confidence = ocr_result["confidence"]
+            human_review = ocr_result["human_review"]
             if len(ocr_text) > len(text):
                 text = clean_retrieval_text(ocr_text)
                 extraction = "tesseract_ocr"
+            vision = analyze_image_bytes(ocr_result["image"], citation=f"page {page_number}") if ocr_result["image"] else None
+            if vision is not None:
+                vision_meta = vision.to_metadata()
+                human_review = human_review or vision.human_review
+                if vision.text:
+                    text = f"{text}\n\n[Vision analysis]\n{vision.text}".strip()
+                    extraction = f"{extraction}+vision"
         pages.append({
             "page": page_number,
             "raw_text": raw,
             "text": text,
             "extraction": extraction,
+            "ocr_confidence": ocr_confidence,
+            "human_review": human_review,
+            **vision_meta,
         })
     return pages
 
 
-def _ocr_pdf_page(path: Path, page_number: int) -> str:
+def _ocr_pdf_page(path: Path, page_number: int) -> dict[str, Any]:
     """Best-effort OCR for image-only or handwritten PDF pages."""
     tesseract = shutil.which("tesseract")
     if not tesseract:
-        return ""
+        return {"text": "", "confidence": -1.0, "human_review": True, "image": b""}
     try:
         import fitz
 
@@ -147,17 +164,38 @@ def _ocr_pdf_page(path: Path, page_number: int) -> str:
         longest_side = max(float(page.rect.width), float(page.rect.height))
         scale = min(2.0, max(1.0, 5000.0 / max(longest_side, 1.0)))
         pixels = page.get_pixmap(matrix=fitz.Matrix(scale, scale), alpha=False)
+        image = pixels.tobytes("png")
         result = subprocess.run(
-            [tesseract, "stdin", "stdout", "--psm", "11"],
-            input=pixels.tobytes("png"),
+            [tesseract, "stdin", "stdout", "--psm", "11", "tsv"],
+            input=image,
             capture_output=True,
             text=False,
             timeout=120,
             check=False,
         )
-        return result.stdout.decode("utf-8", errors="replace").strip() if result.returncode == 0 else ""
+        words: list[str] = []
+        confidences: list[float] = []
+        decoded = result.stdout.decode("utf-8", errors="replace")
+        for line in decoded.splitlines()[1:]:
+            fields = line.split("\t")
+            if len(fields) < 12 or not fields[11].strip():
+                continue
+            words.append(fields[11].strip())
+            try:
+                value = float(fields[10])
+                if value >= 0:
+                    confidences.append(value / 100.0)
+            except ValueError:
+                continue
+        confidence = sum(confidences) / len(confidences) if confidences else -1.0
+        return {
+            "text": " ".join(words).strip() if result.returncode == 0 else "",
+            "confidence": confidence,
+            "human_review": confidence < settings.ocr_review_threshold,
+            "image": image,
+        }
     except (OSError, RuntimeError, subprocess.SubprocessError, ValueError):
-        return ""
+        return {"text": "", "confidence": -1.0, "human_review": True, "image": b""}
 
 
 def extract_pdf_pages(path: Path, document_id: str | None = None) -> list[dict[str, Any]]:
@@ -168,11 +206,11 @@ def extract_pdf_pages(path: Path, document_id: str | None = None) -> list[dict[s
     cache_path = settings.extracted_dir / f"{document_id}.json"
     if cache_path.exists():
         payload = json.loads(cache_path.read_text(encoding="utf-8"))
-        if payload.get("schema_version") == 2 and payload.get("document_id") == document_id:
+        if payload.get("schema_version") == 3 and payload.get("document_id") == document_id:
             return payload.get("pages", [])
     pages = _extract_pages(path)
     cache_path.write_text(
-        json.dumps({"schema_version": 2, "document_id": document_id, "pages": pages},
+        json.dumps({"schema_version": 3, "document_id": document_id, "pages": pages},
                    ensure_ascii=False),
         encoding="utf-8",
     )
@@ -265,8 +303,14 @@ def chunk_pdf(path: Path, *, document_id: str | None = None,
                     "page": page["page"],
                     "section": raw_section,
                     "section_type": section_type(raw_section),
+                    "extraction": page.get("extraction", "native"),
+                    "ocr_confidence": page.get("ocr_confidence", -1.0),
+                    "human_review": page.get("human_review", False),
                     "metadata_schema_version": settings.metadata_schema_version,
                 }
+                for key in ("vision_model", "vision_confidence", "vision_human_review", "vision_status"):
+                    if key in page:
+                        metadata[key] = page[key]
                 for key in ("title", "authors", "year", "doi", "arxiv_id", "document_type", "domain", "venue"):
                     if key in identity_data:
                         metadata[key] = identity_data[key]

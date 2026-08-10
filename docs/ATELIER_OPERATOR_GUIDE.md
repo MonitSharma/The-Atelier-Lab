@@ -317,6 +317,7 @@ models.
 | Coder — `qwen3:8b` | 5.2 GB | 6 GB | repository edits, tool use, tests, small coding jobs |
 | Embeddings — `qwen3-embedding:4b` | 2.5 GB | used by retrieval | document/query vectors, 2,560 dimensions |
 | Heavy — `gemma4:26b` | 17 GB | 20 GB | hardest local reasoning and long-context synthesis |
+| Vision — `gemma4:26b` | 17 GB | 20 GB | handwriting, diagrams, equations, and embedded document images |
 | Optional candidate — `qwen2.5-coder:7b` | 4.7 GB | not selected | alternative coding benchmark candidate |
 | Optional candidate — `gemma4:12b-it-q4_K_M` | 7.6 GB | not selected | alternative local reasoning candidate |
 

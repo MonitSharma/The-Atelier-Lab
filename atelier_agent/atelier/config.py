@@ -49,11 +49,22 @@ class Settings(BaseSettings):
     worker_model: str = "hf.co/LiquidAI/LFM2.5-2.6B-GGUF:Q6_K"
     #: Optional heavy reasoner for the hardest steps (~17 GB resident).
     heavy_model: str = "gemma4:26b"
+    #: Installed multimodal model for images, handwriting, diagrams, and equations.
+    vision_model: str = "gemma4:26b"
+    vision_enabled: bool = True
+    vision_max_image_bytes: int = 12_000_000
+    vision_review_threshold: float = 0.72
+    ocr_review_threshold: float = 0.78
+    archive_max_depth: int = 3
+    archive_max_members: int = 500
+    archive_max_total_bytes: int = 50_000_000
+    archive_max_member_bytes: int = 10_000_000
+    archive_max_compression_ratio: float = 100.0
     #: Generic future expert slot; no unreleased model is assumed.
     expert_model: str = ""
     router_model: str = "qwen3:4b"
     temperature: float = 0.1
-    #: Generous: a 14B local model on first load can be slow to first token.
+    #: Generous: local models may be slow to load on the first request.
     request_timeout: int = 600
     #: Truncate retrieved context fed to the model (characters).
     max_context_chars: int = 12_000

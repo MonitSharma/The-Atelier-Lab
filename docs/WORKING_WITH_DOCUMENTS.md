@@ -9,12 +9,12 @@ understand a paper, research plan, notes file, image, archive, or code folder.
 |---|---|
 | PDF | Native page extraction, paper metadata, page-aware chunks, and OCR fallback for image-only pages |
 | Markdown, text, HTML, RTF, TeX, JSON, CSV/TSV, notebooks, source code | Local text extraction and retrieval chunks |
-| DOCX | Paragraph text and tables through the Office XML package |
-| PPTX | Slide text through the Office XML package |
+| DOCX | Heading-aware paragraphs, tables, and embedded images through the Office XML package; local vision descriptions for images |
+| PPTX | Slide text, speaker notes, and slide-linked embedded images through the Office XML package |
 | XLSX/XLSM | Visible cell values through the workbook XML package |
 | EPUB | HTML/XHTML chapter text |
-| PNG, JPG, TIFF, WEBP, BMP | Local Tesseract OCR when installed; visual layout is not represented in text retrieval |
-| ZIP | Safe, non-executing extraction of supported text members; archives are not unpacked to disk |
+| PNG, JPG, TIFF, WEBP, BMP | Local Tesseract OCR plus the installed Gemma 4 vision model for handwriting, diagrams, and equations |
+| ZIP | Recursive, non-executing extraction of supported text/Office/image members with member citations and strict depth, count, size, path, encryption, and compression-ratio limits |
 
 Old binary Office formats (`.doc`, `.ppt`, `.xls`), encrypted files, and
 arbitrary binaries require conversion or a dedicated reader. Atelier does not
@@ -22,10 +22,11 @@ execute files, install software from archives, or send them to a cloud service.
 
 ## Format and accuracy limits
 
-Atelier now reads modern `.docx` directly. For documents where layout,
-equations, or embedded figures matter, PDF remains the preferred representation
-because it retains page evidence. Keep the original DOCX unchanged as the
-source of record and ingest a working copy or the PDF export.
+Atelier now reads modern `.docx` directly and records headings, tables, and
+embedded-image locations. PDF remains useful when exact page layout matters.
+Native extraction and OCR are evidence layers; vision descriptions and equation
+transcriptions carry a confidence/review flag and should be checked by a human
+before publication.
 
 ## QAtelier quickstart
 
@@ -47,6 +48,14 @@ For a research plan, direct DOCX ingestion is sufficient for a text-first pass:
 ```text
 atelier › ingest ~/Downloads/QAtelier_Quantum_Adapters_Research_Plan.docx
 atelier › sources
+```
+
+After an extraction upgrade, use `--force` once if the file was already in
+the index so Atelier regenerates its headings, media descriptions, and review
+metadata:
+
+```text
+atelier › ingest --force ~/Downloads/QAtelier_Quantum_Adapters_Research_Plan.docx
 ```
 
 If you want a plain-text working copy, macOS also provides a built-in converter:
@@ -84,17 +93,18 @@ atelier › ask "Separate verified facts, assumptions, open questions, and risks
 atelier › ask "What should I implement or test first, and what evidence would make the project convincing?"
 ```
 
-For an image or handwritten scan, ingest it directly first. Atelier will use
-local Tesseract OCR when available:
+For an image or handwritten scan, ingest it directly first. Atelier combines
+local Tesseract OCR with the installed `gemma4:26b` vision model when available:
 
 ```text
 atelier › ingest ~/Downloads/handwritten-note.png
 atelier › ask "Transcribe the legible content and mark uncertain words."
 ```
 
-OCR is an extraction aid, not a proof of handwriting accuracy. For diagrams,
-chemical structures, equations, or spatial layout, use the original image/PDF
-with a vision-capable workflow and verify the result manually.
+OCR and vision are extraction aids, not proof of handwriting or equation
+accuracy. `ocr_confidence`, `vision_confidence`, and `human_review` metadata are
+preserved in retrieval context. Verify low-confidence text, diagrams, and
+equations manually.
 
 Use `--show-context` when checking an answer. The answer should cite the
 converted source. If the document is not listed by `sources`, it has not been

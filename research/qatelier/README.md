@@ -13,7 +13,7 @@ ATELIER_BRAIN_MODEL=qwen3:8b atelier ingest \
   ~/Downloads/QAtelier_Quantum_Adapters_Research_Plan.docx
 ```
 
-The six questions in [`questions.json`](questions.json) test the useful research
+The eight questions in [`questions.json`](questions.json) test the useful research
 behaviours rather than generic fluency:
 
 - summary: preserve the research objective and contribution without inflating the claim;
@@ -21,6 +21,8 @@ behaviours rather than generic fluency:
 - methods: reconstruct the comparison ladder and experimental protocol;
 - risks: identify confounders, failure modes, and meaningful falsifiers;
 - citations: separate claims supported by the plan from claims requiring external verification;
+- equations: transcribe and explain equations without silently correcting uncertainty;
+- embedded visuals: describe diagrams or document images and abstain when none are present;
 - proposed experiments: turn the plan into a dependency-ordered first experiment sequence.
 
 ## Scoring rubric

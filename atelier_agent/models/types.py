@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-Role = Literal["worker", "brain", "coder", "expert", "router", "heavy"]
+Role = Literal["worker", "brain", "coder", "expert", "router", "heavy", "vision"]
 
 
 @dataclass(frozen=True)

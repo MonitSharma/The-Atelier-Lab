@@ -32,6 +32,7 @@ _ROLE_METADATA = {
     "brain": ("Q4-class", 10.0, 40960, "text", True, True),
     "coder": ("Q4-class", 6.0, 40960, "text", True, True),
     "heavy": ("Q4-class", 20.0, 262144, "text,image", True, True),
+    "vision": ("Q4-class", 20.0, 262144, "image", False, False),
     "router": ("Q4-class", 3.0, 40960, "text", True, True),
     "expert": ("unknown", 0.0, 0, "unknown", False, False),
 }
@@ -71,6 +72,7 @@ class ModelLifecycle:
             "brain": settings.brain_model,
             "coder": settings.coder_model,
             "heavy": settings.heavy_model,
+            "vision": settings.vision_model,
             "router": settings.router_model,
             "expert": settings.expert_model,
         }
