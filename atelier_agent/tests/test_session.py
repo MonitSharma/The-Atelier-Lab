@@ -1,4 +1,4 @@
-from atelier.session import _command_completions, _path_completions
+from atelier.session import _command_completions, _path_completion_request, _path_completions
 
 
 def test_path_completions_match_directories_and_add_slash(tmp_path) -> None:
@@ -22,3 +22,9 @@ def test_path_completions_preserve_home_prefix(tmp_path, monkeypatch) -> None:
 def test_command_completions_include_atelier_and_terminal_commands() -> None:
     assert "doctor" in _command_completions("doc")
     assert "cd" in _command_completions("c")
+
+
+def test_nested_workspace_and_repo_commands_request_directory_completion() -> None:
+    assert _path_completion_request("workspace add ~/code_projects/", 29) == (True, True)
+    assert _path_completion_request("atelier workspace add ~/code_projects/", 37) == (True, True)
+    assert _path_completion_request("repo inspect ", 13) == (True, True)

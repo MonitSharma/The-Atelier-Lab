@@ -29,7 +29,10 @@ atelier
 Inside the interactive prompt, use ordinary terminal commands such as `cd`,
 `pwd`, `ls`, `find`, `rg`, `git`, and `cat`. Tab completion works for Atelier
 commands and filesystem paths. Type `help` for the short guide or `exit` to
-leave.
+leave. Paths beginning with `~` are expanded, nested commands such as
+`workspace add` and `repo inspect` complete directories, and a trailing `\`
+continues a command on the next line. You normally omit the `atelier` prefix
+inside the prompt, but it is accepted as well.
 
 Outside the prompt, the same commands work directly:
 

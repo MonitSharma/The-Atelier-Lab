@@ -64,6 +64,33 @@ _PATH_COMMANDS = {
 }
 
 
+def _command_tokens_before_cursor(line: str, begin: int) -> list[str]:
+    """Return simple command tokens before the readline cursor."""
+    tokens = line[:begin].strip().split()
+    if tokens and Path(tokens[0]).name == "atelier":
+        tokens = tokens[1:]
+    return tokens
+
+
+def _path_completion_request(line: str, begin: int) -> tuple[bool, bool]:
+    """Return ``(is_path, directories_only)`` for the current command."""
+    tokens = _command_tokens_before_cursor(line, begin)
+    if not tokens:
+        return False, False
+    command = tokens[0]
+    if command == "cd":
+        return True, True
+    if command == "workspace" and len(tokens) >= 2 and tokens[1] == "add":
+        return True, True
+    if command == "repo" and len(tokens) >= 2 and tokens[1] in {
+        "inspect", "status", "symbols", "tests"
+    }:
+        return True, True
+    if command in _PATH_COMMANDS:
+        return True, False
+    return False, False
+
+
 def _path_completions(
     text: str,
     *,
@@ -135,17 +162,18 @@ class _AtelierCompleter:
     def complete(self, text: str, state: int) -> str | None:
         line = readline.get_line_buffer()
         begin = readline.get_begidx()
-        before = line[:begin]
-        first_word = before.strip().split(maxsplit=1)[0] if before.strip() else ""
+        tokens = _command_tokens_before_cursor(line, begin)
 
         if begin == 0:
             candidates = _command_completions(text)
-        elif first_word == "cd":
-            candidates = _path_completions(text, directories_only=True)
-        elif first_word in _PATH_COMMANDS:
-            candidates = _path_completions(text)
         else:
-            candidates = []
+            is_path, directories_only = _path_completion_request(line, begin)
+            if is_path:
+                candidates = _path_completions(text, directories_only=directories_only)
+            elif tokens and len(tokens) == 1 and tokens[0] == "atelier":
+                candidates = _command_completions(text)
+            else:
+                candidates = []
 
         return candidates[state] if state < len(candidates) else None
 
@@ -182,7 +210,7 @@ def _restore_readline(state: tuple[ModuleType, Any, str] | None) -> None:
 def _readline_input(console: Console, prompt: str, enabled: bool) -> str:
     """Read a line with completion when available, Rich input otherwise."""
     if enabled:
-        return input("\033[1;36matelier ›\033[0m ")
+        return input(prompt)
     return console.input(prompt)
 
 
@@ -210,11 +238,30 @@ def run_session(console: Console | None = None) -> None:
     try:
         while True:
             try:
-                line = _readline_input(console, "[bold cyan]atelier ›[/] ", readline_state is not None).strip()
+                line = _readline_input(
+                    console, "\033[1;36matelier ›\033[0m ", readline_state is not None
+                ).strip()
             except (EOFError, KeyboardInterrupt):
                 console.print("\n[dim]session closed[/]")
                 return
 
+            if not line:
+                continue
+
+            # Support the familiar shell continuation form. The interactive
+            # prompt is line-oriented, so collect continuation lines before
+            # handing the complete command to shlex.
+            while line.endswith("\\"):
+                line = line[:-1].rstrip()
+                try:
+                    continuation = _readline_input(
+                        console, "\033[2m... \033[0m", readline_state is not None
+                    ).strip()
+                except (EOFError, KeyboardInterrupt):
+                    console.print("\n[yellow]continued command cancelled[/]")
+                    line = ""
+                    break
+                line = f"{line} {continuation}"
             if not line:
                 continue
             if line.lower() in {"exit", "quit"}:
@@ -233,6 +280,17 @@ def run_session(console: Console | None = None) -> None:
             except ValueError as exc:
                 console.print(f"[red]Parse error:[/] {exc}")
                 continue
+
+            # Inside Atelier, `atelier workspace ...` is a convenient harmless
+            # prefix even though the session normally accepts `workspace ...`.
+            if args and Path(args[0]).name == "atelier":
+                args = args[1:]
+            if not args:
+                continue
+
+            # A normal shell expands a leading `~`; this session invokes
+            # subprocesses without a shell, so expand it explicitly.
+            args = [os.path.expanduser(arg) if arg.startswith("~") else arg for arg in args]
 
             if args[0] == "cd":
                 if len(args) > 2:
