@@ -1,8 +1,8 @@
 # QAtelier architecture
 
-> Status: planned research design. This document describes the experimental
-> system; it does not claim a quantum advantage or authorize production
-> integration.
+> Status: implemented current-phase research design. This document describes
+> the experimental system; it does not claim a quantum advantage or authorize
+> production integration.
 
 ## Research question and hypothesis
 
@@ -156,4 +156,3 @@ reproduction. Use a named experiment directory with `config.yaml`, an explicit
 runner and analysis entry point, raw outputs under `raw/`, and figures under
 `figures/`. Keep all result values traceable to committed raw artifacts; do not
 fill missing fields by inference.
-

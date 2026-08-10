@@ -2,10 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from research.qatelier.config import (
-    UnresolvedScientificPlaceholderError,
     default_config_path,
     default_config_schema_path,
     find_unresolved_placeholders,
@@ -14,22 +11,12 @@ from research.qatelier.config import (
 )
 
 
-def test_committed_protocol_is_structurally_valid_but_not_execution_ready():
+def test_committed_protocol_is_structurally_and_execution_ready():
     report = validate_config()
 
     assert report.structurally_valid
-    assert not report.execution_ready
-    paths = {issue.path for issue in report.placeholder_issues}
-    assert {
-        "$.datasets.manifest",
-        "$.representation.backbone.model_version",
-        "$.representation.backbone.weights_digest",
-        "$.representation.backbone.lock_state",
-        "$.representation.preprocessing.normalization",
-        "$.datasets.regimes[1].shift_definition",
-        "$.seeds.split_seed",
-        "$.hardware.backend_selection",
-    } <= paths
+    assert report.execution_ready
+    assert not report.placeholder_issues
 
 
 def test_placeholder_scan_is_deterministic_and_does_not_flag_protocol_language():
@@ -46,9 +33,9 @@ def test_placeholder_scan_is_deterministic_and_does_not_flag_protocol_language()
     ]
 
 
-def test_execution_loader_refuses_unresolved_protocol():
-    with pytest.raises(UnresolvedScientificPlaceholderError, match="execution blocked"):
-        load_execution_config()
+def test_execution_loader_accepts_the_locked_negative_phase_protocol():
+    document = load_execution_config()
+    assert document["hardware"]["backend_selection"] == "none_authorized_no_candidate_frozen"
 
 
 def test_default_paths_are_shipped_files():

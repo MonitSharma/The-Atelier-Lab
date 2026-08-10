@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from pathlib import Path
 
 
@@ -11,8 +12,12 @@ def test_current_phase_audit_is_negative_and_provider_free():
     document = json.loads((ROOT / "research/qatelier/audit_artifacts/audit.json").read_text())
     assert document["status"] == "negative_result_audited_current_phase"
     assert document["provider_contacted"] is False
+    assert document["preflight_contacted"] is True
     assert document["jobs_submitted"] == 0
     assert document["physical_quantinuum_jobs"] == 0
     assert document["frozen_candidates"] == []
     assert document["hardware_authorized"] is False
     assert document["c1_c4_claim_supported"] is False
+    report = ROOT / "research/qatelier/FINAL_RESEARCH_REPORT.md"
+    assert document["final_report_sha256"] == hashlib.sha256(report.read_bytes()).hexdigest()
+    assert all(record["row_count"] > 0 for record in document["provider_records"])

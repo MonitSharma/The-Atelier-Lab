@@ -23,7 +23,7 @@ The bounded all-order screen remains exploratory and uses short training budgets
 | QIA-X-q4-R1 | 0.4984 | 0.0406 | 24 |
 | QIA-X-q4-R2 | 0.4974 | 0.0417 | 24 |
 
-Aggregate classical control accuracy: 0.5528.
+Aggregate classical control accuracy: 0.5390.
 
 Frozen candidates: none.
 Hardware authorized: false.

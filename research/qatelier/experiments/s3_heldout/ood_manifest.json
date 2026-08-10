@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "dataset_id": "stanfordnlp-imdb",
+  "repository": "stanfordnlp/imdb",
+  "revision": "e6281661ce1c48d982bc483cf8a173c1bbeb5d31",
+  "revision_kind": "immutable_huggingface_commit",
+  "license_note": "Follow the upstream IMDb dataset terms and attribution.",
+  "members": {
+    "train": {
+      "path": "plain_text/train-00000-of-00001.parquet",
+      "url": "https://huggingface.co/datasets/stanfordnlp/imdb/resolve/e6281661ce1c48d982bc483cf8a173c1bbeb5d31/plain_text/train-00000-of-00001.parquet?download=true",
+      "sha256": "db47d16b5c297cc0dd625e519c81319c24c9149e70e8496de5475f6fa928342c",
+      "rows": 25000,
+      "columns": ["text", "label"]
+    },
+    "test": {
+      "path": "plain_text/test-00000-of-00001.parquet",
+      "url": "https://huggingface.co/datasets/stanfordnlp/imdb/resolve/e6281661ce1c48d982bc483cf8a173c1bbeb5d31/plain_text/test-00000-of-00001.parquet?download=true",
+      "sha256": "b52e26e2f872d282ffac460bf9770b25ac6f102cda0e6ca7158df98c94e8b3da",
+      "rows": 25000,
+      "columns": ["text", "label"]
+    }
+  },
+  "selection_policy": "Use the complete pinned test member only after a candidate is frozen; no OOD row was used for current S2 selection."
+}

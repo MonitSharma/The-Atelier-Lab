@@ -39,6 +39,10 @@ def _classical_config(name: str) -> dict[str, Any]:
     return {"logistic": {}, "rbf_svm": {}, "matched_mlp": {"hidden_layers": (8,), "max_iter": 60}}[name]
 
 
+def _array_hash(array: np.ndarray) -> str:
+    return hashlib.sha256(np.ascontiguousarray(array, dtype=np.float64).tobytes()).hexdigest()
+
+
 def run_screen(*, config_path: str | Path, output_dir: str | Path) -> Path:
     config_path = Path(config_path)
     config = yaml.safe_load(config_path.read_text())
@@ -53,36 +57,34 @@ def run_screen(*, config_path: str | Path, output_dir: str | Path) -> Path:
             problem = make_interaction_problem(n_features=problem_config["n_features"], interaction_order=order, family=family, problem_seed=problem_config["problem_seed"] + order)
             train_data = problem.sample(problem_config["train_samples"], seed=problem_config["train_seed"])
             evaluation_data = problem.sample(problem_config["evaluation_samples"], seed=problem_config["evaluation_seed"])
-            target_kernel = np.outer(2 * train_data.labels - 1, 2 * train_data.labels - 1)
-            feature_kernel = train_data.features @ train_data.features.T
-            base_diagnostics = {
-                "target_definition": dict(problem.target_definition),
-                "target_fingerprint": problem.target_fingerprint,
-                "train_diagnostics": dict(problem.diagnostics(train_data.features, train_data.labels)),
-                "evaluation_diagnostics": dict(problem.diagnostics(evaluation_data.features, evaluation_data.labels)),
-                "feature_target_alignment": centered_kernel_alignment(feature_kernel, target_kernel),
-                "feature_effective_rank": effective_rank(feature_kernel),
-            }
-            representation = RepresentationMetadata(f"s2-{problem.target_fingerprint}", problem_config["n_features"], split_id="train-11", source="synthetic-interaction")
-            for name in config["classical_controls"]:
-                model = train(name, train_data.features, train_data.labels, seed=problem_config["train_seed"], representation=representation, **_classical_config(name))
-                rows.append({"family": family, "interaction_order": order, "model_type": "classical", "candidate_id": name, "metrics": evaluate(model, evaluation_data.features, evaluation_data.labels, representation=representation), "target_fingerprint": problem.target_fingerprint, "feature_target_alignment": base_diagnostics["feature_target_alignment"], "feature_effective_rank": base_diagnostics["feature_effective_rank"]})
-            for quantum_family in config["quantum"]["families"]:
-                for reuploads in config["quantum"]["reuploads"]:
-                    for q in config["quantum"]["q_values"]:
-                        q = int(q)
-                        if q > problem_config["n_features"]:
-                            raise ValueError("quantum q cannot exceed benchmark feature dimension")
+            for q in config["quantum"]["q_values"]:
+                q = int(q)
+                if q > problem_config["n_features"]:
+                    raise ValueError("quantum q cannot exceed benchmark feature dimension")
+                candidate_train = train_data.features[:, :q]
+                candidate_evaluation = evaluation_data.features[:, :q]
+                target_kernel = np.outer(2 * train_data.labels - 1, 2 * train_data.labels - 1)
+                feature_kernel = candidate_train @ candidate_train.T
+                feature_target_alignment = centered_kernel_alignment(feature_kernel, target_kernel)
+                feature_effective_rank = effective_rank(feature_kernel)
+                representation = RepresentationMetadata(f"s2-{problem.target_fingerprint}-q{q}", q, split_id="train-11", source="synthetic-interaction:first_q_features")
+                train_feature_hash = _array_hash(candidate_train)
+                evaluation_feature_hash = _array_hash(candidate_evaluation)
+                for name in config["classical_controls"]:
+                    model = train(name, candidate_train, train_data.labels, seed=problem_config["train_seed"], representation=representation, **_classical_config(name))
+                    rows.append({"family": family, "interaction_order": order, "q": q, "feature_projection": "first_q_features", "train_feature_matrix_sha256": train_feature_hash, "evaluation_feature_matrix_sha256": evaluation_feature_hash, "model_type": "classical", "candidate_id": f"{name}-q{q}", "metrics": evaluate(model, candidate_evaluation, evaluation_data.labels, representation=representation), "target_fingerprint": problem.target_fingerprint, "feature_target_alignment": feature_target_alignment, "feature_effective_rank": feature_effective_rank})
+                for quantum_family in config["quantum"]["families"]:
+                    for reuploads in config["quantum"]["reuploads"]:
                         circuit_config = QuantumAdapterConfig(q=q, R=int(reuploads), L=int(config["quantum"]["trainable_layers"]), family=quantum_family, readout=ReadoutSpec(("Z0",), trainable_weights=True, trainable_bias=True))
-                        parameters, history = _train_quantum(circuit_config, train_data.features[:, :q], train_data.labels, seed=problem_config["train_seed"] + order, steps=int(config["quantum"]["train_steps"]), learning_rate=float(config["quantum"]["learning_rate"]), epsilon=float(config["quantum"]["finite_difference_epsilon"]), l2=float(config["quantum"]["l2"]), initialization_scale=float(config["quantum"]["initialization_scale"]))
+                        parameters, history = _train_quantum(circuit_config, candidate_train, train_data.labels, seed=problem_config["train_seed"] + order, steps=int(config["quantum"]["train_steps"]), learning_rate=float(config["quantum"]["learning_rate"]), epsilon=float(config["quantum"]["finite_difference_epsilon"]), l2=float(config["quantum"]["l2"]), initialization_scale=float(config["quantum"]["initialization_scale"]))
                         simulator = PQCStatevectorSimulator(circuit_config)
-                        scores = _quantum_scores(simulator, evaluation_data.features[:, :q], parameters)
-                        gradient = finite_difference_gradient(lambda theta: float(np.mean((_quantum_scores(simulator, train_data.features[: int(config["diagnostics"]["gradient_rows"]), :q], theta) - train_data.labels[: int(config["diagnostics"]["gradient_rows"])] ) ** 2)), parameters, epsilon=float(config["diagnostics"]["gradient_epsilon"]))
+                        scores = _quantum_scores(simulator, candidate_evaluation, parameters)
+                        gradient = finite_difference_gradient(lambda theta: float(np.mean((_quantum_scores(simulator, candidate_train[: int(config["diagnostics"]["gradient_rows"])], theta) - train_data.labels[: int(config["diagnostics"]["gradient_rows"])] ) ** 2)), parameters, epsilon=float(config["diagnostics"]["gradient_epsilon"]))
                         grid = np.linspace(-2.0, 2.0, int(config["diagnostics"]["spectral_grid_size"]))
                         line_features = np.zeros((grid.size, q), dtype=float)
                         line_features[:, 0] = grid
                         line_scores = _quantum_scores(simulator, line_features, parameters)
-                        rows.append({"family": family, "interaction_order": order, "model_type": "quantum_simulator", "candidate_id": f"{quantum_family}-q{q}-R{reuploads}", "metrics": classification_metrics(evaluation_data.labels, scores), "target_fingerprint": problem.target_fingerprint, "feature_target_alignment": base_diagnostics["feature_target_alignment"], "feature_effective_rank": base_diagnostics["feature_effective_rank"], "circuit": CircuitSchedule.from_config(circuit_config).to_dict(), "parameters_hash": hashlib.sha256(np.ascontiguousarray(parameters).tobytes()).hexdigest(), "training_history": history, "gradient_summary": gradient_summary(gradient), "line_spectral_summary": spectral_summary(line_scores[:, None])})
+                        rows.append({"family": family, "interaction_order": order, "q": q, "feature_projection": "first_q_features", "train_feature_matrix_sha256": train_feature_hash, "evaluation_feature_matrix_sha256": evaluation_feature_hash, "model_type": "quantum_simulator", "candidate_id": f"{quantum_family}-q{q}-R{reuploads}", "metrics": classification_metrics(evaluation_data.labels, scores), "target_fingerprint": problem.target_fingerprint, "feature_target_alignment": feature_target_alignment, "feature_effective_rank": feature_effective_rank, "circuit": CircuitSchedule.from_config(circuit_config).to_dict(), "parameters_hash": hashlib.sha256(np.ascontiguousarray(parameters).tobytes()).hexdigest(), "training_history": history, "gradient_summary": gradient_summary(gradient), "line_spectral_summary": spectral_summary(line_scores[:, None])})
     manifest = {"schema_version": 1, "experiment_id": config["experiment_id"], "config_sha256": hashlib.sha256(config_path.read_bytes()).hexdigest(), "row_count": len(rows), "provider_contacted": False, "jobs_submitted": 0, "status": "exploratory_screen_not_selection_freeze"}
     (destination / "run_manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
     (destination / "results.json").write_text(json.dumps(_ready({"run_manifest": manifest, "rows": rows}), indent=2, sort_keys=True) + "\n")

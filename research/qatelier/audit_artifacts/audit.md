@@ -2,7 +2,7 @@
 
 Status: negative result audited; no quantum advantage or hardware utility claim is supported.
 
-The S0 calibration, S1 classical reference panels, S2 mechanism screen, and no-candidate freeze are hash-linked. Every archived execution manifest records zero provider jobs. Quantinuum physical jobs: 0.
+The S0 calibration, S1 classical reference panels, fair-projection S2 mechanism screen, and no-candidate freeze are hash-linked. Read-only provider discovery was performed, but every archived scientific execution manifest records zero provider jobs. Quantinuum physical jobs: 0.
 
 Frozen candidates: none.
 Hardware authorized: false.

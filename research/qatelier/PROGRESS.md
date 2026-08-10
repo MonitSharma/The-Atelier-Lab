@@ -1,7 +1,7 @@
 # QAtelier progress
 
-> Status: infrastructure hardening in progress. No scientific experiment result
-> or production Atelier change is claimed here.
+> Status: current-phase negative result audited; release package complete on
+> `qatelier`. No production Atelier behavior was changed.
 
 ## Initial branch status
 
@@ -112,8 +112,8 @@ The following credential-free infrastructure is now implemented on `qatelier`:
   `experiments/s1_baseline_lock/raw/cola/` with 480 rows and zero provider jobs.
   The combined SST-2/MRPC/CoLA reference table is
   [`experiments/s1_baseline_lock/artifacts/baseline_lock_all.json`](experiments/s1_baseline_lock/artifacts/baseline_lock_all.json),
-  while the remaining scientific-retrieval and controlled-order definitions
-  are now pinned for later head evaluation under
+  while the scientific-retrieval and controlled-order definitions are now
+  pinned under
   `experiments/s1_baseline_lock/scientific_retrieval/` and
   `experiments/s1_baseline_lock/controlled_interaction_order/`. The controlled
   order definition also has a completed classical panel under its `raw/`
@@ -129,14 +129,19 @@ The following credential-free infrastructure is now implemented on `qatelier`:
   under [`experiments/s2_mechanism_screen/raw/`](experiments/s2_mechanism_screen/raw/);
   quantum heads were near chance and no candidate was frozen. This is a useful
   negative optimization/mechanism checkpoint, not a C1/C2 result.
-- A bounded all-order S2 panel is now archived under
-  `experiments/s2_mechanism_screen/raw/orders_1_6/`: 456 rows covering all
-  four benchmark families, orders 1–6, q=2/4, all four QIA families, both
-  re-upload counts, and three classical controls. It uses two short training
-  steps, reports zero provider jobs, and explicitly freezes no candidate. A
-  larger q=6 exploratory attempt was stopped after becoming impractical for
-  the current finite-difference simulator; its declared configuration remains
-  documented but no partial output was retained.
+- A first 456-row all-order S2 panel under `raw/orders_1_6/` was rejected by
+  red-team review because its classical rows saw all six features while the
+  quantum rows were evaluated at q=2/4. It is retained as an explicitly
+  rejected audit artifact, not used for the scientific conclusion.
+- The authoritative fair-projection panel is now archived under
+  `raw/orders_1_6_fair/`: 528 rows covering all four benchmark families,
+  orders 1–6, q=2/4, all four QIA families, both re-upload counts, and three
+  classical controls trained separately on the identical first-q projection.
+  Every row records train/evaluation feature-matrix hashes. It uses two short
+  training steps, reports zero provider jobs, and explicitly freezes no
+  candidate. A larger q=6 exploratory attempt was stopped after becoming
+  impractical for the current finite-difference simulator; its declared
+  configuration remains documented but no partial output was retained.
 - The S2 candidate gate is now explicit in
   [`experiments/s2_mechanism_screen/analysis/candidate_freeze.json`](experiments/s2_mechanism_screen/analysis/candidate_freeze.json):
   no candidate is frozen, hardware authorization is false, and no C1–C4 claim
@@ -147,7 +152,7 @@ The following credential-free infrastructure is now implemented on `qatelier`:
   verifies every archived run manifest is provider-free, records Quantinuum
   physical jobs as zero, and makes the no-hardware/no-C1–C4 decision explicit.
 
-Focused QAtelier verification currently passes: 71 tests plus 7 benchmark
+Focused QAtelier verification currently passes: 88 tests plus 7 benchmark
 subtests, with Ruff clean. No provider job was submitted.
 
 The repository-wide verification has two pre-existing/unrelated blockers in the
@@ -168,10 +173,10 @@ may not silently revise an earlier stage's split, baseline, or selection rule.
 | S1 — classical baseline lock | Establish the reference numbers before quantum screening. | Shared compressor, full nonlinear baseline ladder, equal validation/search budgets. | Search spaces, metrics, seeds, and reference outputs are frozen. | Reference panels archived for SST-2, MRPC, CoLA, SciFact, and controlled-order; aggregate lock table remains partial for heterogeneous metrics |
 | S2 — mechanism screen | Test QIA-P/L/X/A across low-data and controlled interaction-order conditions. | Matched `q`, depth, trainable-parameter bands, optimization budget, and paired seeds; include aligned and deliberately misaligned tasks. | Retain only Pareto candidates with stable validation utility and non-pathological gradients. | Complete as a negative exploratory screen; no candidate frozen |
 | S3 — held-out simulator | Evaluate the frozen candidates on all predeclared public/OOD tasks. | No test tuning; report paired effect sizes and bootstrap intervals across seeds/tasks. | C1/C2 evidence exists, or a rigorous negative result explains the loss. | Not authorized: S2 produced no candidate to carry forward |
-| S4 — noise/shot screen | Estimate finite-shot and device-noise degradation. | Fixed shot budgets, noise-model versions, and candidate list; report gradient and resource costs. | Select 2–4 candidates only if signal is stable enough to justify QPU spend. | Planned |
-| S5 — hardware pilot | Run a small, fixed sample slice on IBM and Quantinuum where access permits. | Frozen parameters, sample IDs, thresholds, shots, compilation settings, and one preregistered mitigation condition. | Outputs are stable enough for a main campaign; otherwise stop at simulation evidence. | Planned |
-| S6 — main hardware | Validate the same selected models and declared ablations. | Logical-matched and hardware-co-designed comparisons; raw and fixed-mitigation results; provider records. | Claim only C3-level hardware utility when retention and ordering support it. | Planned |
-| S7 — audit/package | Verify the complete result and claim trail. | Fresh-clone reproduction, seed audit, raw-data checks, resource audit, and claim-to-artifact map. | Every reported table/figure has a reproduction command and source artifact. | Current-phase negative audit archived; final manuscript packaging pending |
+| S4 — noise/shot screen | Estimate finite-shot and device-noise degradation. | Fixed shot budgets, noise-model versions, and candidate list; report gradient and resource costs. | Select 2–4 candidates only if signal is stable enough to justify QPU spend. | Not authorized: no candidate survived S2 |
+| S5 — hardware pilot | Run a small, fixed sample slice on IBM and Quantinuum where access permits. | Frozen parameters, sample IDs, thresholds, shots, compilation settings, and one preregistered mitigation condition. | Outputs are stable enough for a main campaign; otherwise stop at simulation evidence. | Not executed by design; hardware decision deferred |
+| S6 — main hardware | Validate the same selected models and declared ablations. | Logical-matched and hardware-co-designed comparisons; raw and fixed-mitigation results; provider records. | Claim only C3-level hardware utility when retention and ordering support it. | Not executed; no frozen candidate |
+| S7 — audit/package | Verify the complete result and claim trail. | Fresh-clone reproduction, seed audit, raw-data checks, resource audit, and claim-to-artifact map. | Every reported table/figure has a reproduction command and source artifact. | Report, manuscript draft, hardware ledger, and current audit archived |
 
 ### Kill and redirect rules
 
@@ -212,17 +217,11 @@ may not silently revise an earlier stage's split, baseline, or selection rule.
 
 ## Immediate next actions
 
-1. Integrate heterogeneous retrieval and controlled-order summaries into the
-   final S1 audit table; do not use confirmation results for quantum tuning.
-2. Package the negative S2/S3 decision into the final audit/manuscript path;
-   no candidate is frozen and no hardware campaign is authorized.
-3. Keep IBM/Helios-1E execution gated permanently for this phase unless a
-   separately approved preregistration replaces the negative gate.
-   accepted resource/cost manifests.
+1. Keep IBM/Helios-1E execution gated for this phase; no candidate is frozen
+   and no hardware campaign is authorized.
+2. Defer any physical Quantinuum decision until a human-approved future
+   preregistration replaces the negative gate.
 
-The optional provider dependencies and access checks are complete, but they do
-not advance the staged experiment plan. Hardware remains gated behind the
-simulator smoke test, frozen parameters, and explicit HQC authorization.
-
-Until those actions are complete, QAtelier remains a planned parallel research
-track and the production Atelier behavior remains unchanged.
+The optional provider dependencies and access checks are complete. The current
+phase ends with the negative simulator result, no frozen candidate, and no
+authorized hardware campaign; production Atelier behavior remains unchanged.

@@ -39,6 +39,26 @@ not merely a high total: the answer must not call something a quantum advantage
 without parameter-matched classical baselines, held-out evaluation, resource
 accounting, and hardware-aware evidence.
 
+## QAtelier research artifact
+
+The executable research branch and current-phase conclusion are documented in
+[`FINAL_RESEARCH_REPORT.md`](FINAL_RESEARCH_REPORT.md). The paper draft is
+[`manuscript/qatelier_draft.md`](manuscript/qatelier_draft.md), the
+requirement audit is [`REQUIREMENTS_AUDIT.md`](REQUIREMENTS_AUDIT.md), and
+hardware decisions are recorded under [`hardware/`](hardware/).
+
+The current evidence is C0: no demonstrated quantum benefit. No provider job
+was submitted, and physical Quantinuum execution is disabled by policy.
+
+From the repository root:
+
+```bash
+make qatelier-test
+make qatelier-validate
+make qatelier-audit
+make qatelier-paper
+```
+
 ## Running one question
 
 ```bash

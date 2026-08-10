@@ -1,0 +1,22 @@
+schema_version: 1
+experiment_id: qatelier-s3-heldout-ood
+status: preregistered_not_executed_no_candidate
+in_distribution:
+  task: SST-2
+  source_manifest: ../s0_reproduction/data_manifest.json
+  representation_manifest: ../s0_reproduction/encoder_manifest.json
+out_of_distribution:
+  task: IMDb sentiment
+  source_manifest: ood_manifest.json
+  label_mapping: {negative: 0, positive: 1}
+  evaluation_member: test
+  candidate_pool: all_test_examples
+protocol:
+  train_on: frozen_SST2_training_selections_only
+  compressor_fit_on: frozen_SST2_training_selection_only
+  confirmation_seeds: [101, 103, 107, 109, 113]
+  metrics: [accuracy, balanced_accuracy, auroc, brier_score]
+  tuning_on_ood: false
+  quantum_execution: not_authorized_no_candidate_frozen
+  provider_contacted: false
+  jobs_submitted: 0

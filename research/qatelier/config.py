@@ -1,10 +1,9 @@
 """Configuration loading and execution-readiness checks for QAtelier.
 
-The committed QAtelier configuration is a research protocol.  It intentionally
-contains fields that must be filled after the researcher selects concrete
-models, datasets, and artifacts.  This module keeps structural validation
-separate from execution readiness so a protocol can be inspected without
-making an unresolved experiment runnable by accident.
+The committed QAtelier configuration is the locked current-phase research
+protocol. It records the frozen encoder/artifact identifiers and the explicit
+no-candidate hardware decision. Structural validation remains separate from
+execution readiness so future protocol changes cannot silently become runnable.
 
 The loader is intentionally local-only: it never reads provider credentials,
 contacts a backend, or imports a quantum SDK.

@@ -2,7 +2,7 @@
 
 Examples
 --------
-Inspect the committed protocol (this reports unresolved fields):
+Inspect the committed current-phase protocol:
 
     python -m research.qatelier.cli validate
 
@@ -11,9 +11,8 @@ Run the deterministic local smoke path without a model, provider, or secret:
     python -m research.qatelier.cli smoke --output /tmp/qatelier-smoke.json
 
 The smoke path is deliberately a toy validation, not a scientific result and
-not a quantum execution.  Commands that would eventually consume a scientific
-config are explicit and fail closed until their implementation and protocol
-gates exist.
+not a quantum execution. Provider-facing commands remain explicit and fail
+closed unless a future protocol gate authorizes them.
 """
 
 from __future__ import annotations
@@ -72,7 +71,7 @@ def _parser() -> argparse.ArgumentParser:
     validate_parser.add_argument(
         "--structure-only",
         action="store_true",
-        help="allow unresolved planning markers in the report (never enables execution)",
+        help="retain the explicit non-executing validation mode (never submits a job)",
     )
 
     smoke_parser = subparsers.add_parser(
@@ -88,7 +87,7 @@ def _parser() -> argparse.ArgumentParser:
     smoke_parser.add_argument(
         "--config",
         type=Path,
-        help="optional protocol config; unresolved fields block the smoke command",
+        help="optional locked protocol config; provider execution is never part of toy smoke",
     )
 
     for name, help_text in (
@@ -141,9 +140,8 @@ def _run_validate(args: argparse.Namespace) -> int:
     print(json.dumps(report.to_dict(), indent=2, sort_keys=True) if args.json else _report_text(report))
     if report.schema_errors:
         return 2
-    # Validation is an inspection command, not an execution command.  A
-    # structurally valid planning config may intentionally be unresolved; the
-    # report makes that state explicit and execution paths enforce the gate.
+    # Validation is an inspection command, not an execution command. It never
+    # contacts a provider, even when the current protocol is execution-ready.
     return 0
 
 

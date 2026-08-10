@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "experiment_id": "qatelier-s3-heldout-ood",
+  "status": "not_executed_no_candidate_frozen",
+  "reason": "The S2 candidate gate froze no quantum model, so there is no frozen quantum candidate to evaluate on the OOD set.",
+  "ood_protocol_locked": true,
+  "test_data_used": false,
+  "provider_contacted": false,
+  "jobs_submitted": 0,
+  "quantinuum_physical_jobs": 0,
+  "quantum_results": [],
+  "future_execution_requires": [
+    "new approved preregistration",
+    "frozen candidate parameters",
+    "frozen SST-2 compressor",
+    "predeclared OOD execution manifest"
+  ]
+}

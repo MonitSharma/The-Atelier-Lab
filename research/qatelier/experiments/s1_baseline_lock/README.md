@@ -1,8 +1,9 @@
 # S1 — classical baseline lock
 
-S1 freezes the classical reference numbers before any QAtelier mechanism
-screening. The current artifact locks the SST-2 condition from the completed
-S0 raw bundle and does not claim that the multi-task S1 stage is complete.
+S1 freezes classical reference numbers before QAtelier mechanism screening.
+SST-2, MRPC, CoLA, SciFact, and controlled interaction-order panels are now
+archived. The aggregate JSON table remains task-aware because retrieval and
+classification metrics are not interchangeable.
 
 The locked groups are:
 
@@ -10,9 +11,9 @@ The locked groups are:
 - parameter-matched controls: logistic, linear SVM, RFF, matched MLP,
   low-rank bilinear, and finite RBF.
 
-The scientific retrieval and controlled interaction-order tasks remain explicit
-prerequisites for advancing S1 to a full baseline lock. SST-2, MRPC, and CoLA
-now have archived classical reference panels.
+The scientific-retrieval and controlled-order definitions and head panels are
+also archived; controlled-order is retained as a separate metric table because
+it is a mechanism benchmark rather than a public-language task.
 
 The MRPC semantic-pair manifest and deterministic split manifest are now
 committed. A local preparation validation produced 1,522 selected pairs as

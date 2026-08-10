@@ -22,17 +22,17 @@ experiment:
 representation:
   backbone:
     status: frozen
-    model_id: record_exact_model_identifier_before_run
-    model_version: record_exact_version_before_run
-    weights_digest: record_digest_before_run
-    lock_state: unresolved
+    model_id: sentence-transformers/paraphrase-mpnet-base-v2
+    model_version: 6cc9279c672dc57f94445ef259b28a1b736fec8f
+    weights_digest: 5fc2279bd6e503ca3543197b4ef00b615d87eebd02490f8c108aa3f35d7b705d
+    lock_state: locked_s0_mpnet_snapshot
     trainable: false
     extraction_split: train_only_for_fitting_downstream_transforms
-    output_artifact: representation_manifest_and_digest
+    output_artifact: research/qatelier/experiments/s0_reproduction/preparation_validation.json plus external immutable embedding bundle
   preprocessing:
     fit_scope: training_split_only
     transform_reused_for: [validation, held_out_test, out_of_distribution, hardware_replay]
-    normalization: version_and_record_parameters
+    normalization: none
 
 compression:
   method: shared_low_dimensional_compressor
@@ -40,16 +40,16 @@ compression:
   dimensions: [8, 16, 32]
   candidates:
     - id: linear_pca
-      trainable_parameters: fitted_on_training_split_only
+      trainable_parameters: fitted_on_training_split_only_and_archived
     - id: linear_projection
-      trainable_parameters: fitted_on_training_split_only
+      trainable_parameters: fitted_on_training_split_only_and_archived
   shared_between: [quantum_adapter, classical_adapters]
   selection_split: development_only
   frozen_after_selection: true
   artifact: compressor_parameters_and_digest
 
 datasets:
-  manifest: record_dataset_manifest_and_version_before_run
+  manifest: research/qatelier/experiments/s0_reproduction/data_manifest.json plus task-specific S1 manifests
   split_policy:
     train: fit_representation_transforms_and_adapters
     validation: select_models_and_screen_circuits
@@ -62,7 +62,7 @@ datasets:
       evaluation: held_out_test
     - id: out_of_distribution
       purpose: test transfer beyond the training distribution
-      shift_definition: preregister_and_record_before_run
+      shift_definition: SST-2-to-IMDb label mapping is frozen before any OOD evaluation; no candidate was authorized for OOD execution in this phase
       evaluation: out_of_distribution
     - id: controlled_high_order_correlation
       purpose: test sensitivity to controlled interaction structure
@@ -73,7 +73,7 @@ datasets:
 seeds:
   values: [0, 1, 2, 3, 4]
   role: independent_training_and_evaluation_repetitions
-  split_seed: fixed_and_recorded_separately
+  split_seed: fixed_in_each_committed_experiment_split_manifest
   selection_rule: aggregate_across_seeds_without_post_hoc_seed_selection
 
 metrics:
@@ -169,7 +169,7 @@ hardware:
   scope: simulator_and_emulator_until_explicit_hardware_gate
   allowed_execution_modes: [simulator, emulator, hardware]
   candidate_providers: [IBM Quantum, Quantinuum]
-  backend_selection: null
+  backend_selection: none_authorized_no_candidate_frozen
   secret_material: never_serialized_in_this_experiment_metadata
   ibm:
     physical_execution_allowed: true

@@ -2,10 +2,14 @@
   "branch_requirement": "qatelier",
   "c1_c4_claim_supported": false,
   "claim_level": "no_quantum_advantage",
+  "final_report_sha256": "37a93e5bfc8ad87ba9d4affce48e2cfe91c00f32d34088ba158fe08e7039942e",
   "frozen_candidates": [],
   "hardware_authorized": false,
+  "hardware_decisions_sha256": "e452f4222aaac796468ffa81acfd3272580cdc55641074f06c0574deef02fb5b",
   "jobs_submitted": 0,
+  "manuscript_sha256": "f3094a7a2d13d349ea8a185f6b089e51e69534149324464aa0dd5b29c8a80a49",
   "physical_quantinuum_jobs": 0,
+  "preflight_contacted": true,
   "provider_contacted": false,
   "provider_records": [
     {
@@ -37,15 +41,22 @@
       "path": "experiments/s2_mechanism_screen/raw/orders_1_6/run_manifest.json",
       "row_count": 456,
       "sha256": "dc037e6d3f394520172f5e3b59241783541e627dbb1f67749fa18bac7e29e24f"
+    },
+    {
+      "path": "experiments/s2_mechanism_screen/raw/orders_1_6_fair/run_manifest.json",
+      "row_count": 528,
+      "sha256": "d96506333bba1617b6961746fbdfdb34af3274874b84d7707107cdf39b13cd38"
     }
   ],
   "reproduction_commands": [
     ".venv/bin/pytest -q research/qatelier/tests",
     ".venv/bin/python scripts/validate_experiments.py"
   ],
+  "requirements_audit_sha256": "cc53280ce07c335236adcd953bc8448c9d0cbf11cbe0f89cc1e346630d66592a",
   "s0_completion_sha256": "84568feca01c352fda25984cd195aedd1f54b5634470733b731203b57c1871ef",
   "s1_multitask_lock_sha256": "06cd0c619147687b9ee6854d2dbfcd8a163fe306c7042079e833fca457b77a3a",
-  "s2_candidate_freeze_sha256": "f3f78aa93a4f5f614509fc6ff703606061c9bbab07d6bb27f654fa61e28d0e4d",
+  "s2_candidate_freeze_sha256": "03094ae1372fd7e3f506a3971ea8146b439a56d6ac391304931e1e4280a6dc95",
+  "s3_decision_sha256": "8f4901d6fd8bf504c9ffd08448ba32c64c15614c2b1d8d7f87b94339617bdcf3",
   "schema_version": 1,
   "status": "negative_result_audited_current_phase"
 }

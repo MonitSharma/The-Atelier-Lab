@@ -1,0 +1,3 @@
+provider,execution_type,backend,stage,experiment_id,candidate_id,job_id,timestamp,samples,shots,estimated_hqc,actual_hqc,status,notes
+IBM Quantum,preflight,metadata-only,preflight,qatelier-hardware-access-check,,,2026-08-10T11:47:00+08:00,0,0,,,not_submitted,Read-only credential/backend check; no circuit job.
+Quantinuum,discovery,Helios-1E,preflight,qatelier-hardware-access-check,,,2026-08-10T11:47:00+08:00,0,0,,,not_submitted,Read-only exact emulator discovery; no syntax check or execution campaign.

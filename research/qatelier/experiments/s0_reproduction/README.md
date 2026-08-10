@@ -1,6 +1,6 @@
 # S0 — published-style reproduction and calibration
 
-Status: preregistered, not run.
+Status: completed calibration; negative result archived.
 
 S0 is a calibration experiment, not a novelty claim. It asks whether the
 QAtelier implementation can reproduce the qualitative behavior of a compact
@@ -20,11 +20,12 @@ explicit.
   finite-shot simulator, and resource accounting.
 - Hardware: none in S0. IBM and Helios-1E are downstream validation stages.
 
-The exact model revision, weights digest, dataset version, and split manifest
-are committed. The cached embedding and compressor hashes are produced by the
-credential-free preparation command; missing values are an intentional
-execution block, not a permission to substitute the latest model or a
-test-derived split.
+The exact model revision, weights digest, dataset version, split manifest, and
+preparation-manifest hashes are committed. The embedding cache and fitted
+compressor arrays used to produce the archived result remain in the external
+output directory recorded by `preparation_validation.json`; they are not
+claimed to be distributable repository artifacts. The completed raw bundle and
+analysis are archived under `raw/` and `analysis/`.
 
 ## Reproduction
 
@@ -46,7 +47,7 @@ representation manifest, and one train-only PCA artifact per declared
 selection. The normal experiment runner remains gated until those generated
 artifacts are explicitly supplied and the downstream head protocol is locked.
 
-The eventual execution command is:
+The completed panel can be reproduced from an external prepared cache with:
 
 ```bash
 python -m research.qatelier.experiments.s0_reproduction.run \
@@ -66,7 +67,8 @@ python -m research.qatelier.experiments.s0_reproduction.run \
 
 `--selection-limit` and `--candidate-limit` are available only for bounded
 runtime smoke checks; those outputs are explicitly marked partial and are not
-scientific results.
+scientific results. The committed full result is hash-linked by
+[`s0_completion.json`](s0_completion.json).
 
 Any reproduction discrepancy should be recorded as a discrepancy, not hidden
 by changing the QAtelier-normalized protocol after seeing held-out results.

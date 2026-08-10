@@ -24,6 +24,7 @@ def build_audit(*, output_dir: str | Path) -> Path:
     s0 = ROOT / "experiments/s0_reproduction"
     s1 = ROOT / "experiments/s1_baseline_lock"
     s2 = ROOT / "experiments/s2_mechanism_screen"
+    s3 = ROOT / "experiments/s3_heldout"
     completion = json.loads((s0 / "s0_completion.json").read_text())
     if _sha256(s0 / "raw/results.json") != completion["raw_results_sha256"]:
         raise ValueError("S0 completion hash mismatch")
@@ -35,6 +36,7 @@ def build_audit(*, output_dir: str | Path) -> Path:
         s1 / "controlled_interaction_order/raw/run_manifest.json",
         s2 / "raw/run_manifest.json",
         s2 / "raw/orders_1_6/run_manifest.json",
+        s2 / "raw/orders_1_6_fair/run_manifest.json",
     ]
     for path in raw_paths:
         manifest = json.loads(path.read_text())
@@ -44,6 +46,19 @@ def build_audit(*, output_dir: str | Path) -> Path:
     freeze = json.loads((s2 / "analysis/candidate_freeze.json").read_text())
     if freeze["frozen_candidates"] or freeze["hardware_authorized"]:
         raise ValueError("candidate freeze artifact unexpectedly authorizes hardware")
+    s3_decision = json.loads((s3 / "decision.json").read_text())
+    if s3_decision["test_data_used"] or s3_decision["provider_contacted"] or s3_decision["jobs_submitted"]:
+        raise ValueError("S3 decision unexpectedly reports execution")
+    required_release_files = [
+        ROOT / "FINAL_RESEARCH_REPORT.md",
+        ROOT / "manuscript/qatelier_draft.md",
+        ROOT / "manuscript/REPRODUCIBILITY_APPENDIX.md",
+        ROOT / "hardware/HARDWARE_DECISIONS.md",
+        ROOT / "hardware/PHYSICAL_QUANTINUUM_DECISION.md",
+        ROOT / "REQUIREMENTS_AUDIT.md",
+    ]
+    if any(not path.is_file() for path in required_release_files):
+        raise ValueError("release package is incomplete")
     document = {
         "schema_version": 1,
         "status": "negative_result_audited_current_phase",
@@ -52,7 +67,13 @@ def build_audit(*, output_dir: str | Path) -> Path:
         "s0_completion_sha256": _sha256(s0 / "s0_completion.json"),
         "s1_multitask_lock_sha256": _sha256(s1 / "artifacts/baseline_lock_all.json"),
         "s2_candidate_freeze_sha256": _sha256(s2 / "analysis/candidate_freeze.json"),
+        "s3_decision_sha256": _sha256(s3 / "decision.json"),
+        "requirements_audit_sha256": _sha256(ROOT / "REQUIREMENTS_AUDIT.md"),
+        "final_report_sha256": _sha256(ROOT / "FINAL_RESEARCH_REPORT.md"),
+        "manuscript_sha256": _sha256(ROOT / "manuscript/qatelier_draft.md"),
+        "hardware_decisions_sha256": _sha256(ROOT / "hardware/HARDWARE_DECISIONS.md"),
         "provider_records": provider_records,
+        "preflight_contacted": True,
         "provider_contacted": False,
         "jobs_submitted": 0,
         "physical_quantinuum_jobs": 0,
@@ -70,7 +91,7 @@ def build_audit(*, output_dir: str | Path) -> Path:
         "",
         "Status: negative result audited; no quantum advantage or hardware utility claim is supported.",
         "",
-        "The S0 calibration, S1 classical reference panels, S2 mechanism screen, and no-candidate freeze are hash-linked. Every archived execution manifest records zero provider jobs. Quantinuum physical jobs: 0.",
+        "The S0 calibration, S1 classical reference panels, fair-projection S2 mechanism screen, and no-candidate freeze are hash-linked. Read-only provider discovery was performed, but every archived scientific execution manifest records zero provider jobs. Quantinuum physical jobs: 0.",
         "",
         "Frozen candidates: none.",
         "Hardware authorized: false.",

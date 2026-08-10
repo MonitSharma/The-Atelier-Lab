@@ -15,3 +15,10 @@ Current provider policy:
 Provider-specific raw results, manifests, cost reports, and decision logs will
 live under `ibm/` and `quantinuum/`. No credentials or unredacted provider
 responses containing secrets may be committed.
+
+The current phase ledger is [`RUN_LEDGER.csv`](RUN_LEDGER.csv), decisions are
+in [`HARDWARE_DECISIONS.md`](HARDWARE_DECISIONS.md), and the deferred physical
+Quantinuum recommendation is in
+[`PHYSICAL_QUANTINUUM_DECISION.md`](PHYSICAL_QUANTINUUM_DECISION.md). The
+ledger contains only read-only preflight/discovery records: submitted jobs are
+zero.
