@@ -7,6 +7,9 @@ installed, and what each model is responsible for.
 For the shorter task-oriented guide with worked examples, start with
 [`ATELIER_USER_GUIDE.md`](ATELIER_USER_GUIDE.md).
 
+For the UPSC preparation workflow and the `exam_website` inventory, see
+[`UPSC_PREPARATION_TRACK.md`](UPSC_PREPARATION_TRACK.md).
+
 The active implementation lives in
 [`atelier_agent/`](../atelier_agent/). User data and runtime state live outside
 the Git checkout under `~/Atelier`, so updating the code does not overwrite the
@@ -328,12 +331,13 @@ Current optional and future model slots:
 
 | Role | Configured model | Purpose |
 |---|---|---|
-| Future brain candidate | `qwen3:14b` | larger local reasoning candidate; not installed |
+| Reserved expert slot | Qwen3.8-27B Q4-class (exact released tag TBD) | evaluation-only slot; not installed or active |
 | Router target | `qwen3:4b` | future model-backed routing experiment |
 | Expert | empty | reserved capability slot |
 
 The current local configuration uses `qwen3:8b` for the brain and coder roles.
-`qwen3:14b` remains a future candidate, not an installed dependency. Override
+Qwen3.8-27B remains an evaluation candidate, not an installed dependency.
+Keep the temporary brain on `qwen3:8b` until the release is tested. Override
 the roles explicitly when benchmarking another model:
 
 ```bash
@@ -354,9 +358,34 @@ already compact and the large model files remain managed by Ollama.
 | C — main local intelligence | mathematics, papers, optimization, quantum reasoning | Qwen3-8B is temporary; Qwen3.8-27B Q4 remains a future hardware-budget decision |
 | D — frontier handoffs | architecture, implementation, long context, multimodal review | Claude = critic/architect; Codex = implementation; Gemini = large-context/multimodal |
 
+### UPSC preparation track
+
+Atelier is not limited to coding, AI, or quantum research. The `study` route is
+designed for the user's UPSC preparation library: it retrieves dated notes,
+question banks, PYQs, current affairs, essays, ethics cases, CSAT material,
+and Physics optional material before generating an answer. It should expose
+source dates and file citations, separate facts from inference, and flag
+current-affairs claims that need verification.
+
 Do not load the 17 GB heavy model at the same time as every other large model
 on a 36 GiB machine. Serialize model-heavy operations and watch
 `atelier performance` for peak process memory.
+
+### Qwen3.8-27B release gate
+
+The Tier C slot is reserved for the upcoming Qwen3.8-27B release. Keep
+`expert_model` empty and keep `qwen3:8b` as the temporary brain until the
+released model is available. The adoption sequence is:
+
+1. download one Q4-class candidate only;
+2. run `atelier models status` and record disk/resident-memory behavior;
+3. benchmark the frozen research, document-QA, coding, and UPSC study sets;
+4. compare quality, citation accuracy, latency, and peak memory with `qwen3:8b`;
+5. promote it only if it fits the 36 GiB M3 Pro and improves the measured work.
+
+Do not install overlapping 14B/27B candidates while this evaluation is in
+progress. The exact Ollama tag is intentionally left unset until the release
+metadata is known.
 
 ## 6. Privacy and safety rules
 

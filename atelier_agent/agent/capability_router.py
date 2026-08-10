@@ -10,7 +10,7 @@ from agent.router import Router
 from atelier.config import settings
 from atelier.workspace import WorkspaceContext
 
-Domain = Literal["paper", "code", "data", "vision", "research", "quantum", "optimization", "general"]
+Domain = Literal["paper", "code", "data", "vision", "research", "study", "quantum", "optimization", "general"]
 
 _DOMAIN_HINTS: dict[Domain, tuple[str, ...]] = {
     "code": ("repo", "repository", "code", "bug", "test", "refactor", "function", "script", "python", "rust"),
@@ -20,6 +20,13 @@ _DOMAIN_HINTS: dict[Domain, tuple[str, ...]] = {
     "optimization": ("optimization", "optimisation", "qubo", "milp", "mip", "linear program", "solver", "constraint"),
     "paper": ("paper", "pdf", "abstract", "methodology", "results section", "characterize", "summarize"),
     "research": ("research", "literature", "citation", "related work", "arxiv", "doi", "crossref"),
+    "study": (
+        "upsc", "civil services", "prelims", "mains", "csat", "pyq", "mock test",
+        "answer writing", "essay", "ethics", "current affairs", "polity",
+        "governance", "modern history", "ancient history", "medieval history",
+        "geography", "economy", "environment", "internal security", "optional subject",
+        "revision", "study plan", "exam preparation",
+    ),
     "general": (),
 }
 
@@ -113,6 +120,19 @@ class CapabilityRouter:
             tools = ("search_notes", "search", "read_file")
             reason = "Research verification needs provenance-aware retrieval and explicit network policy."
             escalations.append("abstain from external lookup when LOCAL_ONLY blocks the requested source")
+        elif domain == "study":
+            deep_study = difficulty == "hard" or any(
+                marker in lowered
+                for marker in ("mains answer", "essay", "evaluate", "compare", "study plan", "strategy")
+            )
+            role, workflow = ("brain", "study_coach") if deep_study else ("worker", "study_retrieve")
+            tools = ("search_notes", "read_file", "calculator")
+            use_memory = memory_available
+            reason = (
+                "Use the UPSC preparation track: retrieve the user's notes and questions first, "
+                "then use the reasoning role for answer writing, synthesis, and planning."
+            )
+            escalations.append("verify current-affairs claims against dated source material before relying on them")
         elif domain == "vision":
             role, workflow, modality = "heavy", "figure_inspect", "image_or_document"
             tools = ("read_file", "search_notes")

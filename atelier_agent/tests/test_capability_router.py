@@ -24,6 +24,25 @@ def test_paper_route_uses_memory() -> None:
     assert decision.use_memory
 
 
+def test_upsc_study_route_uses_preparation_track() -> None:
+    decision = CapabilityRouter(backend="heuristic").decide(
+        "Create a UPSC mains answer on polity and cite the indexed current-affairs notes"
+    )
+    assert decision.domain == "study"
+    assert decision.workflow == "study_coach"
+    assert decision.role == "brain"
+    assert decision.use_memory
+
+
+def test_upsc_recall_route_uses_worker_for_short_questions() -> None:
+    decision = CapabilityRouter(backend="heuristic").decide(
+        "Which indexed prelims notes cover the Finance Commission?"
+    )
+    assert decision.domain == "study"
+    assert decision.workflow == "study_retrieve"
+    assert decision.role == "worker"
+
+
 def test_frozen_capability_routing_evaluation_passes():
     report = run_capability_eval()
     assert report["cases"] == 16

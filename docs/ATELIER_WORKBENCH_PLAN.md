@@ -309,3 +309,8 @@ Do not download missing placeholder models merely to make `doctor` green. Add a
 model only when its role has a frozen benchmark, a memory budget, and a clear
 workflow consumer. The current installed baseline is LFM worker, Qwen3
 embedding, and Gemma heavy reasoner.
+
+The Tier C expert slot is reserved for the upcoming Qwen3.8-27B release. It is
+an evaluation-only slot: download one Q4-class candidate, benchmark research
+reasoning, document QA, coding, and UPSC preparation, and promote it only if
+the quality and memory results justify replacing the temporary Qwen3-8B brain.

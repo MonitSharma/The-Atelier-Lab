@@ -428,8 +428,8 @@ def _root(
 def _print_guide() -> None:
     console.print(Panel(
         "[bold cyan]The daily Atelier loop[/]\n\n"
-        "[bold]1. ingest[/] a paper, document, image, archive, or code folder\n"
-        "[bold]2. ask[/] questions grounded in your indexed material\n"
+        "[bold]1. ingest[/] a paper, document, image, archive, study folder, or code folder\n"
+        "[bold]2. ask[/] research, study, or document questions grounded in your indexed material\n"
         "[bold]3. agent[/] ask Atelier to inspect or change an approved repository\n"
         "[bold]4. code-fix[/] run the certified inspect → edit → test workflow\n\n"
         "Everything is local by default. Use [bold]doctor[/] when something is unclear.",

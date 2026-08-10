@@ -15,6 +15,9 @@ constrained inspect → edit → test workflow.
 The default privacy mode is local. Ollama serves models on the Mac, and the
 indexed documents, vectors, traces, and memory live under `~/Atelier`.
 
+For UPSC preparation using the `exam_website` study archive, see
+[`UPSC_PREPARATION_TRACK.md`](UPSC_PREPARATION_TRACK.md).
+
 ## Start here
 
 From any normal terminal:
@@ -148,6 +151,12 @@ atelier agent \
 preferred when the task requires searching notes, inspecting a repository, or
 using several tools. The agent does not receive the powerful shell tool unless
 you explicitly pass `--shell`.
+
+Atelier also has a study route. Questions mentioning UPSC, Prelims, Mains,
+CSAT, current affairs, essays, ethics, or optional subjects are routed toward
+the indexed preparation material. Short recall questions use the worker;
+answer writing, comparison, evaluation, and study planning use the temporary
+brain model.
 
 For a repository outside the current directory, approve it explicitly:
 

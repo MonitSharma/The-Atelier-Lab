@@ -6,11 +6,12 @@ The Atelier Lab is a local-first AI research laboratory for learning language mo
 
 > How much reliable AI capability can a single researcher obtain from local models under fixed memory, latency, privacy, and compute constraints?
 
-## Three tracks
+## Four tracks
 
 - **Foundations:** tokenization, language modelling, attention, transformers, training, and autoregressive inference.
 - **Local AI systems:** Apple Silicon benchmarking, quantization, KV caching, memory, serving, and routing.
 - **Reliable agents:** RAG, tools, code modification, verification, memory, routing, and evaluation.
+- **UPSC preparation:** grounded study over the `exam_website` knowledge base, including Prelims, Mains, CSAT, current affairs, essays, ethics, and optional-subject material.
 
 ## Verified results
 
@@ -22,6 +23,7 @@ The current expanded Atelier suites record 17/18 knowledge answers, 13/13 code t
 - [Run the local agent](atelier_agent/README.md)
 - [Atelier operator guide](docs/ATELIER_OPERATOR_GUIDE.md)
 - [Atelier user guide with worked examples](docs/ATELIER_USER_GUIDE.md)
+- [UPSC preparation track](docs/UPSC_PREPARATION_TRACK.md)
 - [Work with papers and documents](docs/WORKING_WITH_DOCUMENTS.md)
 - [Experiment registry](experiments/registry.yaml)
 - [Repository map](docs/REPOSITORY_MAP.md)
@@ -124,6 +126,11 @@ Keep all three subscriptions, but assign them different responsibilities instead
 - Google ecosystem workflows
 
 This division of labor keeps the frontier models complementary and makes the local stack responsible for the work that benefits most from privacy, low latency, and predictable cost.
+
+The main local intelligence slot is reserved for the upcoming Qwen3.8-27B
+release. It will be downloaded only for a controlled evaluation first; it will
+not replace the temporary Qwen3-8B brain until the benchmark, memory use, and
+UPSC/research/coding quality justify promotion.
 
 ### Current model policy
 
