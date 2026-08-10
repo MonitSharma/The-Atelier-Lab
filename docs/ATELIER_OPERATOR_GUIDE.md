@@ -28,6 +28,49 @@ handoffs require explicit workspace capabilities and user approval.
 ## 2. Quick start on this Mac
 
 ```bash
+# `atelier` is installed globally on this Mac; no venv activation is needed.
+atelier
+```
+
+The command opens the interactive Atelier session. Type `help` for commands
+and `exit` to leave it. Pressing Ctrl-C while a child command is running now
+cancels that command and returns to the `atelier ›` prompt.
+
+For a direct one-time installation in a new checkout:
+
+```bash
+uv venv ~/code_projects/The-Atelier-Lab/.venv
+uv pip install -e ~/code_projects/The-Atelier-Lab/atelier_agent
+```
+
+The global launcher uses that environment without requiring activation. It is
+available because `~/bin` is on this Mac's PATH. If the checkout moves, set
+`ATELIER_REPO` to its new location before invoking `atelier`.
+
+```bash
+ATELIER_REPO=~/code_projects/The-Atelier-Lab atelier doctor
+```
+
+Atelier automatically uses the directory from which it was launched as the
+active local workspace. You can explicitly target another directory with
+`--workspace` (or `--root`):
+
+```bash
+atelier --workspace ~/code_projects/my-project agent "Fix the failing tests"
+atelier --workspace ~/Documents/papers ingest .
+atelier --workspace ~/Documents/papers paper report.pdf --ingest
+atelier --workspace ~/code_projects/my-project repo inspect .
+```
+
+The automatic workspace grants `read`, `write`, and `execute` only inside that
+directory and never grants network access. This is the same working-directory
+model used by repository agents while retaining Atelier's explicit privacy
+boundary. `atelier workspace list` shows the active roots; close old automatic
+entries with `atelier workspace close NAME`.
+
+For developers who want to run directly from the checkout:
+
+```bash
 cd ~/code_projects/The-Atelier-Lab/atelier_agent
 source ../.venv/bin/activate
 
@@ -149,14 +192,24 @@ capacity profiles; it does not contact a cloud backend.
 ### Web UI, MCP, and handoffs
 
 ```bash
-atelier serve                         # loopback UI/API, normally 127.0.0.1:8787
-atelier mcp                           # MCP over stdio
+atelier serve                         # optional loopback UI/API
+atelier mcp                           # only when launched by an MCP client
 atelier finder plan ~/Documents/paper.pdf
 atelier handoff create --target codex --task "Review this result"
 ```
 
-The web UI and CLI use the same `AtelierService`; they do not maintain separate
-business logic. Finder actions and handoffs are explicit plans until approved.
+`serve` starts the optional local web/API process at
+`http://127.0.0.1:8787/ui`. It is useful when you want a browser dashboard or
+another local program to call Atelier; it is not required for normal CLI use.
+Run it in a separate terminal and press Ctrl-C there to stop only the server.
+
+`mcp` is different: it is a JSON-RPC bridge for an MCP host such as Claude
+Desktop/Code or another compatible client. It intentionally appears idle in a
+terminal because it waits for protocol messages on stdin. Do not run it as the
+normal interactive Atelier command; configure the external MCP host to launch
+it. The web UI and CLI use the same `AtelierService`; they do not maintain
+separate business logic. Finder actions and handoffs are explicit plans until
+approved.
 
 ## 4. Architecture
 

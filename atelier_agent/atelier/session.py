@@ -19,7 +19,7 @@ def run_session(console: Console | None = None) -> None:
     print_banner(console)
     console.print(
         "[dim]Commands: search · ask · paper · ingest · sources · "
-        "doctor · agent · remember · recall · help · exit[/]\n"
+        "doctor · agent · workspace · serve · mcp · remember · recall · help · exit[/]\n"
     )
 
     executable = shutil.which("atelier")
@@ -54,5 +54,8 @@ def run_session(console: Console | None = None) -> None:
             console.print(f"[red]Parse error:[/] {exc}")
             continue
 
-        subprocess.run([*command, *args], env=env, check=False)
+        try:
+            subprocess.run([*command, *args], env=env, check=False)
+        except KeyboardInterrupt:
+            console.print("[yellow]command cancelled; Atelier session remains open[/]")
         console.print()

@@ -149,6 +149,17 @@ uv pip install -e .                     # installs the `atelier` command
 atelier doctor                          # verify models + vector store + embeddings
 ```
 
+For the normal terminal experience, install Atelier once and use it from any
+directory without activating the virtualenv:
+
+```bash
+uv pip install -e ~/code_projects/The-Atelier-Lab/atelier_agent
+atelier
+```
+
+The complete global-launcher, workspace, architecture, model, `serve`, and MCP
+guide is [`docs/ATELIER_OPERATOR_GUIDE.md`](../docs/ATELIER_OPERATOR_GUIDE.md).
+
 `atelier doctor` reports which configured roles are installed. A missing
 placeholder model is intentional until its role has a benchmark and a clear
 workflow consumer.
@@ -302,10 +313,13 @@ Expose Atelier's whole toolbox to any [MCP](https://modelcontextprotocol.io)
 client (Claude Desktop/Code, etc.):
 
 ```bash
-atelier mcp        # speaks JSON-RPC over stdio
+atelier mcp        # launched by an MCP host; not an interactive command
 ```
 
-Point your MCP host's server command at `atelier mcp`. It publishes 12 tools:
+Point your MCP host's server command at `atelier mcp`. It publishes the shared
+toolbox. The process waits for JSON-RPC on stdin and should normally be started
+by the MCP host rather than typed manually in a terminal. For the browser UI,
+use `atelier serve` instead.
 `calculator`, `read_file`, `write_file`, `edit_file`, `ast_edit`, `search`,
 `search_notes`, `repo_map`, `code_exec`, `test_runner`, `remember`, `recall`
 (add `--shell` for the shell tool).
