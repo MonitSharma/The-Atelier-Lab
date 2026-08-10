@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "dataset_id": "huggingface-nyu-mll-glue-cola",
+  "source_repository": "nyu-mll/glue",
+  "source_revision": "main",
+  "license_note": "Use and redistribution must follow the source dataset terms. The repository stores manifests, not source data.",
+  "members": {
+    "train": {
+      "url": "https://huggingface.co/datasets/nyu-mll/glue/resolve/main/cola/train-00000-of-00001.parquet?download=true",
+      "sha256": "2e7538afa2000e63f5343f16a758d75c452661a384208399d2035cd2fce45c33",
+      "rows": 8551,
+      "columns": ["sentence", "label", "idx"],
+      "label_counts": {"0": 2528, "1": 6023}
+    },
+    "validation": {
+      "url": "https://huggingface.co/datasets/nyu-mll/glue/resolve/main/cola/validation-00000-of-00001.parquet?download=true",
+      "sha256": "c14b7219a7d9f9fe3dd291fd000f6623ee413805eb108c9c49578ed50873e4ba",
+      "rows": 1043,
+      "columns": ["sentence", "label", "idx"],
+      "label_counts": {"0": 322, "1": 721}
+    },
+    "test": {
+      "url": "https://huggingface.co/datasets/nyu-mll/glue/resolve/main/cola/test-00000-of-00001.parquet?download=true",
+      "sha256": "3c4d526b6f49f432621de43569f9ecf6af41f639baaf4a9d821b95d745def61d",
+      "rows": 1063,
+      "columns": ["sentence", "label", "idx"],
+      "labels_available_for_local_confirmation": false
+    }
+  }
+}

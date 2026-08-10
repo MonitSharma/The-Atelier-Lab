@@ -20,6 +20,11 @@ committed. A local preparation validation produced 1,522 selected pairs as
 compressors; the validation record is
 [`mrpc_preparation_validation.json`](mrpc_preparation_validation.json).
 
+CoLA is also pinned as the additional classification condition. Its prepared
+validation produced 1,795 selected sentences, 768-dimensional embeddings, and
+12 train-only compressors; see
+[`cola_preparation_validation.json`](cola_preparation_validation.json).
+
 Prepare the pair cache with the same pinned MPNet snapshot used by S0:
 
 ```bash

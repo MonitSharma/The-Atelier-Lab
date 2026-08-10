@@ -11,6 +11,12 @@ pair_task:
   encoder_manifest: ../s0_reproduction/encoder_manifest.json
   representation: frozen_pair_concat_abs_product
   compressor_output_dim: 4
+additional_classification:
+  name: CoLA
+  data_manifest: cola_data_manifest.json
+  split_manifest: cola_split_manifest.json
+  encoder_manifest: ../s0_reproduction/encoder_manifest.json
+  compressor_output_dim: 4
 public_tasks:
   sst2:
     status: locked_from_s0

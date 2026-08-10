@@ -108,6 +108,9 @@ The following credential-free infrastructure is now implemented on `qatelier`:
   representation preparation path are committed. A local validation produced
   1,522 selected pairs and 12 train-only compressors; full MRPC head evaluation
   is still pending.
+- CoLA is now pinned as the additional public classification condition, with
+  deterministic splits and a validated frozen-embedding/compressor preparation
+  path. Its head evaluation remains pending.
 - The initial S2 mechanism screen is implemented with kernel alignment,
   effective-rank, spectrum, and finite-difference gradient diagnostics. A
   bounded screen over four interaction families and orders 1–4 is archived
