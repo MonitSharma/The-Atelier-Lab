@@ -13,7 +13,8 @@ research library, vector index, memory, traces, or workflow state.
 
 Atelier is a local-first research workbench with two primary modes:
 
-- **Knowledge mode:** ingest papers, notes, PDFs, and source code; retrieve
+- **Knowledge mode:** ingest papers, notes, Office documents, PDFs, images,
+  EPUBs, archives, and source code; retrieve
   relevant passages; answer with file/page citations.
 - **Build mode:** inspect a repository, plan a change, edit through guarded
   tools, run tests, and return a certificate describing the verified change.
@@ -57,8 +58,8 @@ not search or upload anything.
 Commands are executed without a shell, so pipes and redirections are not
 interpreted inside the Atelier prompt; use a normal terminal for shell syntax.
 
-For a complete document workflow, including the current DOCX conversion step
-and a QAtelier example, see [`WORKING_WITH_DOCUMENTS.md`](WORKING_WITH_DOCUMENTS.md).
+For the supported-format matrix, OCR limits, and a QAtelier example, see
+[`WORKING_WITH_DOCUMENTS.md`](WORKING_WITH_DOCUMENTS.md).
 
 For a direct one-time installation in a new checkout:
 
@@ -259,7 +260,8 @@ CLI / loopback web UI / Finder actions / MCP / persistent session
 
 1. The workspace manager verifies that the source is approved for `read`.
 2. Ingestion assigns content identity and updates the SQLite manifest.
-3. PDFs are extracted and chunked with page/section metadata.
+3. PDFs are extracted and chunked with page/section metadata; image-only pages
+   receive a best-effort local OCR pass.
 4. Qwen3-Embedding-4B creates 2,560-dimensional vectors in ChromaDB.
 5. Dense retrieval and BM25 lexical retrieval are fused with reciprocal-rank
    fusion, section adjustment, and diversity controls.

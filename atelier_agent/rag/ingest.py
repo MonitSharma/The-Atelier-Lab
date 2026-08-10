@@ -9,17 +9,22 @@ from typing import Any
 
 from atelier.config import settings
 from rag.chunk import Chunk, split_markdown, split_plain
+from rag.extract import extract_text_sections
 from rag.manifest import DocumentRecord, IndexManifest
 from rag.paper import chunk_pdf, load_metadata, sha256_file
 
 MARKDOWN_EXT = {".md", ".markdown", ".mdx"}
-TEXT_EXT = {".txt", ".rst", ".org"}
+TEXT_EXT = {".txt", ".rst", ".org", ".adoc", ".html", ".htm", ".rtf", ".tex", ".ipynb", ".log"}
 CODE_EXT = {
     ".py", ".js", ".ts", ".tsx", ".jsx", ".go", ".rs", ".java", ".c", ".h",
-    ".cpp", ".hpp", ".rb", ".sh", ".sql", ".toml", ".yaml", ".yml", ".json",
+    ".cpp", ".hpp", ".rb", ".sh", ".sql", ".toml", ".yaml", ".yml", ".json", ".csv", ".tsv",
 }
 PDF_EXT = {".pdf"}
-SUPPORTED = MARKDOWN_EXT | TEXT_EXT | CODE_EXT | PDF_EXT
+OFFICE_EXT = {".docx", ".pptx", ".xlsx", ".xlsm"}
+BOOK_EXT = {".epub"}
+IMAGE_EXT = {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".webp", ".bmp"}
+ARCHIVE_EXT = {".zip"}
+SUPPORTED = MARKDOWN_EXT | TEXT_EXT | CODE_EXT | PDF_EXT | OFFICE_EXT | BOOK_EXT | IMAGE_EXT | ARCHIVE_EXT
 SKIP_DIRS = {".git", ".venv", "venv", "node_modules", "__pycache__",
              ".pytest_cache", ".ruff_cache", "data", "dist", "build"}
 
@@ -89,6 +94,18 @@ def _doc_type(path: Path) -> str:
         return "markdown"
     if path.suffix.lower() in CODE_EXT:
         return "code"
+    if path.suffix.lower() == ".docx":
+        return "document"
+    if path.suffix.lower() == ".pptx":
+        return "presentation"
+    if path.suffix.lower() in {".xlsx", ".xlsm"}:
+        return "spreadsheet"
+    if path.suffix.lower() in BOOK_EXT:
+        return "book"
+    if path.suffix.lower() in IMAGE_EXT:
+        return "image"
+    if path.suffix.lower() in ARCHIVE_EXT:
+        return "archive"
     return "text"
 
 
@@ -113,6 +130,15 @@ def chunk_file(path: Path, *, document_id: str | None = None) -> list[Chunk]:
         return split_plain(text, str(path), base_meta=base_meta)
     if ext in MARKDOWN_EXT:
         return split_markdown(_read_text(path), str(path), base_meta=base_meta)
+    if ext in OFFICE_EXT | BOOK_EXT | IMAGE_EXT | ARCHIVE_EXT:
+        chunks: list[Chunk] = []
+        for section_text, section_meta in extract_text_sections(path):
+            metadata = {**base_meta, **section_meta}
+            pieces = split_plain(section_text, str(path), base_meta=metadata)
+            for piece in pieces:
+                piece.chunk_index += len(chunks)
+                chunks.append(piece)
+        return chunks
     return split_plain(_read_text(path), str(path), base_meta=base_meta)
 
 
