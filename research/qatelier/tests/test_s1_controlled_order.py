@@ -43,3 +43,14 @@ def test_controlled_order_bundle_validates_without_provider_access() -> None:
         assert data["labels"].shape == (192, 512)
         assert set(np.unique(data["labels"])) == {0, 1}
 
+
+def test_controlled_order_classical_panel_is_complete_and_provider_free() -> None:
+    raw = ARTIFACT / "raw"
+    document = json.loads((raw / "results.json").read_text())
+    assert len(document["rows"]) == 14400
+    assert document["run_manifest"]["provider_contacted"] is False
+    assert document["run_manifest"]["jobs_submitted"] == 0
+    assert {row["candidate_id"] for row in document["rows"]} == {
+        "rbf_svm", "polynomial_svm", "logistic", "linear_svm", "rff",
+        "matched_mlp", "low_rank_bilinear", "finite_rbf",
+    }

@@ -1,0 +1,9 @@
+{
+  "artifact_manifest_sha256": "b72f7a83f01f1e3a9efb99c306492e0c82564c8560b9e4e1c6d6d51ee7228a48",
+  "experiment_id": "qatelier-s1-controlled-interaction-order-classical",
+  "jobs_submitted": 0,
+  "provider_contacted": false,
+  "row_count": 14400,
+  "schema_version": 1,
+  "status": "completed_classical_reference_panel"
+}

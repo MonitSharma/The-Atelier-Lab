@@ -86,3 +86,8 @@ PYTHONPATH=. .venv/bin/python \
 The generation script only constructs local NumPy arrays and imports the
 canonical QAtelier benchmark. It has no hardware/provider integration.
 
+The classical reference panel is archived under [`raw/`](raw/). It contains
+14,400 rows: 24 family/order problems × 3 training seeds × 5 budgets × 5
+confirmation seeds × 8 heads. The panel uses the frozen six-dimensional
+features directly, records train/confirmation split fingerprints, and makes no
+candidate selection or quantum claim.
