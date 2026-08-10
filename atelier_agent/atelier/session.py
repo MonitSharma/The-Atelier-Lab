@@ -18,8 +18,9 @@ def run_session(console: Console | None = None) -> None:
     console = console or Console()
     print_banner(console)
     console.print(
-        "[dim]Commands: search · ask · paper · ingest · sources · "
-        "doctor · agent · workspace · serve · mcp · remember · recall · help · exit[/]\n"
+        "[dim]Atelier: search · ask · paper · ingest · sources · doctor · agent · "
+        "workspace · serve · mcp · remember · recall[/]\n"
+        "[dim]Terminal: cd · pwd · ls · find · rg · git · cat · ollama · help · exit[/]\n"
     )
 
     executable = shutil.which("atelier")
@@ -27,6 +28,7 @@ def run_session(console: Console | None = None) -> None:
 
     env = os.environ.copy()
     env["ATELIER_NO_BANNER"] = "1"
+    previous_cwd = os.getcwd()
 
     while True:
         try:
@@ -52,6 +54,38 @@ def run_session(console: Console | None = None) -> None:
             args = shlex.split(line)
         except ValueError as exc:
             console.print(f"[red]Parse error:[/] {exc}")
+            continue
+
+        if args[0] == "cd":
+            if len(args) > 2:
+                console.print("[red]Usage:[/] cd [DIRECTORY]")
+                continue
+            target = os.path.expanduser(args[1]) if len(args) == 2 else os.path.expanduser("~")
+            if target == "-":
+                target = previous_cwd
+            candidate = os.path.abspath(target)
+            if not os.path.isdir(candidate):
+                console.print(f"[red]cd:[/] no such directory: {target}")
+                continue
+            previous_cwd, _ = os.getcwd(), candidate
+            os.chdir(candidate)
+            console.print(f"[dim]{os.getcwd()}[/]")
+            continue
+
+        if args[0] == "pwd":
+            console.print(os.getcwd())
+            continue
+
+        # Run ordinary terminal programs in the session's current directory.
+        # Shell syntax such as pipes/redirection is intentionally not evaluated;
+        # use a normal terminal for that, while commands like `ls -la` and
+        # `git status` work directly here.
+        if shutil.which(args[0]):
+            try:
+                subprocess.run(args, env=env, check=False)
+            except KeyboardInterrupt:
+                console.print("[yellow]command cancelled; Atelier session remains open[/]")
+            console.print()
             continue
 
         try:
