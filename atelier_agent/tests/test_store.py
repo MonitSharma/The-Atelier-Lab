@@ -1,5 +1,7 @@
 """Vector-store round-trip using synthetic embeddings (no model download)."""
 
+import os
+
 from rag.chunk import Chunk
 from rag.store import VectorStore
 
@@ -40,3 +42,10 @@ def test_reset_clears(tmp_path) -> None:
     store.add([_chunk("x", 0)], [[1.0, 0.0, 0.0]])
     store.reset()
     assert store.count() == 0
+
+
+def test_chroma_product_telemetry_is_disabled(tmp_path) -> None:
+    store = VectorStore(path=str(tmp_path / "vs"), collection="test")
+
+    assert os.environ["ANONYMIZED_TELEMETRY"] == "False"
+    assert store._client.get_settings().anonymized_telemetry is False

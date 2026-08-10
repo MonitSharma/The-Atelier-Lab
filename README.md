@@ -196,7 +196,7 @@ For time-sensitive questions, use words such as `recent`, `latest`, or `current`
 - `exit` or `Ctrl-D` closes the interactive session.
 - `clear` redraws the banner without closing Atelier.
 - If the knowledge base is empty, run `ingest PATH` and then `sources`.
-- If a model is missing, run `atelier doctor` and `atelier models status`; Atelier does not download missing models automatically.
+- If a model is missing, run `atelier doctor` and `atelier models status`; the default local path does not download models automatically. The optional cross-encoder reranker downloads its small Hugging Face model only when you explicitly enable reranking.
 - If a document changed, use `ingest --force PATH`.
 - If `serve` is running, stop it with `Ctrl-C` in the terminal where the server is running.
 - Do not run `mcp` manually as a normal conversation command; it waits for an external MCP host to send JSON-RPC messages.
@@ -345,7 +345,7 @@ Run `serve` in a separate terminal. `mcp` intentionally waits for protocol messa
 
 ## Model stack
 
-The stack is capability-first: no model is downloaded merely because it is interesting. A role must have a clear consumer, a memory budget, and an evaluation.
+The stack is capability-first: no model is downloaded merely because it is interesting. A role must have a clear consumer, a memory budget, and an evaluation. The default local path does not contact Hugging Face; the optional cross-encoder reranker is the deliberate exception and downloads its small model only when enabled.
 
 ![Atelier model tiers](docs/assets/atelier-model-stack.svg)
 
@@ -412,6 +412,8 @@ The external Google Drive archive is useful for cold project material and backup
 
 - `LOCAL_ONLY` is the default privacy policy.
 - Ingested files, vectors, memory, traces, and model calls remain local by default.
+- Chroma product telemetry is explicitly disabled for the local vector store.
+- The optional cross-encoder reranker is the only documented model path that may download from Hugging Face, and it is off by default.
 - Workspace capabilities distinguish `read`, `write`, `execute`, and `network`.
 - Research lookup, downloads, and frontier handoffs require explicit approval.
 - Destructive operations require a one-use confirmation.
