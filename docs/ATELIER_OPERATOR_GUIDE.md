@@ -28,7 +28,7 @@ handoffs require explicit workspace capabilities and user approval.
 ## 2. Quick start on this Mac
 
 ```bash
-cd /Users/monitsharma/code_projects/The-Atelier-Lab/atelier_agent
+cd ~/code_projects/The-Atelier-Lab/atelier_agent
 source ../.venv/bin/activate
 
 # Confirm the local runtime and model installation.
@@ -294,7 +294,7 @@ on a 36 GiB machine. Serialize model-heavy operations and watch
 ## 7. Maintenance and verification
 
 ```bash
-cd /Users/monitsharma/code_projects/The-Atelier-Lab/atelier_agent
+cd ~/code_projects/The-Atelier-Lab/atelier_agent
 source ../.venv/bin/activate
 
 atelier doctor
