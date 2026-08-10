@@ -22,6 +22,7 @@ drives the whole toolbox (knowledge + build). Design choices that matter:
 from __future__ import annotations
 
 import json
+import re
 import time
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -41,6 +42,7 @@ DEFAULT_HISTORY_PAIRS = 6
 #: budget, a model stuck emitting prose burns every step on parse errors and
 #: reports the same "ran out of steps" as a run that was making progress.
 DEFAULT_PARSE_ERROR_BUDGET = 3
+_ELISION_RE = re.compile(r"^\[(?P<count>\d+) earlier step\(s\) elided")
 
 SYSTEM_TEMPLATE = """\
 You are Atelier, a local AI agent that completes tasks by reasoning and using \
@@ -157,19 +159,29 @@ class ReActAgent:
         without carrying every observation's full text.
         """
         head, history = messages[:2], messages[2:]
+        previous_elisions = 0
+        clean_history: list[dict[str, Any]] = []
+        for message in history:
+            content = message.get("content") if isinstance(message, dict) else None
+            match = _ELISION_RE.match(content) if isinstance(content, str) else None
+            if match:
+                previous_elisions = max(previous_elisions, int(match.group("count")))
+            else:
+                clean_history.append(message)
         keep = self.history_pairs * 2
-        if len(history) <= keep:
+        if previous_elisions == 0 and len(clean_history) <= keep:
             return messages
-        dropped = len(history) - keep
+        dropped = max(0, len(clean_history) - keep) // 2
+        total_elisions = previous_elisions + dropped
         summary = {
             "role": "user",
             "content": (
-                f"[{dropped // 2} earlier step(s) elided to stay within the context "
+                f"[{total_elisions} earlier step(s) elided to stay within the context "
                 "window. Their observations are gone; re-run a tool if you need "
                 "that information again.]"
             ),
         }
-        return [*head, summary, *history[-keep:]]
+        return [*head, summary, *clean_history[-keep:]]
 
     def _recall_preamble(self, goal: str) -> str:
         """Pull relevant long-term memories into the system context."""

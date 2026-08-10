@@ -55,8 +55,10 @@ def inspect_qasm_text(text: str) -> dict[str, Any]:
             "gate_counts": {str(k): int(v) for k, v in circuit.count_ops().items()},
             "measurements": sum(1 for item in circuit.data if item.operation.name == "measure"),
         }
-    except Exception as exc:  # noqa: BLE001
-        return {"status": "error", "error_type": "invalid_qasm", "message": str(exc)}
+    except Exception as exc:  # noqa: BLE001 - optional parser compatibility varies by Qiskit version
+        fallback = _qasm_fallback(text)
+        fallback["warning"] = f"Qiskit could not parse this OpenQASM; used the minimal parser: {exc}"
+        return fallback
 
 
 def _qasm_operations(text: str) -> tuple[int, list[tuple[str, list[float], list[int]]]]:
@@ -190,7 +192,11 @@ def transpile_qasm_text(text: str, *, optimization_level: int = 1) -> dict[str, 
             ), "gate_counts": {str(k): int(v) for k, v in result.count_ops().items()},
         }
     except Exception as exc:  # noqa: BLE001 - return structured optional capability result
-        return {"status": "error", "error_type": "transpile_failed", "message": str(exc)}
+        return {
+            "status": "unavailable", "error_type": "transpile_parser_incompatible",
+            "capability": "qiskit_transpile", "fallback": inspected,
+            "message": f"The installed Qiskit parser cannot load this OpenQASM: {exc}",
+        }
 
 
 def compare_quantum_backends(text: str, backends: list[dict[str, Any]]) -> dict[str, Any]:

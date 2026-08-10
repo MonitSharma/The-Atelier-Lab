@@ -11,6 +11,7 @@ the corpus is read back only when it has actually changed.
 
 from __future__ import annotations
 
+import hashlib
 import math
 import pickle
 import re
@@ -77,7 +78,18 @@ class BM25Index:
         ]
 
 
-_cache: dict[str, Any] = {"fingerprint": None, "index": None}
+_cache: dict[tuple[str, str], tuple[str, BM25Index]] = {}
+
+
+def _cache_key(store: VectorStore) -> tuple[str, str]:
+    """Identify one collection without allowing names to escape the cache dir."""
+    collection = _collection_name(store)
+    return str(Path(store.path).resolve()), collection
+
+
+def _collection_name(store: VectorStore) -> str:
+    collection = getattr(store, "_collection", None)
+    return str(getattr(collection, "name", "default"))
 
 
 def _fingerprint(store: VectorStore) -> str:
@@ -90,11 +102,12 @@ def _fingerprint(store: VectorStore) -> str:
     single small file read, and the chunk count guards against a store whose
     sidecar counter was lost.
     """
-    return f"{store.path}:{store.count()}:{store.generation()}"
+    return f"{store.path}:{_collection_name(store)}:{store.count()}:{store.generation()}"
 
 
 def _cache_path(store: VectorStore) -> Path:
-    return Path(store.path) / "bm25_index.pickle"
+    collection_hash = hashlib.sha256(_collection_name(store).encode("utf-8")).hexdigest()[:16]
+    return Path(store.path) / f"bm25_index.{collection_hash}.pickle"
 
 
 def _load_cached(store: VectorStore, fingerprint: str) -> BM25Index | None:
@@ -133,9 +146,11 @@ def _store_cached(store: VectorStore, fingerprint: str, index: BM25Index) -> Non
 
 def get_bm25(store: VectorStore | None = None) -> BM25Index:
     store = store or VectorStore()
+    cache_key = _cache_key(store)
     fingerprint = _fingerprint(store)
-    if _cache["index"] is not None and _cache["fingerprint"] == fingerprint:
-        return _cache["index"]
+    cached = _cache.get(cache_key)
+    if cached is not None and cached[0] == fingerprint:
+        return cached[1]
 
     index = _load_cached(store, fingerprint)
     if index is None:
@@ -143,6 +158,5 @@ def get_bm25(store: VectorStore | None = None) -> BM25Index:
         index = BM25Index(got.get("documents", []), got.get("metadatas", []))
         _store_cached(store, fingerprint, index)
 
-    _cache["index"] = index
-    _cache["fingerprint"] = fingerprint
+    _cache[cache_key] = (fingerprint, index)
     return index

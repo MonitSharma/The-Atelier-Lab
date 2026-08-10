@@ -95,7 +95,13 @@ class WorkspaceContext:
                 f"Path is outside all approved workspaces: {raw_path}. "
                 "Attach the containing root with `atelier workspace add`."
             )
-        owner = max(owners, key=lambda workspace: len(workspace.root.parts))
+        owner = max(
+            owners,
+            key=lambda workspace: (
+                len(workspace.root.parts),
+                workspace.name == self.active.name,
+            ),
+        )
         if capability not in owner.capabilities:
             raise WorkspaceError(
                 f"Workspace '{owner.name}' does not grant '{capability}' access."
@@ -177,10 +183,12 @@ class WorkspaceManager:
         try:
             payload = json.loads(self.registry_path.read_text(encoding="utf-8"))
             entries = payload.get("workspaces", [])
+            # Keep approved roots even when they are temporarily unavailable
+            # (for example, an unmounted external drive).  Dropping them here
+            # and saving later would silently destroy the user's approvals.
             self._workspaces = {
                 workspace.name: workspace
                 for workspace in (Workspace.from_dict(item) for item in entries)
-                if workspace.root.exists() and workspace.root.is_dir()
             }
             active = payload.get("active")
             self._active_name = active if active in self._workspaces else None
@@ -196,7 +204,10 @@ class WorkspaceManager:
         workspace = Workspace(
             name="atelier",
             root=root,
-            capabilities=frozenset({"read", "write", "execute"}),
+            # The source checkout is readable by default, but must never be a
+            # writable trust root merely because Atelier is running elsewhere.
+            # Projects that need edits must be explicitly approved below.
+            capabilities=frozenset({"read"}),
             privacy="LOCAL_ONLY",
             attached=True,
             system=True,
@@ -251,7 +262,7 @@ class WorkspaceManager:
         _validate_name(workspace_name)
         if workspace_name in self._workspaces:
             raise WorkspaceError(f"Workspace already exists: {workspace_name}")
-        if any(existing.root == root for existing in self._workspaces.values()):
+        if any(existing.root == root and not existing.system for existing in self._workspaces.values()):
             raise WorkspaceError(f"Workspace root is already approved: {root}")
         resolved_capabilities = frozenset(capabilities or {"read"})
         _validate_capabilities(resolved_capabilities, privacy)
@@ -262,6 +273,11 @@ class WorkspaceManager:
 
     def open(self, name: str) -> Workspace:
         workspace = self.get(name)
+        if not workspace.root.exists() or not workspace.root.is_dir():
+            raise WorkspaceError(
+                f"Workspace '{name}' is unavailable because its root is not mounted: "
+                f"{workspace.root}"
+            )
         updated = Workspace(
             workspace.name, workspace.root, workspace.capabilities,
             workspace.privacy, attached=True, system=workspace.system,
@@ -287,9 +303,15 @@ class WorkspaceManager:
         root = Path(path).expanduser().resolve()
         if not root.exists() or not root.is_dir():
             raise WorkspaceError(f"Workspace root must be an existing directory: {path}")
-        matches = [workspace for workspace in self._workspaces.values() if _inside(root, workspace.root)]
+        matches = [
+            workspace for workspace in self._workspaces.values()
+            if workspace.root.exists() and workspace.root.is_dir() and _inside(root, workspace.root)
+        ]
         if matches:
-            return self.open(max(matches, key=lambda workspace: len(workspace.root.parts)).name)
+            return self.open(max(
+                matches,
+                key=lambda workspace: (len(workspace.root.parts), not workspace.system),
+            ).name)
         existing = next((workspace for workspace in self._workspaces.values() if workspace.root == root), None)
         if existing is not None:
             return self.open(existing.name)
@@ -299,7 +321,7 @@ class WorkspaceManager:
         workspace = self.add(
             root,
             name=name,
-            capabilities=capabilities or {"read", "write", "execute"},
+            capabilities=capabilities or {"read"},
             privacy=privacy,
         )
         return self.open(workspace.name)
@@ -323,10 +345,18 @@ class WorkspaceManager:
         workspace = self._workspaces[self._active_name]
         if not workspace.attached:
             raise WorkspaceError("The active workspace is closed.")
+        if not workspace.root.exists() or not workspace.root.is_dir():
+            raise WorkspaceError(
+                f"The active workspace '{workspace.name}' is unavailable because its "
+                f"root is not mounted: {workspace.root}"
+            )
         return workspace
 
     def context(self) -> WorkspaceContext:
-        attached = tuple(item for item in self._workspaces.values() if item.attached)
+        attached = tuple(
+            item for item in self._workspaces.values()
+            if item.attached and item.root.exists() and item.root.is_dir()
+        )
         active = self.active()
         return WorkspaceContext(active=active, attached=attached)
 

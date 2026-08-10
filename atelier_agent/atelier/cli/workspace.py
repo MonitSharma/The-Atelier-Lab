@@ -85,7 +85,10 @@ def workspace_list() -> None:
     table.add_column("Capabilities")
     table.add_column("Privacy")
     for workspace in workspaces:
-        state = "active" if workspace.name == active else ("open" if workspace.attached else "closed")
+        if not workspace.root.exists() or not workspace.root.is_dir():
+            state = "missing"
+        else:
+            state = "active" if workspace.name == active else ("open" if workspace.attached else "closed")
         table.add_row(
             workspace.name,
             str(workspace.root),

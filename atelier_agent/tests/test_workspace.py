@@ -89,6 +89,66 @@ def test_activate_directory_scopes_cli_to_current_directory(tmp_path: Path) -> N
     workspace = manager.activate_directory(root)
 
     assert workspace.root == root.resolve()
-    assert workspace.capabilities == {"read", "write", "execute"}
+    assert workspace.capabilities == {"read"}
     assert workspace.privacy == "LOCAL_ONLY"
     assert manager.context().resolve("README.md").workspace.name == workspace.name
+
+
+def test_default_source_workspace_cannot_be_written_from_another_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = tmp_path / "atelier-source"
+    source.mkdir()
+    victim = tmp_path / "victim"
+    victim.mkdir()
+    security_file = source / "security.py"
+    security_file.write_text("policy", encoding="utf-8")
+    monkeypatch.setattr("atelier.workspace.settings.root", source)
+
+    manager = WorkspaceManager(tmp_path / "registry.json")
+    manager.activate_directory(victim)
+
+    assert manager.get("atelier").capabilities == {"read"}
+    with pytest.raises(WorkspaceError, match="does not grant 'write'"):
+        manager.context().resolve(str(security_file), "write")
+
+    with workspace_scope(manager.context()):
+        result = run_write_file({"path": str(security_file), "content": "changed"})
+    assert result["status"] == "error"
+    assert result["error_type"] == "path_not_allowed"
+    assert security_file.read_text(encoding="utf-8") == "policy"
+
+
+def test_source_checkout_requires_explicit_upgrade_for_writes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = tmp_path / "atelier-source"
+    source.mkdir()
+    security_file = source / "security.py"
+    security_file.write_text("policy", encoding="utf-8")
+    monkeypatch.setattr("atelier.workspace.settings.root", source)
+
+    manager = WorkspaceManager(tmp_path / "registry.json")
+    explicit = manager.add(
+        source,
+        name="atelier-dev",
+        capabilities={"read", "write", "execute"},
+    )
+    manager.open(explicit.name)
+
+    assert manager.context().resolve(str(security_file), "write").workspace.name == "atelier-dev"
+
+
+def test_missing_workspace_approval_survives_reload(tmp_path: Path) -> None:
+    removable = tmp_path / "removable"
+    removable.mkdir()
+    registry = tmp_path / "registry.json"
+    manager = WorkspaceManager(registry)
+    manager.add(removable, name="removable", capabilities={"read"})
+
+    removable.rmdir()
+    reloaded = WorkspaceManager(registry)
+
+    assert reloaded.get("removable").root == removable.resolve()
+    reloaded.close("removable")
+    assert WorkspaceManager(registry).get("removable").attached is False
