@@ -38,6 +38,10 @@ Snapshot taken on 2026-08-10 when the `qatelier` branch was created:
 - The existing evaluation harness remains the source of truth for document
   ingestion and QAtelier question scoring; see the existing README and
   [`initial_results.md`](initial_results.md).
+- The provider-access checkpoint is recorded in
+  [`HARDWARE_ACCESS.md`](HARDWARE_ACCESS.md): IBM authentication succeeded;
+  Quantinuum authentication and project access succeeded; no jobs were
+  submitted; and hardware HQC authorization remains unverified.
 
 ## Staged experiment plan
 
@@ -102,6 +106,10 @@ may not silently revise an earlier stage's split, baseline, or selection rule.
 3. Create the first named experiment from the standard repository template and
    write its falsifiable hypothesis before running it.
 4. Run S0, then lock the classical search spaces and baseline artifacts in S1.
+
+The optional provider dependencies and access checks are complete, but they do
+not advance the staged experiment plan. Hardware remains gated behind the
+simulator smoke test, frozen parameters, and explicit HQC authorization.
 
 Until those actions are complete, QAtelier remains a planned parallel research
 track and the production Atelier behavior remains unchanged.

@@ -1,0 +1,11 @@
+# Optional QAtelier quantum-provider stack for the isolated Python 3.11 environment.
+# These packages are intentionally not imported by Atelier production code.
+qiskit==2.5.1
+qiskit-aer==0.17.2
+qiskit-ibm-runtime==0.48.0
+python-dotenv==1.2.2
+pytket==2.18.1
+pytket-qiskit==0.77.0
+pytket-quantinuum==0.59.2
+qnexus==0.48.0
+selene-core==0.3.0
