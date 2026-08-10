@@ -266,9 +266,22 @@ def execute_plan(
         manifest.remove(record.document_id)
 
     changed = [entry for entry in plan.entries if entry.kind in {"new", "modified", "forced"}]
+    pending: list[tuple[FilePlan, list[Chunk]]] = []
+    all_texts: list[str] = []
     for entry in changed:
         chunks = chunk_file(entry.path, document_id=entry.document_id)
-        vectors = embedder.embed_passages([chunk.text for chunk in chunks]) if chunks else []
+        pending.append((entry, chunks))
+        all_texts.extend(chunk.text for chunk in chunks)
+
+    # Embed across file boundaries so a large repository does not pay one
+    # Ollama request/response round trip for every individual source file.
+    # Storage replacement remains file-scoped, so interrupted runs retain the
+    # same incremental and content-addressed behavior.
+    all_vectors = embedder.embed_passages(all_texts) if all_texts else []
+    vector_offset = 0
+    for entry, chunks in pending:
+        vectors = all_vectors[vector_offset:vector_offset + len(chunks)]
+        vector_offset += len(chunks)
         if not entry.old_document_id and hasattr(store, "replace_document"):
             store.replace_document(entry.document_id, chunks, vectors)
         else:

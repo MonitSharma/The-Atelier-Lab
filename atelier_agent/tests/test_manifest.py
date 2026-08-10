@@ -106,3 +106,18 @@ def test_dry_run_does_not_embed(tmp_path):
     execute_plan(plan, manifest, store, embedder, dry_run=True)
     assert not embedder.calls
     assert manifest.all() == before
+
+
+def test_multiple_files_share_one_embedding_batch(tmp_path):
+    manifest = IndexManifest(tmp_path / "manifest.sqlite3")
+    store = FakeStore()
+    embedder = CountingEmbedder()
+    (tmp_path / "first.txt").write_text("first content", encoding="utf-8")
+    (tmp_path / "second.txt").write_text("second content", encoding="utf-8")
+
+    plan = build_plan([tmp_path], manifest)
+    execute_plan(plan, manifest, store, embedder)
+
+    assert len(embedder.calls) == 1
+    assert len(embedder.calls[0]) == 2
+    assert len(store.docs) == 2
