@@ -19,6 +19,13 @@ steps as a bounded diagnostic and should be archived separately under
 `raw/orders_1_6/`. This remains a mechanism screen and does not authorize
 hardware.
 
+The resulting decision is archived in
+[`analysis/candidate_freeze.json`](analysis/candidate_freeze.json) and
+[`analysis/candidate_freeze.md`](analysis/candidate_freeze.md): no candidate
+was frozen, because the quantum panel stayed near chance and below the
+aggregate classical controls. Consequently no S3/S4 provider-facing campaign
+is authorized and the branch makes no C1–C4 claim.
+
 ```bash
 python -m research.qatelier.experiments.s2_mechanism_screen.screen \
   --config research/qatelier/experiments/s2_mechanism_screen/config.yaml \

@@ -7,6 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).parents[3]
 RAW = ROOT / "research/qatelier/experiments/s2_mechanism_screen/raw/results.json"
 ORDERS = ROOT / "research/qatelier/experiments/s2_mechanism_screen/raw/orders_1_6"
+FREEZE = ROOT / "research/qatelier/experiments/s2_mechanism_screen/analysis/candidate_freeze.json"
 
 
 def test_s2_archived_screen_contains_diagnostics_and_no_provider_jobs():
@@ -30,3 +31,13 @@ def test_s2_orders_1_6_panel_covers_all_families_and_orders_without_freezing():
     assert validation["candidate_freeze"] is False
     assert validation["provider_contacted"] is False
     assert validation["jobs_submitted"] == 0
+
+
+def test_s2_candidate_gate_freezes_nothing_and_authorizes_no_hardware():
+    decision = json.loads(FREEZE.read_text())
+    assert decision["status"] == "no_candidate_frozen_exploratory_negative"
+    assert decision["frozen_candidates"] == []
+    assert decision["hardware_authorized"] is False
+    assert decision["c4_claim_supported"] is False
+    assert decision["provider_contacted"] is False
+    assert decision["jobs_submitted"] == 0

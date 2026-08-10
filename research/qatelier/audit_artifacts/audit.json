@@ -1,0 +1,51 @@
+{
+  "branch_requirement": "qatelier",
+  "c1_c4_claim_supported": false,
+  "claim_level": "no_quantum_advantage",
+  "frozen_candidates": [],
+  "hardware_authorized": false,
+  "jobs_submitted": 0,
+  "physical_quantinuum_jobs": 0,
+  "provider_contacted": false,
+  "provider_records": [
+    {
+      "path": "experiments/s1_baseline_lock/raw/mrpc/run_manifest.json",
+      "row_count": 480,
+      "sha256": "e5ad377bf6cfbb3848833e5aa66fb56ae3c668bb3ad957d8c4c42fd426d536cd"
+    },
+    {
+      "path": "experiments/s1_baseline_lock/raw/cola/run_manifest.json",
+      "row_count": 480,
+      "sha256": "c4b9d69059c07e9eee1d9bf9a2435b1dcf9613eca7cf04cedd3e7d4370b5124d"
+    },
+    {
+      "path": "experiments/s1_baseline_lock/scientific_retrieval/raw/run_manifest.json",
+      "row_count": 360,
+      "sha256": "9bdd92c2fc92b41218c4114113acd245aef309f0e75297b88febad25e1b23f79"
+    },
+    {
+      "path": "experiments/s1_baseline_lock/controlled_interaction_order/raw/run_manifest.json",
+      "row_count": 14400,
+      "sha256": "0a9e21bb4a3c1817e88c8a38e89380d884aa7c0e865caaacb9ebcdb5c74b89d0"
+    },
+    {
+      "path": "experiments/s2_mechanism_screen/raw/run_manifest.json",
+      "row_count": 112,
+      "sha256": "120354747d61776cf680942731da2b1b62d40294b466ef68b1dd4de330b47955"
+    },
+    {
+      "path": "experiments/s2_mechanism_screen/raw/orders_1_6/run_manifest.json",
+      "row_count": 456,
+      "sha256": "dc037e6d3f394520172f5e3b59241783541e627dbb1f67749fa18bac7e29e24f"
+    }
+  ],
+  "reproduction_commands": [
+    ".venv/bin/pytest -q research/qatelier/tests",
+    ".venv/bin/python scripts/validate_experiments.py"
+  ],
+  "s0_completion_sha256": "84568feca01c352fda25984cd195aedd1f54b5634470733b731203b57c1871ef",
+  "s1_multitask_lock_sha256": "06cd0c619147687b9ee6854d2dbfcd8a163fe306c7042079e833fca457b77a3a",
+  "s2_candidate_freeze_sha256": "f3f78aa93a4f5f614509fc6ff703606061c9bbab07d6bb27f654fa61e28d0e4d",
+  "schema_version": 1,
+  "status": "negative_result_audited_current_phase"
+}

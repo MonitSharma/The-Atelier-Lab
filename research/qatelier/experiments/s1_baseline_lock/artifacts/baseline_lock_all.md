@@ -39,4 +39,4 @@ All rows use frozen train-only representations, fixed confirmation seeds, and no
 | cola | strong_reference | rbf_svm | 4 | 0.5159 | 0.0476 | 60 |
 | cola | parameter_matched | rff | 4 | 0.5133 | 0.0471 | 60 |
 
-Unresolved S1 tasks: scientific_retrieval, controlled_interaction_order.
+Unresolved S1 tasks: controlled_interaction_order.
