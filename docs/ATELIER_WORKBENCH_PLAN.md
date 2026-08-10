@@ -101,7 +101,7 @@ unnecessary reads, invalid edits, tool errors, latency, memory, and tokens.
 
 Implemented with `atelier benchmark-coding`, three frozen multi-file tasks, and
 the selected `qwen3:8b` coder role. The full comparison is recorded in
-[`steps/STEP_07_CODING_SPECIALIST_BENCHMARK.md`](steps/STEP_07_CODING_SPECIALIST_BENCHMARK.md).
+[`archive/steps/STEP_07_CODING_SPECIALIST_BENCHMARK.md`](archive/steps/STEP_07_CODING_SPECIALIST_BENCHMARK.md).
 
 ### Step 08 — Build Agent v2 — complete
 
@@ -283,7 +283,7 @@ repository modification, structured-data profiling, figure evidence, quantum
 and optimization tools, project memory, `LOCAL_ONLY` denial, handoff creation,
 shared CLI/UI service coverage, restart/recovery, and reliability/security/
 performance gates. Evidence is recorded in
-[`steps/STEP_26_ATELIER_V1_RELEASE.md`](steps/STEP_26_ATELIER_V1_RELEASE.md).
+[`archive/steps/STEP_26_ATELIER_V1_RELEASE.md`](archive/steps/STEP_26_ATELIER_V1_RELEASE.md).
 
 The local release does not claim provider-backed quantum execution, external
 solver availability, kernel-level isolation, signed artifacts, automatic cloud

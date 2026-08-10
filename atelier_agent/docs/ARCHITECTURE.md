@@ -49,7 +49,7 @@ required by the scientific-library runtime on Linux.
 The code does not assume that every configured model is installed. `doctor`
 reports `ok`, `missing`, or `unconfigured` explicitly. No model is downloaded
 merely to make a placeholder green. The coder selection is backed by the
-frozen multi-file benchmark in `docs/steps/STEP_07_CODING_SPECIALIST_BENCHMARK.md`.
+frozen multi-file benchmark in `docs/archive/steps/STEP_07_CODING_SPECIALIST_BENCHMARK.md`.
 
 ## Knowledge library
 

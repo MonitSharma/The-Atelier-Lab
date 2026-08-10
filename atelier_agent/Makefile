@@ -16,8 +16,8 @@ setup: ## Create venv and install deps (+ editable package)
 test: ## Run the fast unit suite (no model)
 	$(PY) -m pytest -q
 
-ingest: ## Index the sample corpus
-	$(PY) -m atelier.cli ingest ./Project.md ./README.md ./myNotes.md
+ingest: ## Index the frozen sample corpus
+	$(PY) -m atelier.cli ingest ./eval/fixtures/docqa_corpus/Project.md ./README.md ./eval/fixtures/docqa_corpus/myNotes.md
 
 eval: ## Run the reliability eval (both modes)
 	$(PY) -m atelier.cli eval --mode all

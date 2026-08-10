@@ -1,11 +1,11 @@
 {
   "_comment": "FROZEN knowledge-mode eval suite. Do not edit casually — changing the ruler invalidates comparisons (PROJECT.md §9). Add new tasks instead of mutating existing ones whenever possible.",
   "corpus": [
-    "Project.md",
-    "myNotes.md",
+    "eval/fixtures/docqa_corpus/Project.md",
+    "eval/fixtures/docqa_corpus/myNotes.md",
     "README.md",
     "docs/ARCHITECTURE.md",
-    "docs/EVAL.md",
+    "eval/fixtures/docqa_corpus/EVAL.md",
     "docs/TESTING.md"
   ],
   "tasks": [
@@ -103,7 +103,7 @@
       "difficulty": "easy",
       "question": "Where does the eval command write its JSON reports?",
       "expected_contains": ["data/eval_reports"],
-      "expected_sources": ["docs/EVAL.md", "README.md"]
+      "expected_sources": ["EVAL.md", "README.md"]
     },
     {
       "id": "regression-gate",
@@ -135,7 +135,7 @@
       "difficulty": "medium",
       "question": "What did the median_bug eval reveal about the local 14B model?",
       "expected_contains": ["single-line", "multi-line", "structural"],
-      "expected_sources": ["docs/EVAL.md", "README.md", "docs/WRITEUP.md"]
+      "expected_sources": ["EVAL.md", "README.md", "WRITEUP.md"]
     },
     {
       "id": "syntax-check-mitigation",
