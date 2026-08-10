@@ -176,6 +176,8 @@ atelier ask --heavy "Synthesize the mathematical argument and identify gaps."
 
 Use `--show-context` whenever an answer matters. If retrieval is weak, first try a more specific query, inspect `search`, increase `-k`, or ingest the relevant source directly. A fluent answer is not evidence that the right passage was retrieved.
 
+For time-sensitive questions, use words such as `recent`, `latest`, or `current` explicitly. Atelier parses dates such as `YYYY-MM-DD` from source metadata and filenames, expands the retrieval candidates, and ranks dated sources newest-first. It also displays the date in the retrieved context. This improves chronology; it does not replace checking the source coverage or verifying a live claim.
+
 ### Stopping and troubleshooting
 
 - `Ctrl-C` stops the current child command and returns to `atelier ›`.

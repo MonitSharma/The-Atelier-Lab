@@ -19,6 +19,9 @@ numbered context passages provided. Rules:
 - If the answer is in the context, give it directly and cite sources like [1], [2].
 - If the context does not contain the answer, say so plainly: "I don't find that \
 in your notes." Do not invent facts or use outside knowledge.
+- For questions asking for recent, latest, current, or today's information, use \
+the newest explicitly dated passages first and state the date coverage. Never \
+describe older material as recent merely because it is topically relevant.
 - Be concise and concrete. Prefer the user's own wording when quoting.
 """
 

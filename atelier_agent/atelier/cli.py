@@ -89,6 +89,8 @@ def _retrieved_context_panels(hits: list[dict], *, width: int | None = None) -> 
         meta = hit.get("metadata", {})
         source = Path(meta.get("source", "?")).name
         location: list[str] = []
+        if meta.get("source_date"):
+            location.append(f"date: {meta['source_date']}")
         for key, label in (("page", "p."), ("slide", "slide"), ("table", "table")):
             if meta.get(key) is not None:
                 location.append(f"{label} {meta[key]}")

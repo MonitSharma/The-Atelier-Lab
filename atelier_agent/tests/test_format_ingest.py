@@ -124,10 +124,11 @@ def test_retrieval_citations_preserve_page_slide_table_and_archive_locations() -
         "text": "evidence",
         "metadata": {
             "source": "/tmp/plan.docx", "page": 3, "slide": 2, "table": 1,
-            "archive_member": "nested/plan.docx",
+            "archive_member": "nested/plan.docx", "source_date": "2026-08-08",
         },
     }]
     context = format_context(hits)
     assert "p. 3" in context and "slide 2" in context and "table 1" in context
     assert "archive: nested/plan.docx" in context
+    assert "date: 2026-08-08" in context
     assert "p. 3" in citations(hits)[0]
