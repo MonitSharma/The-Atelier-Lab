@@ -266,33 +266,39 @@ def execute_plan(
         manifest.remove(record.document_id)
 
     changed = [entry for entry in plan.entries if entry.kind in {"new", "modified", "forced"}]
-    pending: list[tuple[FilePlan, list[Chunk]]] = []
-    all_texts: list[str] = []
-    for entry in changed:
-        chunks = chunk_file(entry.path, document_id=entry.document_id)
-        pending.append((entry, chunks))
-        all_texts.extend(chunk.text for chunk in chunks)
 
-    # Embed across file boundaries so a large repository does not pay one
-    # Ollama request/response round trip for every individual source file.
-    # Storage replacement remains file-scoped, so interrupted runs retain the
-    # same incremental and content-addressed behavior.
-    all_vectors = embedder.embed_passages(all_texts) if all_texts else []
-    vector_offset = 0
-    for entry, chunks in pending:
-        vectors = all_vectors[vector_offset:vector_offset + len(chunks)]
-        vector_offset += len(chunks)
-        if not entry.old_document_id and hasattr(store, "replace_document"):
-            store.replace_document(entry.document_id, chunks, vectors)
-        else:
-            store.add(chunks, vectors)
-        if entry.old_document_id:
-            store.delete_document(entry.old_document_id)
-            manifest.remove(entry.old_document_id)
-        manifest.upsert_document(
-            document_id=entry.document_id, path=entry.path, size_bytes=entry.size_bytes,
-            mtime_ns=entry.mtime_ns, chunk_count=len(chunks), doc_type=_doc_type(entry.path),
-        )
+    def apply_embedding_batch(batch: list[tuple[FilePlan, list[Chunk]]]) -> None:
+        """Embed a bounded group of files, then commit each file atomically."""
+        all_texts = [chunk.text for _entry, chunks in batch for chunk in chunks]
+        all_vectors = embedder.embed_passages(all_texts) if all_texts else []
+        vector_offset = 0
+        for entry, chunks in batch:
+            vectors = all_vectors[vector_offset:vector_offset + len(chunks)]
+            vector_offset += len(chunks)
+            if not entry.old_document_id and hasattr(store, "replace_document"):
+                store.replace_document(entry.document_id, chunks, vectors)
+            else:
+                store.add(chunks, vectors)
+            if entry.old_document_id:
+                store.delete_document(entry.old_document_id)
+                manifest.remove(entry.old_document_id)
+            manifest.upsert_document(
+                document_id=entry.document_id, path=entry.path, size_bytes=entry.size_bytes,
+                mtime_ns=entry.mtime_ns, chunk_count=len(chunks), doc_type=_doc_type(entry.path),
+            )
+
+    # Embed across a small number of file boundaries so a large repository
+    # avoids one Ollama round trip per file while completed groups remain
+    # durable if a later group is interrupted. A single unusually large file
+    # is still kept atomic and is handled by the embedder's internal batches.
+    pending: list[tuple[FilePlan, list[Chunk]]] = []
+    for entry in changed:
+        pending.append((entry, chunk_file(entry.path, document_id=entry.document_id)))
+        if len(pending) >= 8:
+            apply_embedding_batch(pending)
+            pending = []
+    if pending:
+        apply_embedding_batch(pending)
 
     for entry in plan.entries:
         if entry.kind == "relocated":
