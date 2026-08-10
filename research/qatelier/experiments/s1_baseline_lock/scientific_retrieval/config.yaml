@@ -1,0 +1,34 @@
+schema_version: 1
+experiment_id: qatelier-s1-scientific-retrieval
+status: reference_definition_ready
+task:
+  name: SciFact
+  benchmark: BEIR
+  task_type: scientific_claim_to_abstract_reranking
+  query_field: text
+  corpus_fields: [title, text]
+  relevance_field: score
+  positive_relevance: 1
+sources:
+  data_manifest: data_manifest.json
+  split_manifest: split_manifest.json
+representation:
+  encoder_model_id: sentence-transformers/paraphrase-mpnet-base-v2
+  encoder_revision: 6cc9279c672dc57f94445ef259b28a1b736fec8
+  encoder_weights_sha256: 5fc2279bd6e503ca3543197b4ef00b615d87eebd02490f8c108aa3f35d7b705d
+  normalization: none
+  text_rule: title + newline + text when title is non-empty, otherwise text
+  compressor: train_only_pca
+  compressor_output_dim: 4
+  pair_features: [query, document, abs_query_minus_document, query_times_document]
+protocol:
+  training_query_counts: [32, 64, 128]
+  training_selection_seeds: [11, 13, 17]
+  confirmation_query_count: 64
+  confirmation_seeds: [101, 103, 107, 109, 113]
+  metrics: [ndcg_at_10, mrr_at_10, recall_at_10]
+  candidate_policy: full_5183_document_corpus
+  test_tuning_allowed: false
+  quantum_provider_contacted: false
+  hardware_jobs_submitted: 0
+  test_qrels_reserved: true

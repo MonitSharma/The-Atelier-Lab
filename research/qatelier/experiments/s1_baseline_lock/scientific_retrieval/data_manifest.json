@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "dataset_id": "huggingface-beir-scifact",
+  "benchmark": "BEIR",
+  "task": "scientific claim to abstract retrieval",
+  "license_note": "Follow the upstream SciFact and BEIR dataset terms. Source data is not vendored in this repository.",
+  "sources": {
+    "corpus_and_queries": {
+      "repository": "BeIR/scifact",
+      "revision": "b3b5335604bf5ee3c4447671af975ea25143d4f5",
+      "revision_kind": "immutable_huggingface_commit"
+    },
+    "qrels": {
+      "repository": "BeIR/scifact-qrels",
+      "revision": "2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029",
+      "revision_kind": "immutable_huggingface_commit"
+    }
+  },
+  "members": {
+    "corpus": {
+      "path": "corpus/corpus-00000-of-00001.parquet",
+      "url": "https://huggingface.co/datasets/BeIR/scifact/resolve/b3b5335604bf5ee3c4447671af975ea25143d4f5/corpus/corpus-00000-of-00001.parquet?download=true",
+      "sha256": "243324b35f03d82bd6d98a5f575966876e86cad7ce16e5333a35b1b793dc4f45",
+      "rows": 5183,
+      "columns": ["_id", "title", "text"],
+      "id_column": "_id"
+    },
+    "queries": {
+      "path": "queries/queries-00000-of-00001.parquet",
+      "url": "https://huggingface.co/datasets/BeIR/scifact/resolve/b3b5335604bf5ee3c4447671af975ea25143d4f5/queries/queries-00000-of-00001.parquet?download=true",
+      "sha256": "1c37956c5dc8b810b60302323c24d1a9e79e26411ba8f5ad9d0888642e2a9034",
+      "rows": 1109,
+      "columns": ["_id", "title", "text"],
+      "id_column": "_id"
+    },
+    "qrels_train": {
+      "path": "qrels/train.tsv",
+      "url": "https://huggingface.co/datasets/BeIR/scifact-qrels/resolve/2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029/train.tsv?download=true",
+      "sha256": "a53f2114831916c096b6c37d9e54da68cef4efdcdbd5ed46533601af972acf1d",
+      "rows": 919,
+      "physical_lines_including_header": 920,
+      "query_count": 809,
+      "columns": ["query-id", "corpus-id", "score"],
+      "positive_scores": [1]
+    },
+    "qrels_test": {
+      "path": "qrels/test.tsv",
+      "url": "https://huggingface.co/datasets/BeIR/scifact-qrels/resolve/2938d17dc3b09882fdb8c12bbbe2e2dc0e75a029/test.tsv?download=true",
+      "sha256": "0864bb985e0ca2367ba217977e72004d549054b2b06666ed9d4825ac7c21284c",
+      "rows": 339,
+      "physical_lines_including_header": 340,
+      "query_count": 300,
+      "columns": ["query-id", "corpus-id", "score"],
+      "positive_scores": [1],
+      "policy": "reserved final held-out evaluation; never used for S1 selection or tuning"
+    }
+  }
+}

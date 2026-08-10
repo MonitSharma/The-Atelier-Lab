@@ -1,0 +1,28 @@
+{
+  "array_bundle_hash": "58a12853de2958e9025dabfdbbe9b709031d4a44f53e3e3414ecb0b5747fb186",
+  "artifact_id": "qatelier-s1-controlled-interaction-order",
+  "confirmation_count": 5,
+  "data_file": "data/controlled_interaction_order.npz",
+  "data_file_sha256": "8b9ed6ec1cce87b9c9eb8eef9e9b44bbba92ca95336be5582b54d6db10f81288",
+  "families": [
+    "aligned_polynomial",
+    "rotated_polynomial",
+    "misaligned_dense",
+    "fourier_trigonometric"
+  ],
+  "jobs_submitted": 0,
+  "orders": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "problem_count": 24,
+  "providers_contacted": false,
+  "schema_version": 1,
+  "split_count": 192,
+  "status": "validated",
+  "train_selection_count": 3
+}
