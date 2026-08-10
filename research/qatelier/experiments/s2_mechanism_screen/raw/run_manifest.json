@@ -1,0 +1,9 @@
+{
+  "config_sha256": "75df5bb2d4e59b7c7b1a7f1f61249221ab57348c3d30c18670b2952832ab98b0",
+  "experiment_id": "qatelier-s2-mechanism-screen",
+  "jobs_submitted": 0,
+  "provider_contacted": false,
+  "row_count": 112,
+  "schema_version": 1,
+  "status": "exploratory_screen_not_selection_freeze"
+}

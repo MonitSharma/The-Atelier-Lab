@@ -108,6 +108,12 @@ The following credential-free infrastructure is now implemented on `qatelier`:
   representation preparation path are committed. A local validation produced
   1,522 selected pairs and 12 train-only compressors; full MRPC head evaluation
   is still pending.
+- The initial S2 mechanism screen is implemented with kernel alignment,
+  effective-rank, spectrum, and finite-difference gradient diagnostics. A
+  bounded screen over four interaction families and orders 1–4 is archived
+  under [`experiments/s2_mechanism_screen/raw/`](experiments/s2_mechanism_screen/raw/);
+  quantum heads were near chance and no candidate was frozen. This is a useful
+  negative optimization/mechanism checkpoint, not a C1/C2 result.
 
 Focused QAtelier verification currently passes: 69 tests plus 7 benchmark
 subtests, with Ruff clean. No provider job was submitted.
@@ -128,7 +134,7 @@ may not silently revise an earlier stage's split, baseline, or selection rule.
 | --- | --- | --- | --- | --- |
 | S0 — reproduction/calibration | Reproduce a compact published-style frozen-embedding quantum-head setup and resolve discrepancies. | Same embeddings and splits for LR/SVM and the quantum head; record simulator and seed. | Basic behavior is reproduced or the discrepancy is explained. | Complete; negative calibration result archived |
 | S1 — classical baseline lock | Establish the reference numbers before quantum screening. | Shared compressor, full nonlinear baseline ladder, equal validation/search budgets. | Search spaces, metrics, seeds, and reference outputs are frozen. | SST-2 locked; multi-task completion pending |
-| S2 — mechanism screen | Test QIA-P/L/X/A across low-data and controlled interaction-order conditions. | Matched `q`, depth, trainable-parameter bands, optimization budget, and paired seeds; include aligned and deliberately misaligned tasks. | Retain only Pareto candidates with stable validation utility and non-pathological gradients. | Planned |
+| S2 — mechanism screen | Test QIA-P/L/X/A across low-data and controlled interaction-order conditions. | Matched `q`, depth, trainable-parameter bands, optimization budget, and paired seeds; include aligned and deliberately misaligned tasks. | Retain only Pareto candidates with stable validation utility and non-pathological gradients. | Initial bounded screen archived; full q/family/ablation screen pending |
 | S3 — held-out simulator | Evaluate the frozen candidates on all predeclared public/OOD tasks. | No test tuning; report paired effect sizes and bootstrap intervals across seeds/tasks. | C1/C2 evidence exists, or a rigorous negative result explains the loss. | Planned |
 | S4 — noise/shot screen | Estimate finite-shot and device-noise degradation. | Fixed shot budgets, noise-model versions, and candidate list; report gradient and resource costs. | Select 2–4 candidates only if signal is stable enough to justify QPU spend. | Planned |
 | S5 — hardware pilot | Run a small, fixed sample slice on IBM and Quantinuum where access permits. | Frozen parameters, sample IDs, thresholds, shots, compilation settings, and one preregistered mitigation condition. | Outputs are stable enough for a main campaign; otherwise stop at simulation evidence. | Planned |

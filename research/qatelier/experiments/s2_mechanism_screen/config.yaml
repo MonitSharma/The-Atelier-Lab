@@ -1,0 +1,27 @@
+schema_version: 1
+experiment_id: qatelier-s2-mechanism-screen
+status: exploratory_screen_not_selection_freeze
+problem:
+  n_features: 4
+  interaction_orders: [1, 2, 3, 4]
+  families: [aligned, rotated, misaligned, fourier]
+  problem_seed: 700
+  train_samples: 32
+  evaluation_samples: 128
+  train_seed: 11
+  evaluation_seed: 101
+quantum:
+  families: [QIA-P, QIA-L]
+  q: 4
+  reuploads: [1, 2]
+  trainable_layers: 1
+  train_steps: 4
+  learning_rate: 0.08
+  finite_difference_epsilon: 0.01
+  l2: 0.001
+  initialization_scale: 0.1
+classical_controls: [logistic, rbf_svm, matched_mlp]
+diagnostics:
+  spectral_grid_size: 32
+  gradient_rows: 16
+  gradient_epsilon: 0.01
