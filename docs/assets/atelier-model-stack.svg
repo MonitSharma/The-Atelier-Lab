@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
+  <title id="title">Atelier four-tier model stack</title>
+  <desc id="desc">Four model tiers: tiny worker, coding agent, main local intelligence, and frontier handoffs.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#091321"/><stop offset="1" stop-color="#182039"/></linearGradient>
+    <linearGradient id="a" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#41d8dc"/><stop offset="1" stop-color="#328bd9"/></linearGradient>
+    <linearGradient id="b" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6fa8ff"/><stop offset="1" stop-color="#7667ee"/></linearGradient>
+    <linearGradient id="c" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b27cff"/><stop offset="1" stop-color="#e16cd2"/></linearGradient>
+    <linearGradient id="d" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f0a34d"/><stop offset="1" stop-color="#ef6b82"/></linearGradient>
+  </defs>
+  <rect width="1200" height="520" rx="28" fill="url(#bg)"/>
+  <text x="60" y="64" fill="#f5f7ff" font-family="Inter,Arial,sans-serif" font-size="27" font-weight="700">Four capability tiers, one deliberate stack</text>
+  <text x="60" y="94" fill="#91a6c9" font-family="Inter,Arial,sans-serif" font-size="15">Each model earns its place by serving a distinct workload.</text>
+
+  <g font-family="Inter,Arial,sans-serif">
+    <rect x="60" y="135" width="1080" height="72" rx="16" fill="#12263a" stroke="#2b5571"/>
+    <rect x="60" y="135" width="12" height="72" rx="6" fill="url(#a)"/>
+    <text x="94" y="166" fill="#5fe3e6" font-size="13" font-weight="700" letter-spacing="1.5">TIER A · TINY WORKER</text>
+    <text x="94" y="190" fill="#f5f7ff" font-size="17" font-weight="700">LFM2.5 · 2.6B · Q6_K</text>
+    <text x="430" y="178" fill="#c0cde2" font-size="14">routing · extraction · query rewriting · JSON · repetitive RAG</text>
+
+    <rect x="60" y="225" width="1080" height="72" rx="16" fill="#151f3d" stroke="#3c4f8a"/>
+    <rect x="60" y="225" width="12" height="72" rx="6" fill="url(#b)"/>
+    <text x="94" y="256" fill="#8cb5ff" font-size="13" font-weight="700" letter-spacing="1.5">TIER B · CODING AGENT</text>
+    <text x="94" y="280" fill="#f5f7ff" font-size="17" font-weight="700">Qwen3 · 8B · 5.2 GB</text>
+    <text x="430" y="268" fill="#c0cde2" font-size="14">small fixes · scripts · tests · repository exploration</text>
+
+    <rect x="60" y="315" width="1080" height="72" rx="16" fill="#241a3c" stroke="#684c8d"/>
+    <rect x="60" y="315" width="12" height="72" rx="6" fill="url(#c)"/>
+    <text x="94" y="346" fill="#d59cff" font-size="13" font-weight="700" letter-spacing="1.5">TIER C · MAIN LOCAL INTELLIGENCE</text>
+    <text x="94" y="370" fill="#f5f7ff" font-size="17" font-weight="700">Qwen3.8-27B · Q4 · RESERVED</text>
+    <text x="520" y="358" fill="#cfc4e6" font-size="14">papers · mathematics · quantum · optimization · private synthesis</text>
+
+    <rect x="60" y="405" width="1080" height="72" rx="16" fill="#332131" stroke="#82505f"/>
+    <rect x="60" y="405" width="12" height="72" rx="6" fill="url(#d)"/>
+    <text x="94" y="436" fill="#ffbd6e" font-size="13" font-weight="700" letter-spacing="1.5">TIER D · FRONTIER HANDOFFS</text>
+    <text x="94" y="460" fill="#f5f7ff" font-size="17" font-weight="700">Claude · Codex · Gemini</text>
+    <text x="430" y="448" fill="#e2c6cc" font-size="14">critic/architect · implementation · large-context and multimodal review</text>
+  </g>
+</svg>
