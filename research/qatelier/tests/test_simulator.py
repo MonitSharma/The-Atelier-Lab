@@ -142,3 +142,15 @@ def test_exact_numpy_path_agrees_with_qiskit_aer():
     report = cross_validate_aer(config, [0.17, -0.29, 0.41], theta, atol=1e-8)
     assert report["passed"], report
     assert report["max_abs_error"] < 1e-8
+
+
+@pytest.mark.skipif(not aer_available(), reason="optional qiskit-aer dependency is unavailable")
+def test_finite_shot_numpy_path_agrees_statistically_with_qiskit_aer():
+    config = QuantumAdapterConfig(q=2, R=1, L=1, family="QIA-L", readout=ReadoutSpec(("Z0", "X1", "Y0")))
+    theta = initialize_parameters(config, seed=19)
+    features = [0.13, -0.37]
+    numpy_result = simulate(config, features, theta, shots=8000, seed=31)
+    from research.qatelier.simulation import simulate_with_aer
+
+    aer_result = simulate_with_aer(config, features, theta, shots=8000, seed=31)
+    np.testing.assert_allclose(numpy_result.expectations, aer_result.expectations, atol=0.08)
