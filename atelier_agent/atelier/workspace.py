@@ -9,6 +9,7 @@ authorization so symlinks cannot escape an approved root.
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import re
 import tempfile
@@ -269,6 +270,39 @@ class WorkspaceManager:
         self._save()
         return updated
 
+    def activate_directory(
+        self,
+        path: str | Path,
+        *,
+        capabilities: set[str] | frozenset[str] | None = None,
+        privacy: str = "LOCAL_ONLY",
+    ) -> Workspace:
+        """Use a directory as the active CLI workspace, creating it if needed.
+
+        This makes the normal terminal experience match repository agents:
+        launching Atelier from a directory scopes relative paths to that
+        directory. Network access is never granted automatically.
+        """
+        root = Path(path).expanduser().resolve()
+        if not root.exists() or not root.is_dir():
+            raise WorkspaceError(f"Workspace root must be an existing directory: {path}")
+        matches = [workspace for workspace in self._workspaces.values() if _inside(root, workspace.root)]
+        if matches:
+            return self.open(max(matches, key=lambda workspace: len(workspace.root.parts)).name)
+        existing = next((workspace for workspace in self._workspaces.values() if workspace.root == root), None)
+        if existing is not None:
+            return self.open(existing.name)
+        safe_name = re.sub(r"[^A-Za-z0-9_.-]+", "-", root.name).strip("-")[:32] or "workspace"
+        digest = hashlib.sha256(str(root).encode("utf-8")).hexdigest()[:10]
+        name = f"cwd-{safe_name}-{digest}"
+        workspace = self.add(
+            root,
+            name=name,
+            capabilities=capabilities or {"read", "write", "execute"},
+            privacy=privacy,
+        )
+        return self.open(workspace.name)
+
     def close(self, name: str) -> Workspace:
         workspace = self.get(name)
         updated = Workspace(
@@ -298,4 +332,3 @@ class WorkspaceManager:
 
 def get_workspace_manager() -> WorkspaceManager:
     return WorkspaceManager()
-

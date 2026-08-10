@@ -399,8 +399,26 @@ def research_download(
 
 
 @app.callback()
-def _root(ctx: typer.Context) -> None:
-    """Enter the Atelier workbench when no subcommand is supplied."""
+def _root(
+    ctx: typer.Context,
+    workspace: Path | None = typer.Option(
+        None,
+        "--workspace",
+        "--root",
+        exists=True,
+        file_okay=False,
+        readable=True,
+        help="Use this directory as the active workspace. Defaults to the current directory.",
+    ),
+) -> None:
+    """Enter Atelier in the current directory or an explicitly selected workspace."""
+    from atelier.workspace import WorkspaceError, get_workspace_manager
+
+    try:
+        get_workspace_manager().activate_directory(workspace or Path.cwd())
+    except WorkspaceError as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
     if ctx.invoked_subcommand is None:
         from atelier.session import run_session
 
@@ -1445,7 +1463,7 @@ def models_bench(
 
 @app.command()
 def mcp(shell: bool = typer.Option(False, "--shell", help="Expose the shell tool too.")) -> None:
-    """Run Atelier's tools as an MCP server (stdio). For MCP clients."""
+    """Run the MCP tool bridge for an external MCP client; not for interactive use."""
     from atelier.mcp_server import main as mcp_main
 
     mcp_main(include_shell=shell)
@@ -1470,7 +1488,7 @@ def serve(
     host: str = typer.Option("127.0.0.1", "--host", help="Bind only to localhost by default."),
     port: int = typer.Option(8787, "--port", min=1, max=65535),
 ) -> None:
-    """Run the local JSON API used by future UI clients."""
+    """Run the optional loopback API used by the web UI and integrations."""
     from atelier.api import run_server
 
     console.print(f"Atelier API listening on http://{host}:{port}")

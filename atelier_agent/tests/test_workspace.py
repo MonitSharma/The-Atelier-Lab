@@ -79,3 +79,16 @@ def test_network_capability_requires_cloud_policy(tmp_path: Path) -> None:
             capabilities={"read", "network"},
             privacy="LOCAL_ONLY",
         )
+
+
+def test_activate_directory_scopes_cli_to_current_directory(tmp_path: Path) -> None:
+    root = tmp_path / "project"
+    root.mkdir()
+    manager = WorkspaceManager(tmp_path / "registry.json")
+
+    workspace = manager.activate_directory(root)
+
+    assert workspace.root == root.resolve()
+    assert workspace.capabilities == {"read", "write", "execute"}
+    assert workspace.privacy == "LOCAL_ONLY"
+    assert manager.context().resolve("README.md").workspace.name == workspace.name
