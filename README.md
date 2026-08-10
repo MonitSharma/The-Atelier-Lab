@@ -20,6 +20,7 @@ The current expanded Atelier suites record 17/18 knowledge answers, 13/13 code t
 
 - [Learning path](docs/START_HERE.md)
 - [Run the local agent](atelier_agent/README.md)
+- [Atelier operator guide](docs/ATELIER_OPERATOR_GUIDE.md)
 - [Experiment registry](experiments/registry.yaml)
 - [Repository map](docs/REPOSITORY_MAP.md)
 - [Atelier Workbench plan](docs/ATELIER_WORKBENCH_PLAN.md)

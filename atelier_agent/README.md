@@ -26,6 +26,10 @@ its own reliability — and reports where it fails.
 > research and frontier-model handoffs are separate, explicit, permission-gated
 > operations with provenance and redaction rather than implicit data transfer.
 
+For the complete operating manual, architecture explanation, current model
+inventory, disk sizes, and role assignments, see
+[`docs/ATELIER_OPERATOR_GUIDE.md`](../docs/ATELIER_OPERATOR_GUIDE.md).
+
 **Current state:** the deterministic foundation and the clean-state local v1.0
 scenario are verified. The project has an installable CLI, local RAG, approved
 workspaces, repository intelligence, coding workflows, durable tasks and
