@@ -1,6 +1,6 @@
 schema_version: 1
 experiment_id: qatelier-s1-baseline-lock
-status: partial_sst2_lock
+status: partial_multitask_reference_lock
 source_s0:
   raw_results: ../s0_reproduction/raw/results.json
   completion_manifest: ../s0_reproduction/s0_completion.json
@@ -17,15 +17,18 @@ additional_classification:
   split_manifest: cola_split_manifest.json
   encoder_manifest: ../s0_reproduction/encoder_manifest.json
   compressor_output_dim: 4
+raw_results:
+  mrpc: raw/mrpc
+  cola: raw/cola
 public_tasks:
   sst2:
     status: locked_from_s0
     representation: paraphrase-mpnet-base-v2
   semantic_pair:
-    status: unresolved
+    status: reference_locked
     requirement: public_pair_task_with_frozen_pair_representation
   additional_classification:
-    status: unresolved
+    status: reference_locked
     requirement: public_classification_task_with_distinct_label_geometry
   scientific_retrieval:
     status: unresolved

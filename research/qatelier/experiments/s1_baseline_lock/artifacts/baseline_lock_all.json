@@ -1,0 +1,450 @@
+{
+  "baseline_groups": {
+    "parameter_matched": [
+      "logistic",
+      "linear_svm",
+      "rff",
+      "matched_mlp",
+      "low_rank_bilinear",
+      "finite_rbf"
+    ],
+    "strong_reference": [
+      "rbf_svm",
+      "polynomial_svm"
+    ]
+  },
+  "claim_level": "classical_reference",
+  "config_sha256": "a819fe48a958e352cd14829099852997268f6e90f631814f30dc9a16e01dc6df",
+  "public_task_status": {
+    "additional_classification": {
+      "requirement": "public_classification_task_with_distinct_label_geometry",
+      "status": "reference_locked"
+    },
+    "controlled_interaction_order": {
+      "requirement": "qatelier_benchmark_with_orders_1_through_6",
+      "status": "unresolved"
+    },
+    "scientific_retrieval": {
+      "requirement": "public_scientific_reranking_benchmark",
+      "status": "unresolved"
+    },
+    "semantic_pair": {
+      "requirement": "public_pair_task_with_frozen_pair_representation",
+      "status": "reference_locked"
+    },
+    "sst2": {
+      "representation": "paraphrase-mpnet-base-v2",
+      "status": "locked_from_s0"
+    }
+  },
+  "schema_version": 1,
+  "source_records": [
+    {
+      "results_sha256": "f11b85b1440b2593239d26428d9d553a2c9773ac38d5e2a7e32386d858c0d476",
+      "row_count": 960,
+      "task": "sst2"
+    },
+    {
+      "results_sha256": "be278e77d18a73e4cfaaba393f5ae6d39cba5508a3e76fb7f3333610ba76c86e",
+      "row_count": 480,
+      "task": "mrpc"
+    },
+    {
+      "results_sha256": "349b05cb2b7b7bed69974c88ef557c96cdd20adffa53f74cdd7d75e53d3e3552",
+      "row_count": 480,
+      "task": "cola"
+    }
+  ],
+  "status": "partial_multitask_reference_lock",
+  "summaries": [
+    {
+      "aggregate": {
+        "mean": 0.7602864583333333,
+        "n": 60,
+        "std": 0.08448051883709949
+      },
+      "candidate_id": "finite_rbf",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 2,
+      "task": "sst2"
+    },
+    {
+      "aggregate": {
+        "mean": 0.7427083333333333,
+        "n": 60,
+        "std": 0.07221941400224516
+      },
+      "candidate_id": "finite_rbf",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "sst2"
+    },
+    {
+      "aggregate": {
+        "mean": 0.7833333333333333,
+        "n": 60,
+        "std": 0.07759175359526746
+      },
+      "candidate_id": "linear_svm",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 2,
+      "task": "sst2"
+    },
+    {
+      "aggregate": {
+        "mean": 0.8170572916666666,
+        "n": 60,
+        "std": 0.03892432305479003
+      },
+      "candidate_id": "linear_svm",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "sst2"
+    },
+    {
+      "aggregate": {
+        "mean": 0.7833333333333333,
+        "n": 60,
+        "std": 0.07670675977419784
+      },
+      "candidate_id": "logistic",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 2,
+      "task": "sst2"
+    },
+    {
+      "aggregate": {
+        "mean": 0.8165364583333333,
+        "n": 60,
+        "std": 0.03890305559458912
+      },
+      "candidate_id": "logistic",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "sst2"
+    },
+    {
+      "aggregate": {
+        "mean": 0.59375,
+        "n": 60,
+        "std": 0.16867936374742848
+      },
+      "candidate_id": "low_rank_bilinear",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 2,
+      "task": "sst2"
+    },
+    {
+      "aggregate": {
+        "mean": 0.6634114583333334,
+        "n": 60,
+        "std": 0.13094391887489862
+      },
+      "candidate_id": "low_rank_bilinear",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "sst2"
+    },
+    {
+      "aggregate": {
+        "mean": 0.76484375,
+        "n": 60,
+        "std": 0.07275933262915371
+      },
+      "candidate_id": "matched_mlp",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 2,
+      "task": "sst2"
+    },
+    {
+      "aggregate": {
+        "mean": 0.8048177083333333,
+        "n": 60,
+        "std": 0.0364880358476504
+      },
+      "candidate_id": "matched_mlp",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "sst2"
+    },
+    {
+      "aggregate": {
+        "mean": 0.5100260416666667,
+        "n": 60,
+        "std": 0.03584733492236724
+      },
+      "candidate_id": "polynomial_svm",
+      "capacity_group": "strong_reference",
+      "metric": "accuracy",
+      "q": 2,
+      "task": "sst2"
+    },
+    {
+      "aggregate": {
+        "mean": 0.5359375,
+        "n": 60,
+        "std": 0.029450295673460348
+      },
+      "candidate_id": "polynomial_svm",
+      "capacity_group": "strong_reference",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "sst2"
+    },
+    {
+      "aggregate": {
+        "mean": 0.7622395833333333,
+        "n": 60,
+        "std": 0.09574119807218846
+      },
+      "candidate_id": "rbf_svm",
+      "capacity_group": "strong_reference",
+      "metric": "accuracy",
+      "q": 2,
+      "task": "sst2"
+    },
+    {
+      "aggregate": {
+        "mean": 0.8102864583333333,
+        "n": 60,
+        "std": 0.05335838850046803
+      },
+      "candidate_id": "rbf_svm",
+      "capacity_group": "strong_reference",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "sst2"
+    },
+    {
+      "aggregate": {
+        "mean": 0.749609375,
+        "n": 60,
+        "std": 0.08380349498272048
+      },
+      "candidate_id": "rff",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 2,
+      "task": "sst2"
+    },
+    {
+      "aggregate": {
+        "mean": 0.675390625,
+        "n": 60,
+        "std": 0.09908697708949502
+      },
+      "candidate_id": "rff",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "sst2"
+    },
+    {
+      "aggregate": {
+        "mean": 0.602734375,
+        "n": 60,
+        "std": 0.0571720168965749
+      },
+      "candidate_id": "finite_rbf",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "mrpc"
+    },
+    {
+      "aggregate": {
+        "mean": 0.6317708333333333,
+        "n": 60,
+        "std": 0.05640036008695204
+      },
+      "candidate_id": "linear_svm",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "mrpc"
+    },
+    {
+      "aggregate": {
+        "mean": 0.6283854166666667,
+        "n": 60,
+        "std": 0.05763232536285714
+      },
+      "candidate_id": "logistic",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "mrpc"
+    },
+    {
+      "aggregate": {
+        "mean": 0.5505208333333333,
+        "n": 60,
+        "std": 0.07713175109406084
+      },
+      "candidate_id": "low_rank_bilinear",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "mrpc"
+    },
+    {
+      "aggregate": {
+        "mean": 0.6252604166666667,
+        "n": 60,
+        "std": 0.05329776763412398
+      },
+      "candidate_id": "matched_mlp",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "mrpc"
+    },
+    {
+      "aggregate": {
+        "mean": 0.5225260416666667,
+        "n": 60,
+        "std": 0.029691390895041154
+      },
+      "candidate_id": "polynomial_svm",
+      "capacity_group": "strong_reference",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "mrpc"
+    },
+    {
+      "aggregate": {
+        "mean": 0.6143229166666667,
+        "n": 60,
+        "std": 0.061464654527454865
+      },
+      "candidate_id": "rbf_svm",
+      "capacity_group": "strong_reference",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "mrpc"
+    },
+    {
+      "aggregate": {
+        "mean": 0.558203125,
+        "n": 60,
+        "std": 0.05906939710087813
+      },
+      "candidate_id": "rff",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "mrpc"
+    },
+    {
+      "aggregate": {
+        "mean": 0.508984375,
+        "n": 60,
+        "std": 0.03988345479311077
+      },
+      "candidate_id": "finite_rbf",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "cola"
+    },
+    {
+      "aggregate": {
+        "mean": 0.524609375,
+        "n": 60,
+        "std": 0.05666310830066978
+      },
+      "candidate_id": "linear_svm",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "cola"
+    },
+    {
+      "aggregate": {
+        "mean": 0.52421875,
+        "n": 60,
+        "std": 0.057278222934755575
+      },
+      "candidate_id": "logistic",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "cola"
+    },
+    {
+      "aggregate": {
+        "mean": 0.4903645833333333,
+        "n": 60,
+        "std": 0.051529318633656215
+      },
+      "candidate_id": "low_rank_bilinear",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "cola"
+    },
+    {
+      "aggregate": {
+        "mean": 0.52109375,
+        "n": 60,
+        "std": 0.06487636700088138
+      },
+      "candidate_id": "matched_mlp",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "cola"
+    },
+    {
+      "aggregate": {
+        "mean": 0.494921875,
+        "n": 60,
+        "std": 0.030507092345799316
+      },
+      "candidate_id": "polynomial_svm",
+      "capacity_group": "strong_reference",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "cola"
+    },
+    {
+      "aggregate": {
+        "mean": 0.5158854166666667,
+        "n": 60,
+        "std": 0.047618717565000745
+      },
+      "candidate_id": "rbf_svm",
+      "capacity_group": "strong_reference",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "cola"
+    },
+    {
+      "aggregate": {
+        "mean": 0.51328125,
+        "n": 60,
+        "std": 0.04710176435101782
+      },
+      "candidate_id": "rff",
+      "capacity_group": "parameter_matched",
+      "metric": "accuracy",
+      "q": 4,
+      "task": "cola"
+    }
+  ],
+  "test_tuning_allowed": false,
+  "unresolved_s1_tasks": [
+    "scientific_retrieval",
+    "controlled_interaction_order"
+  ]
+}

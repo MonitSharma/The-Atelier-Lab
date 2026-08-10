@@ -1,0 +1,11 @@
+{
+  "config_sha256": "0bcf87deaad320d85ed5ffc96bcf665f16888c1e21818d542ed49698d4489271",
+  "experiment_id": "qatelier-s1-baseline-lock",
+  "jobs_submitted": 0,
+  "preparation_manifest_sha256": "bbf7da83e01d4ea7b4192a581297bffdb679f875318ee4de8260d0bd4aeaf5b4",
+  "provider_contacted": false,
+  "row_count": 480,
+  "schema_version": 1,
+  "status": "completed",
+  "task": "cola"
+}

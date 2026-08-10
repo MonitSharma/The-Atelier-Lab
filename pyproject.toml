@@ -19,6 +19,7 @@ qatelier-core = [
 ]
 qatelier-data = [
     "sentence-transformers==5.5.1",
+    "pyarrow==25.0.0",
 ]
 qatelier-simulator = [
     "qiskit==2.5.1",

@@ -1,0 +1,11 @@
+{
+  "config_sha256": "0bcf87deaad320d85ed5ffc96bcf665f16888c1e21818d542ed49698d4489271",
+  "experiment_id": "qatelier-s1-baseline-lock",
+  "jobs_submitted": 0,
+  "preparation_manifest_sha256": "95cffc73ec9282d9f12e04598d59442070ad201aa35f8fddd6014e4f10d480b7",
+  "provider_contacted": false,
+  "row_count": 480,
+  "schema_version": 1,
+  "status": "completed",
+  "task": "mrpc"
+}
