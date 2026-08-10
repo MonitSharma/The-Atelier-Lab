@@ -60,7 +60,8 @@ class Settings(BaseSettings):
     archive_max_total_bytes: int = 50_000_000
     archive_max_member_bytes: int = 10_000_000
     archive_max_compression_ratio: float = 100.0
-    #: Generic future expert slot; no unreleased model is assumed.
+    #: Reserved evaluation slot. Keep empty until the Qwen3.8-27B release is
+    #: downloaded, benchmarked, and explicitly promoted after evaluation.
     expert_model: str = ""
     router_model: str = "qwen3:4b"
     temperature: float = 0.1
@@ -75,11 +76,13 @@ class Settings(BaseSettings):
     #: Qwen3 retrieval instruction. It is applied to queries only; passages
     #: remain plain text so the two embedding spaces stay compatible.
     query_instruction: str = (
-        "Retrieve passages that are most relevant to the user's scientific "
-        "research query. Prefer direct technical relevance over broad topical "
-        "similarity. The library primarily contains artificial intelligence, "
-        "quantum computing, optimization, operations research, mathematics, "
-        "and scientific computing material."
+        "Retrieve passages that are most relevant to the user's research, "
+        "study, or document question. Prefer direct evidence over broad topical "
+        "similarity. The library may contain artificial intelligence, quantum "
+        "computing, optimization, operations research, mathematics, scientific "
+        "computing, UPSC civil-services preparation, current affairs, Indian "
+        "polity, history, geography, economy, environment, ethics, essays, CSAT, "
+        "and optional-subject material."
     )
     #: Retained for compatibility with older configuration; Ollama performs
     #: inference locally and chooses the Apple-Silicon GPU automatically.

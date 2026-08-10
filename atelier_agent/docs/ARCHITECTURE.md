@@ -43,13 +43,20 @@ required by the scientific-library runtime on Linux.
 | `coder` | `qwen3:8b` | installed and benchmarked | repository edits, tests, and small coding tasks |
 | `heavy` | `gemma4:26b` | installed | hard reasoning and end-to-end local synthesis |
 | `vision` | `gemma4:26b` | installed; multimodal | handwriting, diagrams, equations, and embedded document images |
-| `expert` | empty | intentionally unconfigured | reserved capability slot |
+| `expert` | empty | intentionally unconfigured | reserved Qwen3.8-27B evaluation slot |
 | `router` | `qwen3:4b` | configuration placeholder | future routing experiment |
 | embedding | `qwen3-embedding:4b` | installed | 2,560-dimensional query/document embeddings |
 
-`qwen3:14b` is no longer the active default because it is not installed on the
-current Mac. It remains a future candidate; the temporary brain slot is
-`qwen3:8b` until a larger model is deliberately evaluated.
+The temporary brain slot is `qwen3:8b`. The reserved expert slot is for the
+upcoming Qwen3.8-27B release: download it only when available, benchmark it
+against research reasoning, coding, document QA, and UPSC study tasks, and
+promote it only if it fits the 36 GiB memory budget and improves the measured
+results.
+
+Atelier also has a first-class `study` capability route for UPSC preparation.
+It uses indexed notes and questions as evidence, routes short recall tasks to
+the worker, and routes answer writing, essays, comparison, evaluation, and
+study planning to the brain.
 
 The code does not assume that every configured model is installed. `doctor`
 reports `ok`, `missing`, or `unconfigured` explicitly. No model is downloaded

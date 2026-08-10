@@ -64,10 +64,11 @@ Status: **Atelier v1.0 verified locally; optional extensions remain**
 
 ## Deliberate placeholders
 
-`qwen3:14b` remains the default brain configuration and `qwen3:4b` remains the
-router configuration, but neither is installed. These are benchmark decisions,
-not setup failures. The project will choose future coding, routing, and vision
-models through frozen evaluations rather than by accumulating downloads.
+`qwen3:8b` is the temporary brain/coder configuration and `qwen3:4b` remains a
+router configuration placeholder. The expert slot is intentionally empty for
+the upcoming Qwen3.8-27B release. That model must first pass a frozen,
+memory-aware evaluation across research reasoning, document QA, coding, and
+UPSC preparation before it can replace the temporary brain.
 
 ## Remaining roadmap work
 
