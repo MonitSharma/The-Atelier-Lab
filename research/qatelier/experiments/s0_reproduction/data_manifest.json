@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "dataset_id": "glue-sst2-official-archive",
+  "source_url": "https://dl.fbaipublicfiles.com/glue/data/SST-2.zip",
+  "archive_sha256": "d67e16fb55739c1b32cdce9877596db1c127dc322d93c082281f64057c16deaa",
+  "license_note": "Use and redistribution must follow the source dataset terms; this repository stores only this manifest, not the archive.",
+  "members": {
+    "SST-2/train.tsv": {
+      "sha256": "48eac26399f8456935f81dd9e3a745c1430adb6c62e233ccfe22db4a0d15d1d1",
+      "rows_including_header": 67350,
+      "label_column": "label",
+      "label_counts": {"0": 29780, "1": 37569}
+    },
+    "SST-2/dev.tsv": {
+      "sha256": "54a9c12c77e402fc14d6a66a506f24d999f596b0176eb777c972cccc2f9cc4b0",
+      "rows_including_header": 873,
+      "label_column": "label",
+      "label_counts": {"0": 428, "1": 444}
+    },
+    "SST-2/test.tsv": {
+      "sha256": "69a938605609b3e6663b4487918fe1565eb293734e6e520d0366d1d412fd2a13",
+      "rows_including_header": 1822,
+      "label_column": null,
+      "labels_available_for_local_confirmation": false
+    }
+  },
+  "protocol_split": {
+    "training_source": "SST-2/train.tsv",
+    "development_source": "SST-2/dev.tsv",
+    "confirmation_source": "SST-2/dev.tsv",
+    "confirmation_selection": "predeclared stratified sample IDs from dev.tsv; no test-set tuning",
+    "low_data_budgets_per_class": [16, 32, 64, 128],
+    "selection_seeds": [11, 13, 17],
+    "confirmation_seeds": [101, 103, 107, 109, 113],
+    "sample_id_rule": "sst2-{source_member}-{zero_based_row}-{sha256_of_utf8_sentence_first_12}",
+    "shuffling": "NumPy PCG64 with the declared seed, after stratification",
+    "test_policy": "official test.tsv is not used for local labeled confirmation because labels are unavailable"
+  }
+}

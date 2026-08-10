@@ -70,9 +70,17 @@ The following credential-free infrastructure is now implemented on `qatelier`:
 - an S0 preregistration under
   [`experiments/s0_reproduction/`](experiments/s0_reproduction/); its runner
   fails closed until the exact encoder, dataset, split, embedding, and
-  compressor locks are committed.
+  compressor locks are committed;
+- exact SST-2 archive/member hashes, deterministic stratified selections, and
+  the pinned MPNet revision/weights digest are now committed in the S0
+  manifests;
+- the credential-free S0 preparation path in `run.py --prepare` validates those
+  locks, encodes the declared union, and writes external immutable embedding
+  and train-only PCA artifacts. A local validation run produced 1,557 examples,
+  768-dimensional embeddings, and 12 compressor artifacts; its preparation
+  record is [`preparation_validation.json`](experiments/s0_reproduction/preparation_validation.json).
 
-Focused QAtelier verification currently passes: 67 tests plus 7 benchmark
+Focused QAtelier verification currently passes: 69 tests plus 7 benchmark
 subtests, with Ruff clean. No provider job was submitted.
 
 The repository-wide verification has two pre-existing/unrelated blockers in the
@@ -137,10 +145,10 @@ may not silently revise an earlier stage's split, baseline, or selection rule.
 
 ## Immediate next actions
 
-1. Pin the public frozen encoder revision/weights digest and create the first
-   dataset/split manifest; current config locks intentionally refuse execution.
-2. Create the first named S0 experiment from the standard repository template,
-   with its falsifiable hypothesis and reproduction command.
+1. Preserve the external S0 preparation directory and register its immutable
+   embedding/compressor manifest with the eventual result bundle.
+2. Implement the declared S0 head runner using the prepared cache, shared
+   compressors, classical controls, and exact/finite-shot simulator.
 3. Run S0, then lock the classical search spaces and baseline artifacts in S1.
 
 The optional provider dependencies and access checks are complete, but they do

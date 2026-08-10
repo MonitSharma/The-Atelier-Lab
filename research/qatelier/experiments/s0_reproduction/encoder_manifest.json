@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "encoder_model_id": "sentence-transformers/paraphrase-mpnet-base-v2",
+  "encoder_revision": "6cc9279c672dc57f94445ef259b28a1b736fec8f",
+  "weights_file": "model.safetensors",
+  "weights_sha256": "5fc2279bd6e503ca3543197b4ef00b615d87eebd02490f8c108aa3f35d7b705d",
+  "snapshot_file_manifest_sha256": "fe1e8c61f8911b3dcd8cdfc2e6d0cea9472348f272b27e50bbee5fb1a4c307cb",
+  "embedding_dimension": 768,
+  "max_seq_length": 512,
+  "tokenizer": {
+    "class": "MPNetTokenizer",
+    "do_lower_case": true,
+    "padding": "model_default",
+    "truncation": "model_default",
+    "max_length": 512
+  },
+  "pooling": {
+    "type": "mean_tokens",
+    "include_prompt": true,
+    "normalize_embeddings": false
+  },
+  "trainable": false,
+  "embedding_cache_policy": "cache_float32_arrays_and_hash_before_compression"
+}

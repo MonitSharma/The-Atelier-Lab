@@ -17,6 +17,9 @@ qatelier-core = [
     "jsonschema==4.25.1",
     "scikit-learn==1.7.2",
 ]
+qatelier-data = [
+    "sentence-transformers==5.5.1",
+]
 qatelier-simulator = [
     "qiskit==2.5.1",
     "qiskit-aer==0.17.2",

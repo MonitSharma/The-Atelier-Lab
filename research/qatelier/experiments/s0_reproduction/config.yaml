@@ -3,15 +3,15 @@ experiment_id: qatelier-s0-reproduction
 status: preregistered_not_run
 encoder:
   model_id: sentence-transformers/paraphrase-mpnet-base-v2
-  revision: null
-  weights_digest: null
+  revision: 6cc9279c672dc57f94445ef259b28a1b736fec8f
+  weights_digest: 5fc2279bd6e503ca3543197b4ef00b615d87eebd02490f8c108aa3f35d7b705d
 dataset:
   name: SST-2
-  version: null
-  split_manifest: null
+  version: d67e16fb55739c1b32cdce9877596db1c127dc322d93c082281f64057c16deaa
+  split_manifest: data_manifest.json
 representation:
   pooling: mean
-  normalization: null
+  normalization: none
   compressor:
     method: pca
     output_dim: 4
@@ -28,7 +28,7 @@ hardware:
   execution_mode: simulator
   physical_quantinuum_allowed: false
 artifacts:
-  embedding_manifest: null
+  embedding_manifest: encoder_manifest.json
   compressor_artifact: null
   raw_results_directory: raw
   figures_directory: figures
