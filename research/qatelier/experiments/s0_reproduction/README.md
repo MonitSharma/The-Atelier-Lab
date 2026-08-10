@@ -53,5 +53,20 @@ python -m research.qatelier.experiments.s0_reproduction.run \
   --config research/qatelier/experiments/s0_reproduction/config.yaml
 ```
 
+After preparation, the fixed S0 panel can be executed against that external
+cache:
+
+```bash
+python -m research.qatelier.experiments.s0_reproduction.run \
+  --config research/qatelier/experiments/s0_reproduction/config.yaml \
+  --run \
+  --prepared-dir /path/to/s0-prepared \
+  --output-dir /path/to/new/s0-raw
+```
+
+`--selection-limit` and `--candidate-limit` are available only for bounded
+runtime smoke checks; those outputs are explicitly marked partial and are not
+scientific results.
+
 Any reproduction discrepancy should be recorded as a discrepancy, not hidden
 by changing the QAtelier-normalized protocol after seeing held-out results.

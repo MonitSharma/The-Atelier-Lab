@@ -1,0 +1,16 @@
+{
+  "candidate_limit": null,
+  "config_sha256": "4ed2370761fb08bab54a6f48d928993e05e0446f207d255a892434b773dfb118",
+  "execution_modes": [
+    "exact_numpy_statevector",
+    "finite_shot_numpy_statevector"
+  ],
+  "experiment_id": "qatelier-s0-reproduction",
+  "jobs_submitted": 0,
+  "preparation_manifest_sha256": "320c4d349e670c676912cc56742c5515053b2bcda7c97fcc4cdaf7aa5a9d9d87",
+  "provider_contacted": false,
+  "row_count": 1440,
+  "schema_version": 1,
+  "selection_limit": null,
+  "status": "completed"
+}

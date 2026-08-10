@@ -20,6 +20,9 @@ def test_compressor_fits_train_only_and_reuses_the_same_transform(tmp_path):
     with pytest.raises(FileExistsError):
         path = artifact.save(tmp_path / "compressor.npz")
         artifact.save(path)
+    restored = CompressorArtifact.load(path)
+    np.testing.assert_allclose(restored.transform(train), artifact.transform(train))
+    assert restored.to_metadata() == artifact.to_metadata()
 
 
 def test_pair_representation_has_declared_layout():

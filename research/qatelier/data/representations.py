@@ -158,6 +158,30 @@ class CompressorArtifact:
         )
         return destination
 
+    @classmethod
+    def load(cls, path: str | Path) -> "CompressorArtifact":
+        """Load and validate an immutable compressor artifact."""
+
+        source = Path(path)
+        with np.load(source, allow_pickle=False) as payload:
+            metadata = json.loads(str(payload["metadata"].item()))
+            artifact = cls(
+                method=str(metadata["method"]),
+                input_dim=int(metadata["input_dim"]),
+                output_dim=int(metadata["output_dim"]),
+                fit_split=str(metadata["fit_split"]),
+                fit_sample_ids_hash=str(metadata["fit_sample_ids_hash"]),
+                fit_features_hash=str(metadata["fit_features_hash"]),
+                mean=np.asarray(payload["mean"], dtype=float),
+                components=np.asarray(payload["components"], dtype=float),
+                scale=np.asarray(payload["scale"], dtype=float),
+                whiten=bool(metadata["whiten"]),
+                artifact_hash=str(metadata["artifact_hash"]),
+            )
+        if artifact.to_metadata() != metadata:
+            raise ValueError(f"compressor metadata mismatch: {source}")
+        return artifact
+
 
 def make_pair_representation(query_embeddings: np.ndarray, document_embeddings: np.ndarray) -> np.ndarray:
     """Build the shared query/document interaction representation."""

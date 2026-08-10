@@ -133,7 +133,8 @@ def prepare_s0(
     for selections in split_document["train_row_indices"].values():
         for indices in selections.values():
             requested.update((split_document["train_member"], int(index)) for index in indices)
-    requested.update((split_document["confirmation_member"], int(index)) for index in split_document["confirmation_row_indices"])
+    for indices in split_document["confirmation_row_indices"].values():
+        requested.update((split_document["confirmation_member"], int(index)) for index in indices)
     examples_by_key: dict[tuple[str, int], dict[str, Any]] = {}
     for example in selected_examples(
         train,

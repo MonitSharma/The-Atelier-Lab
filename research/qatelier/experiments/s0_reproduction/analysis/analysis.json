@@ -1,0 +1,1659 @@
+{
+  "confirmation_seed_count": 5,
+  "expected_row_count": 1440,
+  "jobs_submitted": 0,
+  "learning_curve": [
+    {
+      "budget_per_class": 16,
+      "candidate_id": "finite_rbf",
+      "exact_accuracy": {
+        "mean": 0.6760416666666667,
+        "n": 15,
+        "std": 0.04079491709044972
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "finite_rbf",
+      "exact_accuracy": {
+        "mean": 0.7619791666666667,
+        "n": 15,
+        "std": 0.06508779556070693
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "finite_rbf",
+      "exact_accuracy": {
+        "mean": 0.7697916666666667,
+        "n": 15,
+        "std": 0.09792893476843784
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "finite_rbf",
+      "exact_accuracy": {
+        "mean": 0.8333333333333334,
+        "n": 15,
+        "std": 0.034139139426379944
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "finite_rbf",
+      "exact_accuracy": {
+        "mean": 0.709375,
+        "n": 15,
+        "std": 0.05124700557454204
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "finite_rbf",
+      "exact_accuracy": {
+        "mean": 0.7166666666666667,
+        "n": 15,
+        "std": 0.05789890582844336
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "finite_rbf",
+      "exact_accuracy": {
+        "mean": 0.79375,
+        "n": 15,
+        "std": 0.061643121611127755
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "finite_rbf",
+      "exact_accuracy": {
+        "mean": 0.7510416666666667,
+        "n": 15,
+        "std": 0.08613343464641414
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "linear_svm",
+      "exact_accuracy": {
+        "mean": 0.7526041666666666,
+        "n": 15,
+        "std": 0.06163369101035183
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "linear_svm",
+      "exact_accuracy": {
+        "mean": 0.7411458333333333,
+        "n": 15,
+        "std": 0.08501260957765254
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "linear_svm",
+      "exact_accuracy": {
+        "mean": 0.7942708333333334,
+        "n": 15,
+        "std": 0.07765857792093789
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "linear_svm",
+      "exact_accuracy": {
+        "mean": 0.8453125,
+        "n": 15,
+        "std": 0.03395132578149826
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "linear_svm",
+      "exact_accuracy": {
+        "mean": 0.7765625,
+        "n": 15,
+        "std": 0.030372731029306065
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "linear_svm",
+      "exact_accuracy": {
+        "mean": 0.8151041666666666,
+        "n": 15,
+        "std": 0.03078145772832977
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "linear_svm",
+      "exact_accuracy": {
+        "mean": 0.8317708333333333,
+        "n": 15,
+        "std": 0.028455809124266113
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "linear_svm",
+      "exact_accuracy": {
+        "mean": 0.8447916666666667,
+        "n": 15,
+        "std": 0.02980279928527009
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "logistic",
+      "exact_accuracy": {
+        "mean": 0.7536458333333333,
+        "n": 15,
+        "std": 0.0634598907822511
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "logistic",
+      "exact_accuracy": {
+        "mean": 0.7401041666666667,
+        "n": 15,
+        "std": 0.08201619051109593
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "logistic",
+      "exact_accuracy": {
+        "mean": 0.79375,
+        "n": 15,
+        "std": 0.07607809588907402
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "logistic",
+      "exact_accuracy": {
+        "mean": 0.8458333333333333,
+        "n": 15,
+        "std": 0.03172994539112555
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "logistic",
+      "exact_accuracy": {
+        "mean": 0.7765625,
+        "n": 15,
+        "std": 0.027031056460909128
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "logistic",
+      "exact_accuracy": {
+        "mean": 0.8072916666666666,
+        "n": 15,
+        "std": 0.02748951369332019
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "logistic",
+      "exact_accuracy": {
+        "mean": 0.8348958333333333,
+        "n": 15,
+        "std": 0.02814772560696935
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "logistic",
+      "exact_accuracy": {
+        "mean": 0.8473958333333333,
+        "n": 15,
+        "std": 0.030238465062652202
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "low_rank_bilinear",
+      "exact_accuracy": {
+        "mean": 0.5932291666666667,
+        "n": 15,
+        "std": 0.13635847514019625
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "low_rank_bilinear",
+      "exact_accuracy": {
+        "mean": 0.45677083333333335,
+        "n": 15,
+        "std": 0.03915910672986492
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "low_rank_bilinear",
+      "exact_accuracy": {
+        "mean": 0.61875,
+        "n": 15,
+        "std": 0.1804912149746788
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "low_rank_bilinear",
+      "exact_accuracy": {
+        "mean": 0.70625,
+        "n": 15,
+        "std": 0.1813009857475566
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "low_rank_bilinear",
+      "exact_accuracy": {
+        "mean": 0.6713541666666667,
+        "n": 15,
+        "std": 0.10738246706809706
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "low_rank_bilinear",
+      "exact_accuracy": {
+        "mean": 0.6140625,
+        "n": 15,
+        "std": 0.0870864750088341
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "low_rank_bilinear",
+      "exact_accuracy": {
+        "mean": 0.646875,
+        "n": 15,
+        "std": 0.1845045322831819
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "low_rank_bilinear",
+      "exact_accuracy": {
+        "mean": 0.7213541666666666,
+        "n": 15,
+        "std": 0.11196186189656386
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "matched_mlp",
+      "exact_accuracy": {
+        "mean": 0.7192708333333333,
+        "n": 15,
+        "std": 0.04997790620495173
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "matched_mlp",
+      "exact_accuracy": {
+        "mean": 0.7333333333333333,
+        "n": 15,
+        "std": 0.08123640568508034
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "matched_mlp",
+      "exact_accuracy": {
+        "mean": 0.7739583333333333,
+        "n": 15,
+        "std": 0.0635697147307771
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "matched_mlp",
+      "exact_accuracy": {
+        "mean": 0.8328125,
+        "n": 15,
+        "std": 0.029052177506292753
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "matched_mlp",
+      "exact_accuracy": {
+        "mean": 0.7802083333333333,
+        "n": 15,
+        "std": 0.03949168980922562
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "matched_mlp",
+      "exact_accuracy": {
+        "mean": 0.8015625,
+        "n": 15,
+        "std": 0.026045386639068566
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "matched_mlp",
+      "exact_accuracy": {
+        "mean": 0.8078125,
+        "n": 15,
+        "std": 0.028598445652692383
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "matched_mlp",
+      "exact_accuracy": {
+        "mean": 0.8296875,
+        "n": 15,
+        "std": 0.034963509357716686
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "polynomial_svm",
+      "exact_accuracy": {
+        "mean": 0.5171875,
+        "n": 15,
+        "std": 0.01293872923766914
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "polynomial_svm",
+      "exact_accuracy": {
+        "mean": 0.48125,
+        "n": 15,
+        "std": 0.027825789361156112
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "polynomial_svm",
+      "exact_accuracy": {
+        "mean": 0.5119791666666667,
+        "n": 15,
+        "std": 0.044963506200928684
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "polynomial_svm",
+      "exact_accuracy": {
+        "mean": 0.5296875,
+        "n": 15,
+        "std": 0.03304023858980786
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "polynomial_svm",
+      "exact_accuracy": {
+        "mean": 0.5255208333333333,
+        "n": 15,
+        "std": 0.017335670844560714
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "polynomial_svm",
+      "exact_accuracy": {
+        "mean": 0.5104166666666666,
+        "n": 15,
+        "std": 0.01973480239564709
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "polynomial_svm",
+      "exact_accuracy": {
+        "mean": 0.5557291666666667,
+        "n": 15,
+        "std": 0.019333071952769235
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "polynomial_svm",
+      "exact_accuracy": {
+        "mean": 0.5520833333333334,
+        "n": 15,
+        "std": 0.03283729222114191
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "rbf_svm",
+      "exact_accuracy": {
+        "mean": 0.6802083333333333,
+        "n": 15,
+        "std": 0.04597979507413581
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "rbf_svm",
+      "exact_accuracy": {
+        "mean": 0.7546875,
+        "n": 15,
+        "std": 0.08309000001611849
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "rbf_svm",
+      "exact_accuracy": {
+        "mean": 0.7677083333333333,
+        "n": 15,
+        "std": 0.11897691352687274
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "rbf_svm",
+      "exact_accuracy": {
+        "mean": 0.8463541666666666,
+        "n": 15,
+        "std": 0.02392839096858036
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "rbf_svm",
+      "exact_accuracy": {
+        "mean": 0.7427083333333333,
+        "n": 15,
+        "std": 0.0261567398045395
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "rbf_svm",
+      "exact_accuracy": {
+        "mean": 0.7973958333333333,
+        "n": 15,
+        "std": 0.03832639769684423
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "rbf_svm",
+      "exact_accuracy": {
+        "mean": 0.8458333333333333,
+        "n": 15,
+        "std": 0.02277077478971257
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "rbf_svm",
+      "exact_accuracy": {
+        "mean": 0.8552083333333333,
+        "n": 15,
+        "std": 0.027202547833446635
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "rff",
+      "exact_accuracy": {
+        "mean": 0.6630208333333333,
+        "n": 15,
+        "std": 0.04868767001315141
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "rff",
+      "exact_accuracy": {
+        "mean": 0.7333333333333333,
+        "n": 15,
+        "std": 0.07244212077993878
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "rff",
+      "exact_accuracy": {
+        "mean": 0.7791666666666667,
+        "n": 15,
+        "std": 0.07657312851396805
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "rff",
+      "exact_accuracy": {
+        "mean": 0.8229166666666666,
+        "n": 15,
+        "std": 0.0332332015388799
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "rff",
+      "exact_accuracy": {
+        "mean": 0.6536458333333334,
+        "n": 15,
+        "std": 0.10856149422458135
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "rff",
+      "exact_accuracy": {
+        "mean": 0.68125,
+        "n": 15,
+        "std": 0.05757673935869043
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "rff",
+      "exact_accuracy": {
+        "mean": 0.7083333333333334,
+        "n": 15,
+        "std": 0.08443629277273122
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "rff",
+      "exact_accuracy": {
+        "mean": 0.6583333333333333,
+        "n": 15,
+        "std": 0.13087700329912633
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "QIA-L-q2-R1",
+      "exact_accuracy": {
+        "mean": 0.5005208333333333,
+        "n": 15,
+        "std": 0.002017178826149696
+      },
+      "model_type": "quantum_simulator",
+      "q": 2
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "QIA-L-q2-R1",
+      "exact_accuracy": {
+        "mean": 0.49947916666666664,
+        "n": 15,
+        "std": 0.009999069897221631
+      },
+      "model_type": "quantum_simulator",
+      "q": 2
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "QIA-L-q2-R1",
+      "exact_accuracy": {
+        "mean": 0.5020833333333333,
+        "n": 15,
+        "std": 0.022384583276272553
+      },
+      "model_type": "quantum_simulator",
+      "q": 2
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "QIA-L-q2-R1",
+      "exact_accuracy": {
+        "mean": 0.4942708333333333,
+        "n": 15,
+        "std": 0.006240692474359219
+      },
+      "model_type": "quantum_simulator",
+      "q": 2
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "QIA-L-q2-R2",
+      "exact_accuracy": {
+        "mean": 0.4421875,
+        "n": 15,
+        "std": 0.04357826625943914
+      },
+      "model_type": "quantum_simulator",
+      "q": 2
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "QIA-L-q2-R2",
+      "exact_accuracy": {
+        "mean": 0.48541666666666666,
+        "n": 15,
+        "std": 0.05138859562604009
+      },
+      "model_type": "quantum_simulator",
+      "q": 2
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "QIA-L-q2-R2",
+      "exact_accuracy": {
+        "mean": 0.4354166666666667,
+        "n": 15,
+        "std": 0.10562227032257562
+      },
+      "model_type": "quantum_simulator",
+      "q": 2
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "QIA-L-q2-R2",
+      "exact_accuracy": {
+        "mean": 0.41302083333333334,
+        "n": 15,
+        "std": 0.046395113001443014
+      },
+      "model_type": "quantum_simulator",
+      "q": 2
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "QIA-L-q4-R1",
+      "exact_accuracy": {
+        "mean": 0.5,
+        "n": 15,
+        "std": 0.0
+      },
+      "model_type": "quantum_simulator",
+      "q": 4
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "QIA-L-q4-R1",
+      "exact_accuracy": {
+        "mean": 0.49947916666666664,
+        "n": 15,
+        "std": 0.003576075845445808
+      },
+      "model_type": "quantum_simulator",
+      "q": 4
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "QIA-L-q4-R1",
+      "exact_accuracy": {
+        "mean": 0.5041666666666667,
+        "n": 15,
+        "std": 0.010995805477328075
+      },
+      "model_type": "quantum_simulator",
+      "q": 4
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "QIA-L-q4-R1",
+      "exact_accuracy": {
+        "mean": 0.496875,
+        "n": 15,
+        "std": 0.003961660569039922
+      },
+      "model_type": "quantum_simulator",
+      "q": 4
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "QIA-L-q4-R2",
+      "exact_accuracy": {
+        "mean": 0.4505208333333333,
+        "n": 15,
+        "std": 0.0380065612482459
+      },
+      "model_type": "quantum_simulator",
+      "q": 4
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "QIA-L-q4-R2",
+      "exact_accuracy": {
+        "mean": 0.4864583333333333,
+        "n": 15,
+        "std": 0.048830729097225925
+      },
+      "model_type": "quantum_simulator",
+      "q": 4
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "QIA-L-q4-R2",
+      "exact_accuracy": {
+        "mean": 0.4401041666666667,
+        "n": 15,
+        "std": 0.10227542816749895
+      },
+      "model_type": "quantum_simulator",
+      "q": 4
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "QIA-L-q4-R2",
+      "exact_accuracy": {
+        "mean": 0.4171875,
+        "n": 15,
+        "std": 0.042360755349143624
+      },
+      "model_type": "quantum_simulator",
+      "q": 4
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "QIA-P-q2-R1",
+      "exact_accuracy": {
+        "mean": 0.5015625,
+        "n": 15,
+        "std": 0.0032346823094172843
+      },
+      "model_type": "quantum_simulator",
+      "q": 2
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "QIA-P-q2-R1",
+      "exact_accuracy": {
+        "mean": 0.4984375,
+        "n": 15,
+        "std": 0.008455668270033844
+      },
+      "model_type": "quantum_simulator",
+      "q": 2
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "QIA-P-q2-R1",
+      "exact_accuracy": {
+        "mean": 0.5057291666666667,
+        "n": 15,
+        "std": 0.017831547877354366
+      },
+      "model_type": "quantum_simulator",
+      "q": 2
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "QIA-P-q2-R1",
+      "exact_accuracy": {
+        "mean": 0.49583333333333335,
+        "n": 15,
+        "std": 0.005806432444978176
+      },
+      "model_type": "quantum_simulator",
+      "q": 2
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "QIA-P-q2-R2",
+      "exact_accuracy": {
+        "mean": 0.4588541666666667,
+        "n": 15,
+        "std": 0.029744228381718186
+      },
+      "model_type": "quantum_simulator",
+      "q": 2
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "QIA-P-q2-R2",
+      "exact_accuracy": {
+        "mean": 0.4875,
+        "n": 15,
+        "std": 0.05129802301432845
+      },
+      "model_type": "quantum_simulator",
+      "q": 2
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "QIA-P-q2-R2",
+      "exact_accuracy": {
+        "mean": 0.4583333333333333,
+        "n": 15,
+        "std": 0.09525698519881189
+      },
+      "model_type": "quantum_simulator",
+      "q": 2
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "QIA-P-q2-R2",
+      "exact_accuracy": {
+        "mean": 0.42552083333333335,
+        "n": 15,
+        "std": 0.050619304500311324
+      },
+      "model_type": "quantum_simulator",
+      "q": 2
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "QIA-P-q4-R1",
+      "exact_accuracy": {
+        "mean": 0.5005208333333333,
+        "n": 15,
+        "std": 0.002017178826149696
+      },
+      "model_type": "quantum_simulator",
+      "q": 4
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "QIA-P-q4-R1",
+      "exact_accuracy": {
+        "mean": 0.49947916666666664,
+        "n": 15,
+        "std": 0.003576075845445808
+      },
+      "model_type": "quantum_simulator",
+      "q": 4
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "QIA-P-q4-R1",
+      "exact_accuracy": {
+        "mean": 0.49895833333333334,
+        "n": 15,
+        "std": 0.017184117632556055
+      },
+      "model_type": "quantum_simulator",
+      "q": 4
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "QIA-P-q4-R1",
+      "exact_accuracy": {
+        "mean": 0.4973958333333333,
+        "n": 15,
+        "std": 0.004821979686315371
+      },
+      "model_type": "quantum_simulator",
+      "q": 4
+    },
+    {
+      "budget_per_class": 16,
+      "candidate_id": "QIA-P-q4-R2",
+      "exact_accuracy": {
+        "mean": 0.4708333333333333,
+        "n": 15,
+        "std": 0.022384583276272553
+      },
+      "model_type": "quantum_simulator",
+      "q": 4
+    },
+    {
+      "budget_per_class": 32,
+      "candidate_id": "QIA-P-q4-R2",
+      "exact_accuracy": {
+        "mean": 0.4901041666666667,
+        "n": 15,
+        "std": 0.047564375236795305
+      },
+      "model_type": "quantum_simulator",
+      "q": 4
+    },
+    {
+      "budget_per_class": 64,
+      "candidate_id": "QIA-P-q4-R2",
+      "exact_accuracy": {
+        "mean": 0.46875,
+        "n": 15,
+        "std": 0.08151142694870632
+      },
+      "model_type": "quantum_simulator",
+      "q": 4
+    },
+    {
+      "budget_per_class": 128,
+      "candidate_id": "QIA-P-q4-R2",
+      "exact_accuracy": {
+        "mean": 0.4317708333333333,
+        "n": 15,
+        "std": 0.05152415601709366
+      },
+      "model_type": "quantum_simulator",
+      "q": 4
+    }
+  ],
+  "paired_quantum_vs_logistic": [
+    {
+      "candidate_id": "QIA-L-q2-R1",
+      "exact_accuracy_delta": {
+        "lower_95": -0.30482096354166666,
+        "mean": -0.28424479166666666,
+        "replicates": 2000,
+        "seed": 20260810,
+        "upper_95": -0.2623697916666667
+      },
+      "finite_accuracy_delta": {
+        "lower_95": -0.305078125,
+        "mean": -0.28372395833333336,
+        "replicates": 2000,
+        "seed": 20260811,
+        "upper_95": -0.26328125
+      },
+      "q": 2
+    },
+    {
+      "candidate_id": "QIA-L-q2-R2",
+      "exact_accuracy_delta": {
+        "lower_95": -0.374228515625,
+        "mean": -0.33932291666666664,
+        "replicates": 2000,
+        "seed": 20260810,
+        "upper_95": -0.303642578125
+      },
+      "finite_accuracy_delta": {
+        "lower_95": -0.3735709635416667,
+        "mean": -0.3391927083333333,
+        "replicates": 2000,
+        "seed": 20260811,
+        "upper_95": -0.305986328125
+      },
+      "q": 2
+    },
+    {
+      "candidate_id": "QIA-L-q4-R1",
+      "exact_accuracy_delta": {
+        "lower_95": -0.3265625,
+        "mean": -0.31640625,
+        "replicates": 2000,
+        "seed": 20260810,
+        "upper_95": -0.3061165364583333
+      },
+      "finite_accuracy_delta": {
+        "lower_95": -0.3268229166666667,
+        "mean": -0.3165364583333333,
+        "replicates": 2000,
+        "seed": 20260811,
+        "upper_95": -0.30638020833333335
+      },
+      "q": 4
+    },
+    {
+      "candidate_id": "QIA-L-q4-R2",
+      "exact_accuracy_delta": {
+        "lower_95": -0.39010416666666664,
+        "mean": -0.36796875,
+        "replicates": 2000,
+        "seed": 20260810,
+        "upper_95": -0.34544270833333335
+      },
+      "finite_accuracy_delta": {
+        "lower_95": -0.39115559895833335,
+        "mean": -0.36822916666666666,
+        "replicates": 2000,
+        "seed": 20260811,
+        "upper_95": -0.34674479166666666
+      },
+      "q": 4
+    },
+    {
+      "candidate_id": "QIA-P-q2-R1",
+      "exact_accuracy_delta": {
+        "lower_95": -0.30286783854166666,
+        "mean": -0.28294270833333335,
+        "replicates": 2000,
+        "seed": 20260810,
+        "upper_95": -0.2615885416666667
+      },
+      "finite_accuracy_delta": {
+        "lower_95": -0.303515625,
+        "mean": -0.2828125,
+        "replicates": 2000,
+        "seed": 20260811,
+        "upper_95": -0.26328125
+      },
+      "q": 2
+    },
+    {
+      "candidate_id": "QIA-P-q2-R2",
+      "exact_accuracy_delta": {
+        "lower_95": -0.35833984375,
+        "mean": -0.32578125,
+        "replicates": 2000,
+        "seed": 20260810,
+        "upper_95": -0.29153320312500003
+      },
+      "finite_accuracy_delta": {
+        "lower_95": -0.358466796875,
+        "mean": -0.3255208333333333,
+        "replicates": 2000,
+        "seed": 20260811,
+        "upper_95": -0.2936197916666667
+      },
+      "q": 2
+    },
+    {
+      "candidate_id": "QIA-P-q4-R1",
+      "exact_accuracy_delta": {
+        "lower_95": -0.3279947916666667,
+        "mean": -0.31744791666666666,
+        "replicates": 2000,
+        "seed": 20260810,
+        "upper_95": -0.306640625
+      },
+      "finite_accuracy_delta": {
+        "lower_95": -0.32838541666666665,
+        "mean": -0.31744791666666666,
+        "replicates": 2000,
+        "seed": 20260811,
+        "upper_95": -0.30663736979166667
+      },
+      "q": 4
+    },
+    {
+      "candidate_id": "QIA-P-q4-R2",
+      "exact_accuracy_delta": {
+        "lower_95": -0.3723958333333333,
+        "mean": -0.351171875,
+        "replicates": 2000,
+        "seed": 20260810,
+        "upper_95": -0.33059895833333336
+      },
+      "finite_accuracy_delta": {
+        "lower_95": -0.3734375,
+        "mean": -0.35234375,
+        "replicates": 2000,
+        "seed": 20260811,
+        "upper_95": -0.33254882812500003
+      },
+      "q": 4
+    }
+  ],
+  "provider_contacted": false,
+  "quantum_candidate_count": 8,
+  "raw_results_sha256": "f11b85b1440b2593239d26428d9d553a2c9773ac38d5e2a7e32386d858c0d476",
+  "row_count": 1440,
+  "schema_version": 1,
+  "scientific_claim_level": "calibration_only",
+  "selection_count": 12,
+  "status": "s0_calibration_analysis",
+  "summaries": [
+    {
+      "candidate_id": "finite_rbf",
+      "exact_accuracy": {
+        "mean": 0.7602864583333333,
+        "n": 60,
+        "std": 0.08448051883709949
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.7602864583333333,
+        "n": 60,
+        "std": 0.08448051883709949
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "candidate_id": "finite_rbf",
+      "exact_accuracy": {
+        "mean": 0.7427083333333333,
+        "n": 60,
+        "std": 0.07221941400224516
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.7427083333333333,
+        "n": 60,
+        "std": 0.07221941400224516
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "candidate_id": "linear_svm",
+      "exact_accuracy": {
+        "mean": 0.7833333333333333,
+        "n": 60,
+        "std": 0.07759175359526746
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.7833333333333333,
+        "n": 60,
+        "std": 0.07759175359526746
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "candidate_id": "linear_svm",
+      "exact_accuracy": {
+        "mean": 0.8170572916666666,
+        "n": 60,
+        "std": 0.03892432305479003
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.8170572916666666,
+        "n": 60,
+        "std": 0.03892432305479003
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "candidate_id": "logistic",
+      "exact_accuracy": {
+        "mean": 0.7833333333333333,
+        "n": 60,
+        "std": 0.07670675977419784
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.7833333333333333,
+        "n": 60,
+        "std": 0.07670675977419784
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "candidate_id": "logistic",
+      "exact_accuracy": {
+        "mean": 0.8165364583333333,
+        "n": 60,
+        "std": 0.03890305559458912
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.8165364583333333,
+        "n": 60,
+        "std": 0.03890305559458912
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "candidate_id": "low_rank_bilinear",
+      "exact_accuracy": {
+        "mean": 0.59375,
+        "n": 60,
+        "std": 0.16867936374742848
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.59375,
+        "n": 60,
+        "std": 0.16867936374742848
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "candidate_id": "low_rank_bilinear",
+      "exact_accuracy": {
+        "mean": 0.6634114583333334,
+        "n": 60,
+        "std": 0.13094391887489862
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.6634114583333334,
+        "n": 60,
+        "std": 0.13094391887489862
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "candidate_id": "matched_mlp",
+      "exact_accuracy": {
+        "mean": 0.76484375,
+        "n": 60,
+        "std": 0.07275933262915371
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.76484375,
+        "n": 60,
+        "std": 0.07275933262915371
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "candidate_id": "matched_mlp",
+      "exact_accuracy": {
+        "mean": 0.8048177083333333,
+        "n": 60,
+        "std": 0.0364880358476504
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.8048177083333333,
+        "n": 60,
+        "std": 0.0364880358476504
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "candidate_id": "polynomial_svm",
+      "exact_accuracy": {
+        "mean": 0.5100260416666667,
+        "n": 60,
+        "std": 0.03584733492236724
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.5100260416666667,
+        "n": 60,
+        "std": 0.03584733492236724
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "candidate_id": "polynomial_svm",
+      "exact_accuracy": {
+        "mean": 0.5359375,
+        "n": 60,
+        "std": 0.029450295673460348
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.5359375,
+        "n": 60,
+        "std": 0.029450295673460348
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "candidate_id": "rbf_svm",
+      "exact_accuracy": {
+        "mean": 0.7622395833333333,
+        "n": 60,
+        "std": 0.09574119807218846
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.7622395833333333,
+        "n": 60,
+        "std": 0.09574119807218846
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "candidate_id": "rbf_svm",
+      "exact_accuracy": {
+        "mean": 0.8102864583333333,
+        "n": 60,
+        "std": 0.05335838850046803
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.8102864583333333,
+        "n": 60,
+        "std": 0.05335838850046803
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "candidate_id": "rff",
+      "exact_accuracy": {
+        "mean": 0.749609375,
+        "n": 60,
+        "std": 0.08380349498272048
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.749609375,
+        "n": 60,
+        "std": 0.08380349498272048
+      },
+      "model_type": "classical",
+      "q": 2
+    },
+    {
+      "candidate_id": "rff",
+      "exact_accuracy": {
+        "mean": 0.675390625,
+        "n": 60,
+        "std": 0.09908697708949502
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.675390625,
+        "n": 60,
+        "std": 0.09908697708949502
+      },
+      "model_type": "classical",
+      "q": 4
+    },
+    {
+      "candidate_id": "QIA-L-q2-R1",
+      "exact_accuracy": {
+        "mean": 0.49908854166666666,
+        "n": 60,
+        "std": 0.012711048279621886
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.49908854166666666,
+        "n": 60,
+        "std": 0.012711048279621886
+      },
+      "finite_minus_exact_accuracy": {
+        "mean": 0.0005208333333333333,
+        "n": 60,
+        "std": 0.0024353849653347475
+      },
+      "finite_shot_accuracy": {
+        "mean": 0.499609375,
+        "n": 60,
+        "std": 0.013753445374389413
+      },
+      "model_type": "quantum_simulator",
+      "q": 2
+    },
+    {
+      "candidate_id": "QIA-L-q2-R2",
+      "exact_accuracy": {
+        "mean": 0.4440104166666667,
+        "n": 60,
+        "std": 0.07024871557599957
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.4440104166666667,
+        "n": 60,
+        "std": 0.07024871557599957
+      },
+      "finite_minus_exact_accuracy": {
+        "mean": 0.00013020833333333333,
+        "n": 60,
+        "std": 0.006185389466994293
+      },
+      "finite_shot_accuracy": {
+        "mean": 0.444140625,
+        "n": 60,
+        "std": 0.06904047421318578
+      },
+      "model_type": "quantum_simulator",
+      "q": 2
+    },
+    {
+      "candidate_id": "QIA-L-q4-R1",
+      "exact_accuracy": {
+        "mean": 0.5001302083333333,
+        "n": 60,
+        "std": 0.006511299375187659
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.5001302083333333,
+        "n": 60,
+        "std": 0.006511299375187659
+      },
+      "finite_minus_exact_accuracy": {
+        "mean": -0.00013020833333333333,
+        "n": 60,
+        "std": 0.0010085894130748483
+      },
+      "finite_shot_accuracy": {
+        "mean": 0.5,
+        "n": 60,
+        "std": 0.006102605202226119
+      },
+      "model_type": "quantum_simulator",
+      "q": 4
+    },
+    {
+      "candidate_id": "QIA-L-q4-R2",
+      "exact_accuracy": {
+        "mean": 0.4485677083333333,
+        "n": 60,
+        "std": 0.06671579565826995
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.4485677083333333,
+        "n": 60,
+        "std": 0.06671579565826995
+      },
+      "finite_minus_exact_accuracy": {
+        "mean": -0.00026041666666666666,
+        "n": 60,
+        "std": 0.006427347872249016
+      },
+      "finite_shot_accuracy": {
+        "mean": 0.44830729166666666,
+        "n": 60,
+        "std": 0.06635508164907201
+      },
+      "model_type": "quantum_simulator",
+      "q": 4
+    },
+    {
+      "candidate_id": "QIA-P-q2-R1",
+      "exact_accuracy": {
+        "mean": 0.500390625,
+        "n": 60,
+        "std": 0.010804752079770113
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.500390625,
+        "n": 60,
+        "std": 0.010804752079770113
+      },
+      "finite_minus_exact_accuracy": {
+        "mean": 0.00013020833333333333,
+        "n": 60,
+        "std": 0.0017567700337905055
+      },
+      "finite_shot_accuracy": {
+        "mean": 0.5005208333333333,
+        "n": 60,
+        "std": 0.010157438272511777
+      },
+      "model_type": "quantum_simulator",
+      "q": 2
+    },
+    {
+      "candidate_id": "QIA-P-q2-R2",
+      "exact_accuracy": {
+        "mean": 0.45755208333333336,
+        "n": 60,
+        "std": 0.063913548070359
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.45755208333333336,
+        "n": 60,
+        "std": 0.063913548070359
+      },
+      "finite_minus_exact_accuracy": {
+        "mean": 0.00026041666666666666,
+        "n": 60,
+        "std": 0.005924848996264046
+      },
+      "finite_shot_accuracy": {
+        "mean": 0.4578125,
+        "n": 60,
+        "std": 0.06429815328522143
+      },
+      "model_type": "quantum_simulator",
+      "q": 2
+    },
+    {
+      "candidate_id": "QIA-P-q4-R1",
+      "exact_accuracy": {
+        "mean": 0.49908854166666666,
+        "n": 60,
+        "std": 0.008993342138272685
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.49908854166666666,
+        "n": 60,
+        "std": 0.008993342138272685
+      },
+      "finite_minus_exact_accuracy": {
+        "mean": 0.0,
+        "n": 60,
+        "std": 0.0028767956809322604
+      },
+      "finite_shot_accuracy": {
+        "mean": 0.49908854166666666,
+        "n": 60,
+        "std": 0.010078198563761648
+      },
+      "model_type": "quantum_simulator",
+      "q": 4
+    },
+    {
+      "candidate_id": "QIA-P-q4-R2",
+      "exact_accuracy": {
+        "mean": 0.46536458333333336,
+        "n": 60,
+        "std": 0.0575784504974548
+      },
+      "exact_balanced_accuracy": {
+        "mean": 0.46536458333333336,
+        "n": 60,
+        "std": 0.0575784504974548
+      },
+      "finite_minus_exact_accuracy": {
+        "mean": -0.001171875,
+        "n": 60,
+        "std": 0.004946290247113127
+      },
+      "finite_shot_accuracy": {
+        "mean": 0.4641927083333333,
+        "n": 60,
+        "std": 0.058202554752543385
+      },
+      "model_type": "quantum_simulator",
+      "q": 4
+    }
+  ]
+}

@@ -392,7 +392,8 @@ def _train_sklearn(
     }
     opts = {k: v for k, v in config.items() if k in allowed}
     opts.setdefault("C", 1.0)
-    opts.setdefault("probability", True)
+    # Decision scores are sufficient for the evaluator's calibrated metrics;
+    # avoid hidden internal CV unless a caller explicitly requests probabilities.
     opts["kernel"] = kernel
     opts["random_state"] = seed
     estimator = lib["svc"](**opts).fit(X, y)

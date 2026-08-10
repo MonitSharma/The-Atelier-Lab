@@ -76,9 +76,33 @@ The following credential-free infrastructure is now implemented on `qatelier`:
   manifests;
 - the credential-free S0 preparation path in `run.py --prepare` validates those
   locks, encodes the declared union, and writes external immutable embedding
-  and train-only PCA artifacts. A local validation run produced 1,557 examples,
+  and train-only PCA artifacts. A local validation run produced 1,902 examples,
   768-dimensional embeddings, and 12 compressor artifacts; its preparation
   record is [`preparation_validation.json`](experiments/s0_reproduction/preparation_validation.json).
+- the S0 execution path now trains the declared classical controls and a
+  finite-difference NumPy PQC panel, evaluates exact and fixed finite-shot
+  expectations on all five confirmation seeds, and writes immutable raw JSON
+  with parameter/resource/history hashes. A bounded smoke run produced 45 rows;
+  its validation record is
+  [`execution_validation.json`](experiments/s0_reproduction/execution_validation.json).
+- the complete S0 panel is now archived under [`experiments/s0_reproduction/raw/`](experiments/s0_reproduction/raw/)
+  with derived analysis under [`experiments/s0_reproduction/analysis/`](experiments/s0_reproduction/analysis/).
+  It contains 1,440 rows across all 12 training selections, five confirmation
+  seeds, eight simulator candidates, and the eight declared classical controls
+  at q=2 and q=4. The completion manifest is
+  [`s0_completion.json`](experiments/s0_reproduction/s0_completion.json).
+- The calibration result is negative for the current short, preregistered
+  optimization budget: quantum-head accuracy is near chance and below the
+  classical controls in the archived analysis, while finite-shot metrics track
+  exact simulation closely. This does not support a C1/C2 claim and is retained
+  as a valid calibration outcome.
+- S1 now contains a hash-linked SST-2 classical reference lock derived from
+  those raw rows, separating strong references from parameter-matched controls.
+  The lock is archived under
+  [`experiments/s1_baseline_lock/artifacts/`](experiments/s1_baseline_lock/artifacts/).
+  S1 remains intentionally partial until the public semantic-pair, additional
+  classification, scientific retrieval, and controlled interaction-order tasks
+  are implemented and locked.
 
 Focused QAtelier verification currently passes: 69 tests plus 7 benchmark
 subtests, with Ruff clean. No provider job was submitted.
@@ -97,8 +121,8 @@ may not silently revise an earlier stage's split, baseline, or selection rule.
 
 | Stage | Purpose | Required controls | Advance rule | Status |
 | --- | --- | --- | --- | --- |
-| S0 — reproduction/calibration | Reproduce a compact published-style frozen-embedding quantum-head setup and resolve discrepancies. | Same embeddings and splits for LR/SVM and the quantum head; record simulator and seed. | Basic behavior is reproduced or the discrepancy is explained. | Planned |
-| S1 — classical baseline lock | Establish the reference numbers before quantum screening. | Shared compressor, full nonlinear baseline ladder, equal validation/search budgets. | Search spaces, metrics, seeds, and reference outputs are frozen. | Planned |
+| S0 — reproduction/calibration | Reproduce a compact published-style frozen-embedding quantum-head setup and resolve discrepancies. | Same embeddings and splits for LR/SVM and the quantum head; record simulator and seed. | Basic behavior is reproduced or the discrepancy is explained. | Complete; negative calibration result archived |
+| S1 — classical baseline lock | Establish the reference numbers before quantum screening. | Shared compressor, full nonlinear baseline ladder, equal validation/search budgets. | Search spaces, metrics, seeds, and reference outputs are frozen. | SST-2 locked; multi-task completion pending |
 | S2 — mechanism screen | Test QIA-P/L/X/A across low-data and controlled interaction-order conditions. | Matched `q`, depth, trainable-parameter bands, optimization budget, and paired seeds; include aligned and deliberately misaligned tasks. | Retain only Pareto candidates with stable validation utility and non-pathological gradients. | Planned |
 | S3 — held-out simulator | Evaluate the frozen candidates on all predeclared public/OOD tasks. | No test tuning; report paired effect sizes and bootstrap intervals across seeds/tasks. | C1/C2 evidence exists, or a rigorous negative result explains the loss. | Planned |
 | S4 — noise/shot screen | Estimate finite-shot and device-noise degradation. | Fixed shot budgets, noise-model versions, and candidate list; report gradient and resource costs. | Select 2–4 candidates only if signal is stable enough to justify QPU spend. | Planned |
@@ -145,11 +169,13 @@ may not silently revise an earlier stage's split, baseline, or selection rule.
 
 ## Immediate next actions
 
-1. Preserve the external S0 preparation directory and register its immutable
-   embedding/compressor manifest with the eventual result bundle.
-2. Implement the declared S0 head runner using the prepared cache, shared
-   compressors, classical controls, and exact/finite-shot simulator.
-3. Run S0, then lock the classical search spaces and baseline artifacts in S1.
+1. Use the S0 negative calibration to freeze the classical search spaces and
+   baseline artifacts in S1; do not tune the quantum panel against confirmation
+   results.
+2. Implement the mechanism diagnostics and controlled interaction-order screen
+   in S2, including spectrum-matched and kernel diagnostics.
+3. Keep IBM/Helios-1E execution gated until S2–S4 produce frozen candidates and
+   accepted resource/cost manifests.
 
 The optional provider dependencies and access checks are complete, but they do
 not advance the staged experiment plan. Hardware remains gated behind the

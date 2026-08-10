@@ -103,16 +103,20 @@ def validate_split_manifest(
             if actual != expected:
                 raise ValueError(f"train selection is not reproducible for seed={seed}, budget={budget}")
     confirmation_budget = int(split_document["confirmation_budget_per_class"])
-    confirmation = _validate_indices(
-        split_document["confirmation_row_indices"], dev_rows, budget_per_class=confirmation_budget
-    )
-    expected_confirmation = select_stratified_indices(
-        dev_rows,
-        seed=int(split_document["confirmation_seed"]),
-        budget_per_class=confirmation_budget,
-    )
-    if confirmation != expected_confirmation:
-        raise ValueError("confirmation selection is not reproducible")
+    confirmation_seeds = [int(value) for value in split_document.get("confirmation_seeds", [])]
+    confirmation_selections = split_document.get("confirmation_row_indices", {})
+    for seed in confirmation_seeds:
+        declared = confirmation_selections.get(str(seed))
+        if declared is None:
+            raise ValueError(f"missing confirmation selection for seed={seed}")
+        confirmation = _validate_indices(declared, dev_rows, budget_per_class=confirmation_budget)
+        expected_confirmation = select_stratified_indices(
+            dev_rows,
+            seed=seed,
+            budget_per_class=confirmation_budget,
+        )
+        if confirmation != expected_confirmation:
+            raise ValueError(f"confirmation selection is not reproducible for seed={seed}")
 
 
 def selected_examples(

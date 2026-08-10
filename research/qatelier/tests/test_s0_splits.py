@@ -30,4 +30,5 @@ def test_committed_s0_split_manifest_has_all_declared_selections():
     for selections in split["train_row_indices"].values():
         assert set(selections) == {"16", "32", "64", "128"}
         assert [len(selections[str(budget)]) for budget in (16, 32, 64, 128)] == [2 * budget for budget in (16, 32, 64, 128)]
-    assert len(split["confirmation_row_indices"]) == 128
+    assert set(split["confirmation_row_indices"]) == {"101", "103", "107", "109", "113"}
+    assert all(len(indices) == 128 for indices in split["confirmation_row_indices"].values())

@@ -1,0 +1,16 @@
+{
+  "status": "bounded_smoke_only",
+  "validated_on": "2026-08-10",
+  "selection_limit": 1,
+  "candidate_limit": 1,
+  "confirmation_seed_count": 5,
+  "raw_row_count": 45,
+  "execution_modes": [
+    "exact_numpy_statevector",
+    "finite_shot_numpy_statevector"
+  ],
+  "finite_shots": 4096,
+  "provider_contacted": false,
+  "jobs_submitted": 0,
+  "scientific_result_claimed": false
+}

@@ -1,6 +1,6 @@
 schema_version: 1
 experiment_id: qatelier-s0-reproduction
-status: preregistered_not_run
+status: completed_calibration_external_raw_bundle
 encoder:
   model_id: sentence-transformers/paraphrase-mpnet-base-v2
   revision: 6cc9279c672dc57f94445ef259b28a1b736fec8f
@@ -24,6 +24,20 @@ protocol:
   quantum_families: [QIA-P, QIA-L]
   quantum_qubits: [2, 4]
   quantum_reuploads: [1, 2]
+  quantum_train_steps: 8
+  quantum_learning_rate: 0.08
+  quantum_finite_difference_epsilon: 0.01
+  quantum_l2: 0.001
+  quantum_initialization_scale: 0.1
+  classical_controls:
+    - logistic
+    - linear_svm
+    - rbf_svm
+    - polynomial_svm
+    - rff
+    - matched_mlp
+    - low_rank_bilinear
+    - finite_rbf
 hardware:
   execution_mode: simulator
   physical_quantinuum_allowed: false
