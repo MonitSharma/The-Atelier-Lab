@@ -7,7 +7,9 @@ writes files (``/upload``) and can start an agent that edits a repository
 (``/repo_action``), three cheap browser-side invariants are enforced on every
 request:
 
-* **Host** must name loopback — defeats DNS rebinding, which cannot forge it.
+* **Host** must name loopback when bound to loopback — defeats DNS rebinding,
+  which cannot forge it. Deliberate non-loopback exposure is allowed with a
+  warning and same-host Origin checks, but the API has no authentication.
 * **Origin**, when present, must be this same server — defeats classic CSRF.
 * **Content-Type** on POST must be JSON — a cross-origin ``fetch`` cannot set
   that without a preflight, and we deliberately answer no CORS preflight.
@@ -17,7 +19,9 @@ The bundled UI at ``/ui`` is same-origin, so it satisfies all three unchanged.
 
 from __future__ import annotations
 
+import ipaddress
 import json
+import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 from urllib.parse import parse_qs, urlparse
@@ -41,18 +45,42 @@ class _Handler(BaseHTTPRequestHandler):
         origins |= {f"http://{name}" for name in _LOOPBACK_NAMES}
         return hosts, origins
 
+    def _is_loopback_binding(self) -> bool:
+        """Whether the server is bound only to a loopback interface."""
+        bound_host = str(self.server.server_address[0]).strip().lower()
+        if bound_host in {"localhost", "ip6-localhost"}:
+            return True
+        try:
+            return ipaddress.ip_address(bound_host).is_loopback
+        except ValueError:
+            return False
+
     def _reject_untrusted_origin(self, *, require_json: bool) -> bool:
         """Write an error and return True when the request must not proceed."""
         hosts, origins = self._local_names()
 
         host = (self.headers.get("Host") or "").strip().lower()
-        if host and host not in hosts:
+        loopback_binding = self._is_loopback_binding()
+        if loopback_binding and host and host not in hosts:
             self._write({"status": "error", "error_type": "untrusted_host",
                          "message": "This API only accepts loopback Host headers."}, 403)
             return True
 
         origin = (self.headers.get("Origin") or "").strip().lower()
-        if origin and origin not in origins:
+        if loopback_binding:
+            origin_allowed = origin in origins
+        else:
+            # A deliberately exposed server cannot know its public hostname
+            # from the bind address (0.0.0.0 / ::). Still require a same-host
+            # HTTP Origin, rather than accepting arbitrary cross-site callers.
+            origin_parts = urlparse(origin) if origin else None
+            origin_allowed = bool(
+                origin_parts
+                and origin_parts.scheme == "http"
+                and host
+                and origin_parts.netloc == host
+            )
+        if origin and not origin_allowed:
             self._write({"status": "error", "error_type": "cross_origin_denied",
                          "message": "Cross-origin requests are not accepted."}, 403)
             return True
@@ -157,6 +185,15 @@ class _Handler(BaseHTTPRequestHandler):
 
 
 def run_server(host: str = "127.0.0.1", port: int = 8787, service: AtelierService | None = None) -> None:
+    try:
+        is_loopback = ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        is_loopback = host in {"localhost", "ip6-localhost"}
+    if not is_loopback:
+        print(
+            "WARNING: Atelier API is exposed beyond loopback without authentication.",
+            file=sys.stderr,
+        )
     handler = type("AtelierHandler", (_Handler,), {"service": service or AtelierService()})
     server = ThreadingHTTPServer((host, port), handler)
     try:

@@ -25,7 +25,9 @@ from tools.files import _resolve_workspace_path
 
 DEFAULT_TIMEOUT = 60
 
-# Obvious destructive / exfiltration patterns we refuse outright.
+# Belt-and-braces deny patterns: the executable allowlist rejects these names
+# first, but retaining the patterns makes the policy explicit if the allowlist
+# is expanded later or a command embeds one of these operations as text.
 _DENY = ("rm -rf /", "rm -rf ~", ":(){", "mkfs", "dd if=", "> /dev/sd",
          "shutdown", "reboot", "curl ", "wget ", "scp ", "nc ")
 _NETWORK_MARKERS = (

@@ -17,7 +17,7 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote, urlencode, urlparse
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 from xml.etree import ElementTree
 
 from atelier.config import settings
@@ -266,6 +266,20 @@ def verify_citation(arguments: dict[str, Any], *, opener: _OPEN | None = None) -
 _DOWNLOAD_HOSTS = frozenset({"arxiv.org", "export.arxiv.org", "doi.org", "api.crossref.org"})
 
 
+def _download_url_allowed(url: str) -> bool:
+    parsed = urlparse(url)
+    return parsed.scheme == "https" and parsed.hostname in _DOWNLOAD_HOSTS
+
+
+class _AllowlistedRedirectHandler(HTTPRedirectHandler):
+    """Reject a redirect that leaves the explicitly approved research hosts."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if not _download_url_allowed(newurl):
+            raise ValueError("download redirect target is not an approved HTTPS research host")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
 def download_paper(arguments: dict[str, Any], *, opener: _OPEN | None = None) -> dict[str, Any]:
     """Download an explicitly selected paper URL into the approved workspace."""
     denied = _network_error()
@@ -275,8 +289,7 @@ def download_paper(arguments: dict[str, Any], *, opener: _OPEN | None = None) ->
     destination = arguments.get("destination")
     if not isinstance(url, str) or not isinstance(destination, str) or not url.strip() or not destination.strip():
         return {"status": "error", "error_type": "invalid_arguments", "message": "Provide url and destination."}
-    parsed = urlparse(url)
-    if parsed.scheme != "https" or parsed.hostname not in _DOWNLOAD_HOSTS:
+    if not _download_url_allowed(url):
         return {"status": "denied", "error_type": "download_host_not_allowed", "message": "Only approved HTTPS research hosts may be downloaded."}
     context = current_workspace_context()
     if context is None:
@@ -294,7 +307,11 @@ def download_paper(arguments: dict[str, Any], *, opener: _OPEN | None = None) ->
         max_bytes = 50_000_000
     try:
         request = Request(url, headers={"Accept": "application/pdf,application/octet-stream", "User-Agent": "Atelier/1.0"})
-        with (opener or urlopen)(request, timeout=30) as response:  # noqa: S310 - host allowlist above
+        if opener is None:
+            response = build_opener(_AllowlistedRedirectHandler()).open(request, timeout=30)
+        else:
+            response = opener(request, timeout=30)
+        with response:  # Redirects from the default opener are host-validated above.
             content = response.read(max_bytes + 1)
         if len(content) > max_bytes:
             return {"status": "error", "error_type": "download_too_large", "message": f"Maximum is {max_bytes} bytes."}

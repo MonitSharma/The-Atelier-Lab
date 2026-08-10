@@ -152,7 +152,16 @@ atelier --workspace ~/code_projects/my-project code-fix \
   "Add a regression test for the parser" --path . --no-escalate --json
 ```
 
-The workspace root is the privacy and capability boundary. `read` is enough for inspection and retrieval; `write` is required for edits; `execute` is required to run tests or programs; `network` is separate and off by default. `atelier workspace list` shows the current registry.
+The inspection and ingestion examples need only automatic `read` access. For
+the editing and test-running example, approve the repository once first:
+
+```bash
+atelier workspace add ~/code_projects/my-project \
+  --name my-project --capabilities read,write,execute
+atelier workspace open my-project
+```
+
+The workspace root is the privacy and capability boundary. `read` is enough for inspection and retrieval; `write` is required for edits; `execute` is required to run tests or programs; `network` is separate and off by default. Automatically discovered directories receive `read` only. To let an agent edit and test a repository, approve those capabilities explicitly with `atelier workspace add ... --capabilities read,write,execute`, then open it. `atelier workspace list` shows the current registry.
 
 ### Asking better questions
 
@@ -245,7 +254,7 @@ Build mode follows:
 inspect → baseline tests → edit → regression tests → diff review → certificate
 ```
 
-Workspace capabilities are explicit. `read` is enough for inspection; `write` and `execute` are required for modifications and tests. The default privacy policy is `LOCAL_ONLY`.
+Workspace capabilities are explicit. `read` is enough for inspection; `write` and `execute` are required for modifications and tests. The source checkout is a read-only system workspace, and automatic current-directory activation is read-only. The default privacy policy is `LOCAL_ONLY`.
 
 ### 3. Read handwritten notes and images
 

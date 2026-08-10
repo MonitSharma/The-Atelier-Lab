@@ -137,3 +137,34 @@ def test_loopback_api_uses_the_shared_service_contract(tmp_path: Path):
         server.shutdown()
         server.server_close()
         thread.join(timeout=2)
+
+
+def test_deliberate_non_loopback_binding_accepts_same_host_requests(tmp_path: Path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    manager = WorkspaceManager(tmp_path / "registry.json")
+    manager.add(root, name="repo", capabilities={"read", "write", "execute"})
+    manager.open("repo")
+    if "atelier" in {item.name for item in manager.list()}:
+        manager.close("atelier")
+    handler = type("TestAtelierHandler", (_Handler,), {"service": AtelierService(manager=manager)})
+    server = ThreadingHTTPServer(("0.0.0.0", 0), handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base = f"http://127.0.0.1:{server.server_address[1]}"
+    try:
+        with urlopen(base + "/health") as response:
+            assert json.loads(response.read())["status"] == "ok"
+
+        request = Request(base + "/health", headers={"Origin": base})
+        with urlopen(request) as response:
+            assert json.loads(response.read())["status"] == "ok"
+
+        denied = Request(base + "/health", headers={"Origin": "http://evil.example"})
+        with pytest.raises(HTTPError) as excinfo:
+            urlopen(denied)
+        assert excinfo.value.code == 403
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)

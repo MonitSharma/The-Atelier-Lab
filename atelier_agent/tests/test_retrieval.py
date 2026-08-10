@@ -63,8 +63,7 @@ class _FakeStore:
 
 
 def _reset_process_cache():
-    lexical_module._cache["index"] = None
-    lexical_module._cache["fingerprint"] = None
+    lexical_module._cache.clear()
 
 
 def test_bm25_does_not_reread_the_corpus_on_repeat_queries(tmp_path) -> None:
@@ -104,3 +103,23 @@ def test_bm25_disk_cache_survives_a_fresh_process(tmp_path) -> None:
 
     assert store.get_all_calls == 1
     assert index.search("quick fox", n=1)[0]["text"] == DOCS[0]
+
+
+def test_bm25_disk_cache_isolated_between_collections(tmp_path) -> None:
+    """Memory and knowledge collections may share a Chroma directory."""
+    from rag.chunk import Chunk
+    from rag.store import VectorStore
+
+    knowledge = VectorStore(path=str(tmp_path), collection="atelier")
+    memory = VectorStore(path=str(tmp_path), collection="atelier_memory")
+    chunk = Chunk(text="knowledge alpha", source="knowledge.md", chunk_index=0, metadata={})
+    knowledge.add([chunk], [[1.0, 0.0]])
+    memory.upsert_raw(["memory-1"], ["memory beta"], [[0.0, 1.0]], [{"kind": "memory"}])
+    _reset_process_cache()
+
+    knowledge_index = get_bm25(knowledge)
+    memory_index = get_bm25(memory)
+
+    assert knowledge_index.docs == ["knowledge alpha"]
+    assert memory_index.docs == ["memory beta"]
+    assert knowledge_index is not memory_index

@@ -1,7 +1,16 @@
 import json
+from urllib.request import Request
+
+import pytest
 
 from atelier.workspace import Workspace, WorkspaceContext, workspace_scope
-from tools.research import download_paper, lookup_research, research_graph, verify_citation
+from tools.research import (
+    _AllowlistedRedirectHandler,
+    download_paper,
+    lookup_research,
+    research_graph,
+    verify_citation,
+)
 
 
 class FakeResponse:
@@ -101,3 +110,11 @@ def test_download_requires_allowlisted_host_and_writes_provenance(tmp_path):
     with workspace_scope(context):
         denied = download_paper({"url": "https://example.com/paper.pdf", "destination": "other.pdf"}, opener=opener)
     assert denied["error_type"] == "download_host_not_allowed"
+
+
+def test_download_redirect_cannot_leave_allowlisted_hosts() -> None:
+    handler = _AllowlistedRedirectHandler()
+    request = Request("https://arxiv.org/pdf/1234.5678")
+
+    with pytest.raises(ValueError, match="redirect target"):
+        handler.redirect_request(request, None, 302, "Found", {}, "https://evil.example/payload")

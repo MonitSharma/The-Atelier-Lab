@@ -162,7 +162,7 @@ def serve(
     host: str = typer.Option("127.0.0.1", "--host", help="Bind only to localhost by default."),
     port: int = typer.Option(8787, "--port", min=1, max=65535),
 ) -> None:
-    """Run the optional loopback API used by the web UI and integrations."""
+    """Run the optional API; loopback is the safe default for the web UI."""
     from atelier.api import run_server
 
     console.print(f"Atelier API listening on http://{host}:{port}")

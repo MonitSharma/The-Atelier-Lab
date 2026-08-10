@@ -87,17 +87,24 @@ active local workspace. You can explicitly target another directory with
 `--workspace` (or `--root`):
 
 ```bash
-atelier --workspace ~/code_projects/my-project agent "Fix the failing tests"
 atelier --workspace ~/Documents/papers ingest .
 atelier --workspace ~/Documents/papers paper report.pdf --ingest
 atelier --workspace ~/code_projects/my-project repo inspect .
 ```
 
-The automatic workspace grants `read`, `write`, and `execute` only inside that
-directory and never grants network access. This is the same working-directory
-model used by repository agents while retaining Atelier's explicit privacy
-boundary. `atelier workspace list` shows the active roots; close old automatic
-entries with `atelier workspace close NAME`.
+The automatic workspace grants `read` only. This prevents merely launching
+Atelier from silently granting an agent write and execute access. To permit
+edits and test execution, approve the repository explicitly:
+
+```bash
+atelier workspace add ~/code_projects/my-project \
+  --name my-project --capabilities read,write,execute
+atelier workspace open my-project
+```
+
+Automatic activation never grants network access. `atelier workspace list`
+shows the active roots; close old automatic entries with
+`atelier workspace close NAME`.
 
 For developers who want to run directly from the checkout:
 

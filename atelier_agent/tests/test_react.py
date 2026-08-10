@@ -178,3 +178,20 @@ def test_pruning_tells_the_model_that_history_was_dropped() -> None:
     assert pruned[1]["content"] == "goal"
     assert "4 earlier step(s) elided" in pruned[2]["content"]
     assert pruned[-1]["content"] == "obs5"
+
+
+def test_pruning_reports_cumulative_elisions() -> None:
+    agent = ReActAgent(_registry(), log=False, history_pairs=3)
+    messages = [{"role": "system", "content": "sys"}, {"role": "user", "content": "goal"}]
+    for i in range(10):
+        messages.append({"role": "assistant", "content": f"a{i}"})
+        messages.append({"role": "user", "content": f"obs{i}"})
+
+    first = agent._prune(messages)
+    first.extend([
+        {"role": "assistant", "content": "a10"},
+        {"role": "user", "content": "obs10"},
+    ])
+    second = agent._prune(first)
+
+    assert "8 earlier step(s) elided" in second[2]["content"]
