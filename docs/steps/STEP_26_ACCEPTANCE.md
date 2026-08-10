@@ -7,8 +7,8 @@ creation, project memory, and runtime recovery. It reports every check instead
 of stopping at the first failure.
 
 `atelier acceptance --clean` additionally creates a fresh temporary `Atelier`
-home and workspace, profiles a structured file, characterizes a real paper
-fixture, persists an approval-gated workflow, reconstructs the service from
+home and workspace, profiles a structured file, characterizes a deterministic
+paper fixture, persists an approval-gated workflow, reconstructs the service from
 disk, resumes it, and verifies local-only research denial. This is the
 model-free clean-state evidence; live local-model answer and code quality are
 recorded separately in

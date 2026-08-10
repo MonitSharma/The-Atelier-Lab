@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import base64
-import shutil
 import tempfile
 from dataclasses import dataclass, asdict
 from pathlib import Path
@@ -34,6 +33,38 @@ class AcceptanceCheck:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+
+def _write_acceptance_pdf(path: Path) -> None:
+    """Create a small deterministic paper fixture without repository data."""
+    import fitz
+
+    document = fitz.open()
+    page = document.new_page(width=612, height=792)
+    page.insert_text((72, 72), "Atelier Acceptance Paper", fontsize=18)
+    page.insert_textbox(
+        fitz.Rect(72, 110, 540, 260),
+        "Abstract: This deterministic fixture tests paper characterization, "
+        "page citations, and rendered figure evidence without requiring a "
+        "downloaded or ignored research corpus. The experiment compares two "
+        "local policies under a bounded synthetic workload.",
+        fontsize=11,
+    )
+    page.draw_rect(fitz.Rect(120, 330, 480, 520), color=(0.1, 0.2, 0.6), fill=(0.9, 0.93, 1.0))
+    page.draw_line((150, 480), (450, 370), color=(0.8, 0.1, 0.1), width=2)
+    page.insert_text((120, 550), "Figure 1: Synthetic policy comparison.", fontsize=10)
+    page2 = document.new_page(width=612, height=792)
+    page2.insert_text((72, 72), "Results and limitations", fontsize=16)
+    page2.insert_textbox(
+        fitz.Rect(72, 110, 540, 300),
+        "Results: Policy A has lower average cost in the fixture. This result "
+        "is illustrative only and does not establish a general advantage. "
+        "Limitations include the synthetic workload and the absence of an "
+        "external benchmark.",
+        fontsize=11,
+    )
+    document.save(path)
+    document.close()
 
 
 def _check(name: str, function: Callable[[], str]) -> AcceptanceCheck:
@@ -88,10 +119,7 @@ def run_clean_acceptance(root: str | Path) -> dict[str, Any]:
         (workspace_root / "circuit.qasm").write_text(
             "OPENQASM 2.0; qreg q[2]; h q[0]; cx q[0],q[1];\n", encoding="utf-8"
         )
-        source_pdf = base / "data" / "corpus" / "papers" / "qshield.pdf"
-        if not source_pdf.is_file():
-            raise FileNotFoundError(f"clean acceptance fixture is missing: {source_pdf}")
-        shutil.copy2(source_pdf, workspace_root / "paper.pdf")
+        _write_acceptance_pdf(workspace_root / "paper.pdf")
 
         registry = home.workspaces / "registry.json"
         manager = WorkspaceManager(registry)
