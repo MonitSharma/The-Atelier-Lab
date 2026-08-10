@@ -39,7 +39,7 @@ experiments:
     name: Atelier reliability suites
     track: reliable_agents
     status: completed
-    location: atelier_agent/docs/EVAL.md
+    location: docs/CURRENT_RESULTS.md
     primary_question: How reliably can a local agent retrieve, edit, and verify?
     main_result: Latest expanded report records 17/18 knowledge, 13/13 code, and 10/10 combined.
     reproduction_command: make -C atelier_agent eval

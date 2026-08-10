@@ -27,8 +27,8 @@ done
 say "[3/6] Unit tests"
 pytest -q
 
-say "[4/6] Ingest the sample corpus"
-atelier ingest ./Project.md ./README.md ./myNotes.md
+say "[4/6] Ingest the frozen sample corpus"
+atelier ingest ./eval/fixtures/docqa_corpus/Project.md ./README.md ./eval/fixtures/docqa_corpus/myNotes.md
 
 say "[5/6] Reliability eval (both modes)"
 atelier eval --mode all
@@ -42,4 +42,4 @@ if [ ! -f models/router/adapter/adapters.safetensors ]; then
 fi
 python -m models.router.evaluate
 
-say "Done. Reports in data/eval_reports/ — see docs/EVAL.md and docs/WRITEUP.md."
+say "Done. Reports in data/eval_reports/ — see ../docs/CURRENT_RESULTS.md."

@@ -18,7 +18,7 @@
 - Every deliverable should produce a **committed artifact** (code, a written result, a plot, or a doc). Learning that leaves no artifact doesn't count here.
 - Prefer **build-from-scratch → then framework**. Understand the primitive before adopting the tool that hides it.
 - Log every meaningful session in [§9 Progress Log](#9-progress-log). Terse is fine.
-- **Honesty rule (from Project.md):** negative results and hard limits are features. Record where things fail.
+- **Honesty rule:** negative results and hard limits are features. Record where things fail.
 - Re-read [§8 Honest limits](#8-honest-limits-of-a-single-laptop) whenever a task feels impossible — some are, and the right move is *read + tiny reproduction*, not brute force.
 
 **Legend for effort tags:** 🟢 hours · 🟡 days · 🔴 week+ · 📖 reading · 🧪 experiment · 🛠️ build · ✍️ write-up
@@ -297,7 +297,7 @@ The bar for "expert" is **precise reasoning + measured small-scale reproductions
 
 > Format: `YYYY-MM-DD — what you did — artifact / result`
 
-- 2026-07-06 — Trained + evaluated the planner-router; wrote `evaluate_planner.py`; honest finding (format learned, routing not, data-limited) — `models/router/planner_adapter/`, Project.md changelog.
+- 2026-07-06 — Trained + evaluated the planner-router; wrote `evaluate_planner.py`; honest finding (format learned, routing not, data-limited) — `models/router/planner_adapter/`.
 - 2026-07-06 — Built inference benchmark (exp 003); found+fixed the prompt-cache measurement trap; three-model sweep showed param-count ≠ decode speed (gemma4:26b faster than qwen3:14b) — `foundation/experiments/003_local_inference_benchmark/`.
 - 2026-07-07 — Created this roadmap.
 - _next entry here…_

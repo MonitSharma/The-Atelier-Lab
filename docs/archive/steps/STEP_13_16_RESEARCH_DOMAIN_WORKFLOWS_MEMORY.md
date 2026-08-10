@@ -74,7 +74,7 @@ carry a source and optional expiry.
 
 ```bash
 atelier project memory-add atelier "Qwen3 8B is the selected coder" \
-  --kind decision --source docs/steps/STEP_07_CODING_SPECIALIST_BENCHMARK.md
+  --kind decision --source docs/archive/steps/STEP_07_CODING_SPECIALIST_BENCHMARK.md
 atelier project memory-list atelier
 atelier project memory-export atelier /tmp/atelier-memory.json
 atelier project memory-import atelier /tmp/atelier-memory.json

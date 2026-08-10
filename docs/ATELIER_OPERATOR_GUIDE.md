@@ -57,6 +57,9 @@ not search or upload anything.
 Commands are executed without a shell, so pipes and redirections are not
 interpreted inside the Atelier prompt; use a normal terminal for shell syntax.
 
+For a complete document workflow, including the current DOCX conversion step
+and a QAtelier example, see [`WORKING_WITH_DOCUMENTS.md`](WORKING_WITH_DOCUMENTS.md).
+
 For a direct one-time installation in a new checkout:
 
 ```bash
@@ -105,7 +108,7 @@ atelier workspace add ~/code_projects/my-project \
 atelier workspace open my-project
 
 # Index local research material.
-atelier ingest ~/Documents/papers ./Project.md
+atelier ingest ~/Documents/papers ./research-notes.md
 atelier sources
 
 # Search first, then ask for a grounded synthesis.
@@ -383,7 +386,7 @@ pytest -q
 ```
 
 The local release evidence is in
-[`steps/STEP_26_ATELIER_V1_RELEASE.md`](steps/STEP_26_ATELIER_V1_RELEASE.md).
+[`archive/steps/STEP_26_ATELIER_V1_RELEASE.md`](archive/steps/STEP_26_ATELIER_V1_RELEASE.md).
 The dependency-ordered plan is in
 [`ATELIER_WORKBENCH_PLAN.md`](ATELIER_WORKBENCH_PLAN.md).
 

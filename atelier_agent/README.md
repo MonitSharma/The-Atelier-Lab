@@ -1,713 +1,82 @@
-<div align="center">
+# Atelier package
 
-# Project Atelier
+This directory contains the installable Atelier application: the CLI, local
+RAG pipeline, ReAct agent, guarded tools, evaluations, and runtime services.
 
-**A local-first, dual-mode AI research workbench that runs on a single MacBook.**
+For user-facing operation, use the repository-level guides:
 
-*Answer questions over your own notes. Read and fix your code with test-verified changes.
-Local-first by default; optional network research and frontier handoffs are explicit and permission-gated.*
+- [`docs/START_HERE.md`](../docs/START_HERE.md) — choose a path.
+- [`docs/ATELIER_OPERATOR_GUIDE.md`](../docs/ATELIER_OPERATOR_GUIDE.md) — run
+  the CLI, understand the architecture, and see the model roles.
+- [`docs/WORKING_WITH_DOCUMENTS.md`](../docs/WORKING_WITH_DOCUMENTS.md) —
+  ingest papers, notes, and the QAtelier research plan.
+- [`docs/CURRENT_ARCHITECTURE.md`](../docs/CURRENT_ARCHITECTURE.md) — frozen
+  current-state architecture.
+- [`docs/CURRENT_RESULTS.md`](../docs/CURRENT_RESULTS.md) — measured results
+  and their limits.
 
-</div>
+## Install for development
 
----
-
-Atelier is one agent harness with **two capability modes**:
-
-- 🧠 **Knowledge mode** — retrieval-augmented Q&A grounded in *your own* notes, PDFs, and code.
-- 🔧 **Build mode** — an autonomous agent that reads a repo, edits code, runs tests, and fixes failures, **proving** each change with a green test run.
-
-It runs entirely against a local [Ollama](https://ollama.com) server and local
-embedding models. It also ships persistent **memory**, an **MCP server** so other
-tools can use its toolbox, **hybrid retrieval**, a **LoRA-fine-tuned router** that
-sends easy work to a cheap model, and a **self-evaluation harness** that measures
-its own reliability — and reports where it fails.
-
-> **Why local-first?** The default path is private and offline-capable. Network
-> research and frontier-model handoffs are separate, explicit, permission-gated
-> operations with provenance and redaction rather than implicit data transfer.
-
-For the complete operating manual, architecture explanation, current model
-inventory, disk sizes, and role assignments, see
-[`docs/ATELIER_OPERATOR_GUIDE.md`](../docs/ATELIER_OPERATOR_GUIDE.md).
-
-**Current state:** the deterministic foundation and the clean-state local v1.0
-scenario are verified. The project has an installable CLI, local RAG, approved
-workspaces, repository intelligence, coding workflows, durable tasks and
-project memory, research/quantum/optimization tools, a shared service/API, a
-replaceable web UI, and model-backed plus model-free acceptance evidence.
-Provider-backed quantum execution, external solvers, hardened OS isolation,
-signed artifacts, and automatic cloud routing remain explicit extensions.
-
----
-
-## Table of contents
-
-1. [Highlights](#highlights)
-2. [How it works (architecture)](#how-it-works-architecture)
-3. [Requirements](#requirements)
-4. [Installation](#installation)
-5. [5-minute quickstart](#5-minute-quickstart)
-6. [What's been built — the phases](#whats-been-built--the-phases)
-7. [Usage guide](#usage-guide)
-   - [Knowledge mode](#knowledge-mode)
-   - [Build mode (the agent)](#build-mode-the-agent)
-   - [Memory](#memory)
-   - [Routing](#routing)
-   - [MCP server](#mcp-server)
-   - [Evaluation](#evaluation)
-8. [CLI command reference](#cli-command-reference)
-9. [Configuration reference](#configuration-reference)
-10. [Models & hardware budget](#models--hardware-budget)
-11. [Reliability results](#reliability-results)
-12. [Reproduce everything](#reproduce-everything)
-13. [Testing](#testing)
-14. [Project structure](#project-structure)
-15. [Troubleshooting](#troubleshooting)
-16. [Limitations (read these)](#limitations-read-these)
-17. [Further reading](#further-reading)
-18. [License](#license)
-
----
-
-## Highlights
-
-| | Feature | What it gives you |
-|---|---|---|
-| 🧠 | **Grounded Q&A** | Answers cite *your* documents; says "not in your notes" instead of hallucinating |
-| 🔧 | **Autonomous coding** | Fixes a failing test across a multi-step tool-using run, verified by pytest |
-| 🔎 | **Hybrid retrieval** | Dense (embeddings) + BM25 fused via RRF, with optional cross-encoder reranking |
-| 🧩 | **Persistent memory** | Remembers facts/preferences across sessions (semantic recall) |
-| 🛰️ | **MCP server** | Exposes its toolbox to Claude Desktop/Code or any MCP host |
-| ⚡ | **Fine-tuned router** | A 1-min LoRA fine-tune of a 0.5B model cuts brain calls ~50% with no accuracy loss |
-| 📊 | **Self-evaluation** | 18 doc-QA tasks + 13 code tasks + 10 combined tasks, grouped metrics, regression gate, honest reliability numbers |
-| 🔒 | **Local-first privacy** | `LOCAL_ONLY` is default; network research and handoffs require explicit policy |
-
----
-
-## How it works (architecture)
-
-```
-        you ──▶  atelier CLI  (ask · agent · remember · route · eval · mcp · …)
-                      │
-        knowledge ────┼──── build / general
-            │                     │
-            ▼                     ▼
-   rag.answer (grounded QA)   agent.react  ── reason → act → observe → repeat
-            │                     │  (JSON tool calls, reflection, trace logging)
-            ▼                     ▼
-   rag.retrieve            tools.registry  ── ONE shared toolbox
-   dense + BM25 (RRF)            │
-   + optional rerank      ┌──────┼───────────────┬─────────────┐
-            │             ▼      ▼               ▼             ▼
-            ▼        files   code_exec       search_notes   memory
-     rag.embed (Qwen3-Embedding-4B)  edit   (sandboxed)     (RAG tool)    remember/
-     rag.store        test_runner            repo_map       recall
-     (ChromaDB)            │
-            └──────────────┴──▶ agent.brain ──▶ Ollama (qwen3 / gemma)
-                                 agent.router ──▶ fine-tuned 0.5B picks model size
-```
-
-The default workbench path runs on-device; explicitly networked research and
-frontier handoffs are separate policy-controlled paths. Full design notes:
-[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
-
----
-
-## Requirements
-
-- **macOS on Apple Silicon** (built & tested on **M3 Pro, 36 GB**). Other Apple
-  Silicon Macs with ≥16 GB should work with smaller models.
-- **[Ollama](https://ollama.com)** installed and running (`ollama serve`).
-- **Python 3.11+** and **[`uv`](https://github.com/astral-sh/uv)**.
-- ~5 GB free disk for models (more if you add the heavy model).
-
-The local models Atelier uses by role:
+From the repository root:
 
 ```bash
-ollama pull hf.co/LiquidAI/LFM2.5-2.6B-GGUF:Q6_K  # "worker" — fast subtasks + characterization
-ollama pull gemma4:26b   # "heavy"  — optional, for the hardest reasoning (--heavy)
-# The coder and embedding roles are selected from the current benchmark/configuration.
-# Do not download placeholder models just to make doctor green.
+uv venv .venv
+uv pip install -r atelier_agent/requirements.txt
+uv pip install -e atelier_agent
 ```
 
-The embedding model is served locally by Ollama (`qwen3-embedding:4b`, about
-2.5 GB). The optional reranker still downloads about 80 MB on first use. The
-coder and main-reasoner roles are registry/configuration entries until their
-benchmarks justify downloading them.
-
----
-
-## Installation
+The global macOS launcher at `~/bin/atelier` uses this editable environment,
+so normal use does not require activating the virtual environment:
 
 ```bash
-git clone <your-repo-url> atelier && cd atelier
-
-uv venv && source .venv/bin/activate
-uv pip install -r requirements.txt     # pinned, reproducible deps
-uv pip install -e .                     # installs the `atelier` command
-
-atelier doctor                          # verify models + vector store + embeddings
-```
-
-For the normal terminal experience, install Atelier once and use it from any
-directory without activating the virtualenv:
-
-```bash
-uv pip install -e ~/code_projects/The-Atelier-Lab/atelier_agent
 atelier
+atelier doctor
 ```
 
-The complete global-launcher, workspace, architecture, model, `serve`, and MCP
-guide is [`docs/ATELIER_OPERATOR_GUIDE.md`](../docs/ATELIER_OPERATOR_GUIDE.md).
+Atelier uses Ollama on `localhost`. The configured roles and whether each model
+is actually installed are reported by `atelier doctor`; a missing placeholder
+is not automatically downloaded.
 
-`atelier doctor` reports which configured roles are installed. A missing
-placeholder model is intentional until its role has a benchmark and a clear
-workflow consumer.
-
-> **No banner in scripts?** Set `ATELIER_NO_BANNER=1` to suppress the ASCII banner.
-
----
-
-## 5-minute quickstart
+## Developer checks
 
 ```bash
-# 1) Index some notes (point it at anything — an Obsidian vault, a papers folder)
-atelier ingest ~/Notes ./Project.md
-
-# Characterize a paper with the fast LFM worker, then optionally index it
-atelier paper ./paper.pdf --ingest
-
-# Show passages without asking a model to synthesize an answer
-atelier search "finite-time regret bounds for stochastic inventory optimization"
-
-# 2) Ask a question grounded in what you indexed
-atelier ask "What did I decide about the embedding model and why?"
-
-# 3) Let the agent fix a bug and prove it with tests
-atelier agent "Fix the failing test in sample_task/ and prove it passes"
-
-# 4) Teach it something it will remember next session
-atelier remember "I prefer Apache-2.0 and pytest" --tags prefs
-atelier recall "what license do I like?"
+make -C atelier_agent test
+python3 scripts/check_repo.py
+python3 scripts/validate_experiments.py
 ```
 
----
-
-## What's been built — the phases
-
-The earlier phases (0–7) document the historical foundation. Current product
-milestones and their evidence live in
-[`docs/ATELIER_WORKBENCH_PLAN.md`](../docs/ATELIER_WORKBENCH_PLAN.md). The
-local v1.0 acceptance evidence is recorded in
-[`docs/steps/STEP_26_ATELIER_V1_RELEASE.md`](../docs/steps/STEP_26_ATELIER_V1_RELEASE.md).
-
-| Phase | Title | What it delivered | Where |
-|---|---|---|---|
-| **0** | The loop, from scratch | A hand-written ReAct loop (perceive→plan→act→observe), a local Ollama client, and one verifiable tool (an AST-sandboxed calculator). | `agent/loop.py`, `agent/brain.py`, `tools/calculator.py` |
-| **1** | Tools & the protocol | A `Tool`/`ToolRegistry` abstraction and the full toolbox: file read/write/edit + AST edits (workspace-sandboxed), local search, repo map, **sandboxed code execution**, a **pytest runner**, plus an **MCP server** publishing them all. | `tools/`, `atelier/mcp_server.py` |
-| **2** | Knowledge mode (RAG) | Ingest (md/txt/pdf/code) → heading-aware chunking → local embeddings → ChromaDB → retrieval → **grounded, cited answers**. | `rag/` |
-| **3** | Memory & state | Persistent, semantic long-term memory in its own vector collection; `remember`/`recall` as both CLI commands and agent tools; cross-session persistence. | `agent/memory.py`, `tools/memory_tools.py` |
-| **4** | Build mode + reliability | A registry-driven ReAct engine with **reflection** (recovers from tool/parse errors), observation capping, and full **trace logging**. Verified live: the agent fixes a failing test and proves it. | `agent/react.py` |
-| **5** | Evaluation & reliability | Two **frozen** task suites (doc-QA + code), deterministic metrics + an optional local **LLM-as-judge**, a runner with JSON reports, and a **regression gate**. | `eval/` |
-| **6** | Specialization (routing) | A **LoRA-fine-tuned 0.5B** difficulty classifier routes easy tasks to the cheap model; measured savings. | `models/router/`, `agent/router.py` |
-| **7** | Capstone & release | **One-command reproduction** (`make reproduce`), a public **writeup with a figure** and honest failure analysis, and full architecture docs. | `Makefile`, `scripts/`, `docs/` |
-
-Beyond the phases, two engineering improvements were driven *by* the eval (not
-guessed): the file-edit tools now run a Python `compile()` check and report
-`syntax_ok` so the agent knows instantly when an edit breaks a file; and the
-brain client handles `qwen3` "thinking" traces and JSON-mode tool calls robustly.
-
----
-
-## Usage guide
-
-All commands assume the venv is active (`source .venv/bin/activate`).
-
-### Knowledge mode
+The full model-backed reproduction is intentionally separate and can download
+models or create runtime state:
 
 ```bash
-# Index files or whole folders (md, txt, pdf, and source code are supported)
-atelier ingest ~/Notes ~/Papers ./Project.md
-atelier ingest --reset ~/Notes          # rebuild the index from scratch
-atelier sources                          # list what's currently indexed
-
-# Ask, grounded in your corpus
-atelier ask "Which embedding model did I choose and why?"
-atelier ask -k 8 --show-context "what is build mode's verifier?"   # more context + show passages
-atelier ask --heavy "summarize my design decisions"                # use the bigger model
-
-# Interactive session
-atelier chat
+make -C atelier_agent reproduce
 ```
 
-Answers cite sources as `[1] [2]` and list the files used. If the corpus doesn't
-contain the answer, the agent says so rather than inventing one — that's by design
-and is what the eval's *groundedness* checks measure.
+## Package layout
 
-### Build mode (the agent)
-
-```bash
-atelier tools                            # list the toolbox the agent can use
-
-# Autonomous, test-verified coding
-atelier agent "Fix the failing test in sample_task/ and prove it passes"
-
-# Knowledge + build in one task
-atelier agent "Using my notes on X, implement Y in this repo and add a test"
+```text
+atelier_agent/
+├── atelier/       CLI, configuration, session, service, web, MCP, workspaces
+├── agent/         ReAct loop, model routing, memory, project workflows
+├── rag/           ingestion, paper extraction, embeddings, retrieval, answers
+├── tools/         guarded file, code, search, repository, science, and memory tools
+├── repo/          deterministic repository inspection
+├── eval/          frozen task suites, fixtures, metrics, and reports
+├── models/        model-role registry and router adapters
+├── tests/         deterministic unit and acceptance tests
+└── docs/          developer architecture, testing, evaluation, and writeup notes
 ```
 
-Flags:
-
-| Flag | Effect |
-|---|---|
-| `--heavy` | Use the configured heavy reasoner instead of the main brain |
-| `--memory` | Recall relevant long-term memories into context first |
-| `--shell` | Enable the powerful (lightly guarded) `shell` tool |
-| `--max-steps N` | Bound the reasoning loop (default 10) |
-| `--quiet` | Don't stream each step |
-
-Every run streams its steps and writes a full JSON **trace** to
-`~/Atelier/logs/traces/` by default,
-so you can inspect exactly what the agent did.
-
-> **Safety:** file/test tools are pinned to explicitly approved Atelier
-> workspaces; `code_exec`
-> runs in a subprocess with a timeout and (on macOS) a seatbelt profile that
-> blocks network access. The `shell` tool is opt-in. See
-> [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the exact guarantees.
-
-### Memory
-
-```bash
-atelier remember "I prefer Apache-2.0 and pytest over unittest" --tags prefs
-atelier recall  "what testing framework does the user like?"
-atelier memory                            # list all stored facts
-atelier agent --memory "scaffold a module the way I like it"
-```
-
-Memory persists across sessions (it lives in a local ChromaDB collection) and is
-recalled by **meaning**, not exact words. The agent also has `remember`/`recall`
-tools, so it can choose to store facts mid-task.
-
-### Routing
-
-A LoRA-fine-tuned **0.5B** model classifies a task `easy`/`hard` in milliseconds,
-so easy subtasks can go to the cheap worker and the 14B brain is reserved for hard
-ones (the "small model as a cheap component" pattern).
-
-```bash
-atelier route "what is 47 * 89?"                    # easy → qwen3:4b
-atelier route "refactor auth across the codebase"   # hard → configured brain
-atelier route --backend heuristic "..."             # no model, keyword heuristic
-
-make train-router                                   # reproduce the fine-tune (~1 min)
-python -m eval.route_eval                            # measure routing savings
-```
-
-If the adapter isn't trained, the router transparently falls back to a keyword
-heuristic — nothing depends on the fine-tune at runtime.
-
-### MCP server
-
-Expose Atelier's whole toolbox to any [MCP](https://modelcontextprotocol.io)
-client (Claude Desktop/Code, etc.):
-
-```bash
-atelier mcp        # launched by an MCP host; not an interactive command
-```
-
-Point your MCP host's server command at `atelier mcp`. It publishes the shared
-toolbox. The process waits for JSON-RPC on stdin and should normally be started
-by the MCP host rather than typed manually in a terminal. For the browser UI,
-use `atelier serve` instead.
-`calculator`, `read_file`, `write_file`, `edit_file`, `ast_edit`, `search`,
-`search_notes`, `repo_map`, `code_exec`, `test_runner`, `remember`, `recall`
-(add `--shell` for the shell tool).
-
-### Evaluation
-
-```bash
-atelier eval                  # score both modes, print tables, save a JSON report
-atelier eval --mode docqa     # knowledge mode only
-atelier eval --mode code      # build mode only
-atelier eval --mode combined  # knowledge -> build composition only
-atelier eval --judge          # add the local LLM-as-judge (groundedness)
-atelier eval --gate           # FAIL (exit 1) if any metric regressed vs the last report
-atelier eval-plots            # generate SVG plots from the latest saved report
-```
-
-Reports are saved under the configured runtime home. The suites in `eval/tasks_docqa/` and
-`eval/tasks_code/` are **frozen on purpose** — add new tasks, don't edit existing
-ones, or you invalidate comparisons. The current suite has **18 knowledge-mode
-questions**, **13 build-mode code tasks**, and **10 combined knowledge → build
-tasks**; report rows include `category`, `difficulty`, and code `edit_scope` so
-you can plot success rate by task type. The combined suite counts a task as
-solved only if tests pass and the trace used `search_notes`.
-
-`atelier eval-plots` writes dependency-free SVG charts under the runtime home,
-including overall doc-QA scores,
-correctness by doc-QA category, build solved-rate by difficulty/edit scope, and
-steps-by-task.
-
----
-
-## CLI command reference
-
-| Command | Purpose |
-|---|---|
-| `atelier doctor` | Check models, vector store, and embeddings are healthy |
-| `atelier workspace add PATH` | Approve a local root with explicit capabilities |
-| `atelier workspace open NAME` | Attach a workspace and make it active |
-| `atelier workspace list` | Show approved roots, capabilities, and privacy |
-| `atelier workspace close NAME` | Detach a workspace without deleting approval |
-| `atelier repo inspect PATH` | Characterize repository structure without model calls |
-| `atelier repo status PATH` | Show Git state, history, and diff |
-| `atelier repo symbols PATH` | List deterministic symbols and imports |
-| `atelier repo search PATTERN` | Search repository files with line evidence |
-| `atelier repo tests PATH` | Detect test frameworks and commands |
-| `atelier ingest PATH...` | Index notes/PDFs/code into the vector store (`--reset` to rebuild) |
-| `atelier paper PATH` | Fast-characterize a research PDF; add `--ingest` to index it |
-| `atelier search QUERY` | Show retrieved passages without synthesis |
-| `atelier ask "Q"` | Grounded answer over your corpus (`-k`, `--show-context`, `--heavy`) |
-| `atelier chat` | Interactive knowledge-mode session |
-| `atelier sources` | List indexed source files |
-| `atelier agent "GOAL"` | Run the autonomous dual-mode agent (`--heavy/--shell/--memory/--max-steps`) |
-| `atelier tools` | List the agent's toolbox |
-| `atelier remember "FACT"` | Store a durable fact (`--tags`) |
-| `atelier recall "Q"` | Semantic search over long-term memory (`-k`) |
-| `atelier memory` | List everything in long-term memory |
-| `atelier route "TASK"` | Classify a task easy/hard and show the chosen model (`--backend`) |
-| `atelier route-eval` | Run the frozen human-labeled capability-routing evaluation |
-| `atelier mcp` | Serve the toolbox over MCP (stdio) |
-| `atelier eval` | Run the reliability suites (`--mode/--judge/--gate`) |
-| `atelier eval-plots` | Generate SVG charts from the latest or selected eval report |
-| `atelier workflow run NAME` | Start a durable typed workflow with checkpoints |
-| `atelier workflow status RUN_ID` | Inspect persisted workflow evidence |
-| `atelier workflow approve RUN_ID` | Continue a workflow past an approval gate |
-| `atelier project context NAME` | Show project-scoped memory and task context |
-| `atelier research graph QUERY` | Query related/cited-by research with provenance |
-| `atelier reliability --suite v2 --repetitions N` | Run the frozen model-free reliability suite |
-| `atelier performance` | Measure service baseline and system snapshot |
-
-Run `atelier --help` or `atelier <command> --help` for full options.
-
----
-
-## Configuration reference
-
-Everything is overridable via environment variables (prefix `ATELIER_`) or a
-`.env` file in the repo root. Defaults live in [`atelier/config.py`](atelier/config.py).
-
-| Variable | Default | Meaning |
-|---|---|---|
-| `ATELIER_HOME` | `~/Atelier` | External runtime home for library, databases, caches, logs, and backups |
-| `ATELIER_OLLAMA_URL` | `http://localhost:11434` | Local Ollama endpoint |
-| `ATELIER_BRAIN_MODEL` | `qwen3:14b` | Main reasoning / build model |
-| `ATELIER_WORKER_MODEL` | `hf.co/LiquidAI/LFM2.5-2.6B-GGUF:Q6_K` | Cheap subtasks, routing, paper characterization |
-| `ATELIER_HEAVY_MODEL` | `gemma4:26b` | Optional heavy reasoner (`--heavy`) |
-| `ATELIER_TEMPERATURE` | `0.1` | Sampling temperature |
-| `ATELIER_REQUEST_TIMEOUT` | `600` | Per-request timeout (s) |
-| `ATELIER_MAX_CONTEXT_CHARS` | `12000` | Cap on retrieved context fed to the model |
-| `ATELIER_EMBED_MODEL` | `qwen3-embedding:4b` | Ollama semantic embedding model |
-| `ATELIER_EMBED_DEVICE` | `mps` | `mps` (Apple GPU), `cuda`, or `cpu` |
-| `ATELIER_CHUNK_SIZE` | `1000` | Chunk size (characters) |
-| `ATELIER_CHUNK_OVERLAP` | `150` | Chunk overlap (characters) |
-| `ATELIER_RETRIEVAL_K` | `6` | Chunks retrieved per query |
-| `ATELIER_USE_HYBRID` | `true` | Fuse dense + BM25 retrieval (RRF) |
-| `ATELIER_HYBRID_CANDIDATES` | `20` | Candidates per arm before fusion |
-| `ATELIER_RRF_K` | `60` | Reciprocal Rank Fusion constant |
-| `ATELIER_RERANK` | `false` | Cross-encoder reranking (downloads ~80 MB once) |
-| `ATELIER_RERANK_MODEL` | `cross-encoder/ms-marco-MiniLM-L-6-v2` | Reranker model |
-
-Example:
-
-```bash
-export ATELIER_BRAIN_MODEL=gemma4:26b
-export ATELIER_RETRIEVAL_K=8
-export ATELIER_RERANK=1
-```
-
----
-
-## Models & hardware budget
-
-| Role | Default model | Resident RAM (approx.) | Notes |
-|---|---|---|---|
-| Brain | configured `qwen3:14b` | benchmark-dependent | Main reasoning role; not downloaded automatically |
-| Worker | `hf.co/LiquidAI/LFM2.5-2.6B-GGUF:Q6_K` | ~2.2 GB | Fast iteration, routing, extraction, and strict paper JSON |
-| Router target | `qwen3:4b` | optional | Historical router target; doctor reports it missing if not installed |
-| Heavy (optional) | `gemma4:26b` | ~17 GB | For the hardest reasoning only |
-| Embeddings | `qwen3-embedding:4b` | ~2.5 GB | 2,560-dimensional local semantic retrieval |
-| Router | `Qwen2.5-0.5B` + LoRA | ~1.5 GB (train) | Fine-tune is ~1 min on M3 Pro |
-
-**Rule of thumb:** add a model only after freezing its workflow role, benchmark,
-and memory budget. On a 36 GiB machine, serialize large model loads and keep
-the embedding model, vector store, tools, and OS within the memory budget.
-
----
-
-## Reliability results
-
-Latest expanded results with `qwen3:14b` on an M3 Pro, generated with
-`atelier eval --mode all` after the repo-map path fix and retrieval-metric
-update.
-
-| Metric | Score |
-|---|---|
-| Knowledge correctness | **94%** (17/18) |
-| Knowledge retrieval hit@k | **83%** (15/18) |
-| Knowledge citation rate | **100%** (18/18) |
-| Code tasks solved | **100%** (13/13) |
-| Combined tasks solved | **100%** (10/10) |
-| Combined tasks using `search_notes` | **100%** (10/10) |
-| Single-line code fixes | **100%** (8/8) |
-| Multi-line code fixes | **100%** (5/5) |
-| Average code steps | **6.1** |
-| Average tool errors | **0.0** |
-
-![Knowledge mode overview](docs/assets/eval/report_20260621T173650/docqa_overview.svg)
-
-![Build mode overview](docs/assets/eval/report_20260621T173650/code_overview.svg)
-
-**Build-mode breakdown**
-
-| Slice | Solved | Finding |
-|---|---:|---|
-| Easy tasks | **100%** | arithmetic, off-by-one, API misuse, normalization all pass |
-| Medium tasks | **100%** | all medium tasks now pass |
-| Single-line edits | **100%** | reliable on the expanded suite |
-| Multi-line edits | **100%** | the prior weak boundary now passes on this suite |
-
-![Solved by difficulty](docs/assets/eval/report_20260621T173650/code_by_difficulty.svg)
-
-![Solved by edit scope](docs/assets/eval/report_20260621T173650/code_by_edit_scope.svg)
-
-![Steps by task](docs/assets/eval/report_20260621T173650/code_steps_by_task.svg)
-
-The earlier expanded code run failed only `median_bug` and scored 92% (12/13).
-Trace inspection showed that the agent was confused by paths from `repo_map`.
-After `repo_map` was changed to emit workspace-relative paths, the full code
-suite passed: **13/13 solved, 0 tool errors**. `ast_edit` remains available as a
-safer compile-checked option for future structural Python edits.
-
-**Combined knowledge → build**
-
-The combined suite tests the actual composition goal: retrieve a project/user
-decision from notes, edit code based on that decision, and prove it with tests.
-The current 10-task run passed every task and every row used `search_notes`, so
-the score is not just accidental code repair.
-
-| Metric | Result |
-|---|---:|
-| Combined solved | **100%** (10/10) |
-| Tests passed | **100%** (10/10) |
-| Used `search_notes` | **100%** (10/10) |
-| Average steps | **6.7** |
-| Average tool errors | **0.0** |
-
-![Combined overview](docs/assets/eval/report_20260622T011056/combined_overview.svg)
-
-![Combined by category](docs/assets/eval/report_20260622T011056/combined_by_category.svg)
-
-The first 10-task combined run briefly scored 9/10 because `router_policy`
-triggered a mixed-indentation `ast_edit` input. `ast_edit` now normalizes
-common model indentation variants and still compile-checks the whole file before
-writing. After that fix, `router_policy` passed in a targeted rerun and the full
-combined suite passed at 10/10.
-
-**Knowledge-mode breakdown**
-
-![Correctness by doc-QA category](docs/assets/eval/report_20260621T173650/docqa_by_category.svg)
-
-The knowledge suite is mostly correct, and citation discipline is now perfect on
-this run. Retrieval hit@k improved from 61% to 83% after allowing multiple valid
-expected sources where the same fact appears in several project docs.
-
-**Suite size**
-
-| Suite | Size | What it probes |
-|---|---:|---|
-| Doc-QA | 18 tasks | constraints, architecture, RAG, tools, models, usage, evaluation |
-| Code repair | 13 tasks | arithmetic, off-by-one, normalization, mutation, order preservation, structural logic |
-| Combined | 10 tasks | retrieve a project/user decision, then make a verified code change |
-
-Earlier baseline on the smaller 8+3 suite was 100% doc-QA correctness and 67%
-code solved. The expanded run is more informative: it shows build mode is now
-reliable on this 13-task single-file repair suite after the path-handoff fix.
-
-**Router (fine-tuned 0.5B)**
-
-| Metric | Value |
-|---|---|
-| Base accuracy (held-out) | 43.8% |
-| Fine-tuned accuracy | **100%** (+56 pts) |
-| Brain calls saved (doc-QA) | **50%**, with **0 accuracy loss** |
-
----
-
-## Reproduce everything
-
-```bash
-make reproduce        # env → models → tests → eval → train + evaluate router
-make help             # list all tasks
-```
-
-Or step by step:
-
-```bash
-make setup            # uv venv + install
-make test             # unit suite (no model)
-make ingest           # index the sample corpus
-make eval             # reliability eval
-make eval-plots       # SVG charts for the latest eval report
-make planner-data     # build task -> plan/router SFT data from eval metadata
-make train-planner-router # fine-tune planner-router adapter from planner_data
-make train-router     # LoRA fine-tune + evaluate the router (~1 min)
-make route-eval       # measure routing savings
-make demo             # quick end-to-end build-mode demo
-```
-
-Artifacts produced: the trained adapter (`models/router/adapter/`), JSON reports
-under the runtime home, and per-run traces (`~/Atelier/logs/traces/` by default).
-
----
-
-## Testing
-
-A complete, ability-by-ability test playbook (with expected outputs) lives in
-[`docs/TESTING.md`](docs/TESTING.md). The fast automated suite needs **no model**:
-
-```bash
-pytest -q             # fast tests: tools, sandbox/escape guards, chunking,
-                      # vector store, ReAct engine, memory, retrieval, router, eval
-```
-
-The tests that touch the live model (knowledge/build/eval) are run on demand via
-the `atelier` commands and `make` targets, not in the fast suite.
-
----
-
-## Project structure
-
-```
-atelier/
-├── README.md                 # this file
-├── PROJECT.md                # source of truth: scope, constraints, roadmap, decisions
-├── Makefile                  # `make help` — common tasks
-├── pyproject.toml            # installable package + the `atelier` command
-├── requirements.txt          # pinned, reproducible dependencies
-│
-├── atelier/                  # cross-cutting: config, CLI, MCP server, banner
-│   ├── config.py             #   all settings (env-overridable)
-│   ├── cli.py                #   the `atelier` command (typer)
-│   ├── mcp_server.py         #   publishes the toolbox over MCP
-│   └── banner.py             #   the magician banner
-│
-├── agent/                    # the agent itself
-│   ├── react.py              #   registry-driven ReAct engine (reflection, traces)
-│   ├── brain.py              #   Ollama client (model roles, JSON mode, streaming)
-│   ├── memory.py             #   persistent semantic long-term memory
-│   ├── router.py             #   fine-tuned + heuristic difficulty router
-│   └── loop.py               #   the original Phase-0 loop (kept for reference)
-│
-├── tools/                    # the shared toolbox (one registry, two modes)
-│   ├── registry.py           #   register/validate/dispatch tools
-│   ├── files.py              #   read/write/edit (workspace-sandboxed, syntax-checked)
-│   ├── ast_edit.py           #   AST-aware Python function body replacement
-│   ├── code_exec.py          #   sandboxed Python execution
-│   ├── test_runner.py        #   pytest runner — build mode's verifier
-│   ├── repo_map.py           #   AST outline of a codebase
-│   ├── search.py             #   local grep-like search
-│   ├── knowledge.py          #   search_notes (RAG as a tool)
-│   ├── memory_tools.py       #   remember / recall
-│   ├── calculator.py         #   AST-sandboxed arithmetic
-│   └── shell.py              #   opt-in shell tool
-│
-├── rag/                      # knowledge mode
-│   ├── ingest.py · chunk.py  #   load + heading-aware chunking
-│   ├── embed.py · store.py   #   local embeddings + ChromaDB
-│   ├── lexical.py            #   BM25 (the keyword arm of hybrid)
-│   ├── retrieve.py           #   dense + BM25 fused via RRF (+ optional rerank)
-│   ├── rerank.py             #   optional cross-encoder reranker
-│   └── answer.py             #   grounded, cited answers
-│
-├── eval/                     # reliability harness
-│   ├── tasks_docqa/          #   frozen knowledge-mode suite
-│   ├── tasks_code/           #   frozen build-mode suite (repo + bug + hidden test)
-│   ├── tasks_combined/       #   knowledge -> build suite
-│   ├── metrics.py            #   scoring + local LLM-as-judge
-│   ├── run_eval.py           #   runner, reports, regression gate
-│   └── route_eval.py         #   routing-savings measurement
-│
-├── models/router/            # Phase 6 fine-tune
-│   ├── make_dataset.py       #   synthetic difficulty dataset
-│   ├── make_planner_dataset.py # eval metadata -> planner/router SFT data
-│   ├── evaluate.py           #   base vs fine-tuned accuracy
-│   └── adapter/              #   the trained LoRA adapter (~6 MB)
-│
-├── scripts/reproduce.sh      # one-command reproduction
-├── tests/                    # fast unit tests (no model)
-└── docs/
-    ├── ARCHITECTURE.md       # how the pieces fit
-    ├── TESTING.md            # ability-by-ability test playbook
-    ├── EVAL.md               # reliability results + honest caveats
-    └── WRITEUP.md            # the public writeup + figure
-```
-
-Runtime data (the vector store, traces, eval reports, memory, workflows, and
-backups) lives under `~/Atelier/` by default and is gitignored when generated in
-the repository. Set `ATELIER_HOME` to relocate it; `atelier state validate` and
-`atelier state repair` verify or recreate the layout.
-
----
-
-## Troubleshooting
-
-| Symptom | Fix |
-|---|---|
-| `atelier doctor` shows a model **red** | Run the `ollama pull <model>` it prints; ensure `ollama serve` is running |
-| "Could not reach Ollama" | Start Ollama (`ollama serve`) or set `ATELIER_OLLAMA_URL` |
-| `atelier` command not found | `uv pip install -e .` (or use `python -m atelier.cli ...`) |
-| First `ask`/`ingest` is slow | One-time embedding-model download; subsequent runs are fast |
-| Embeddings fall back to CPU | Expected if MPS is unavailable; set `ATELIER_EMBED_DEVICE=cpu` to silence |
-| Agent loops without finishing | Lower task complexity, raise `--max-steps`, or try `--heavy` |
-| Banner clutters piped output | `export ATELIER_NO_BANNER=1` |
-| Knowledge base "empty" | Run `atelier ingest <path>` first; check `atelier sources` |
-
----
-
-## Limitations (read these)
-
-This project values honest limits over optimism:
-
-- **It will not beat cloud coding agents** (Claude Code, Cursor). A local small
-  model can't, and that's an explicit non-goal.
-- **Multi-line structural code edits are still the risk boundary** for the 14B
-  brain. The current suite passes, but the project handles this by using
-  compile-checked tools like `ast_edit`, not by assuming the model is perfect.
-- **The eval suites are still modest** (18 doc-QA + 13 code + 10 combined).
-  100% on a slice means "no failures on this frozen suite," not "robust at
-  scale."
-- **The router's held-out test is in-distribution** (templated). It generalizes
-  well in spot-checks but isn't a generalization benchmark.
-- **Correctness scoring is keyword-based** by default; the optional local
-  LLM-judge is a second, also-fallible opinion.
-
----
-
-## Further reading
-
-- [`Project.md`](Project.md) — the source of truth: scope, hard constraints, the
-  full roadmap, the Decision Log, and the Changelog.
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — how every layer fits together.
-- [`docs/TESTING.md`](docs/TESTING.md) — verify each capability yourself.
-- [`docs/EVAL.md`](docs/EVAL.md) — reliability numbers and caveats.
-- [`docs/WRITEUP.md`](docs/WRITEUP.md) — the public writeup with the figure.
-
----
-
-## License
-
-[Apache-2.0](LICENSE).
-
-<div align="center"><sub>Built to run local-first on one laptop. Network access and frontier handoffs are explicit.</sub></div>
+User documents, vector indexes, traces, caches, memory, and workflow state are
+stored outside this checkout under `~/Atelier` by default. The frozen document
+QA inputs live under [`eval/fixtures/docqa_corpus/`](eval/fixtures/docqa_corpus/)
+solely to preserve historical benchmark comparability; they are not current
+project instructions.
+
+## Design boundary
+
+The system is local-first. Knowledge mode retrieves from explicitly ingested
+files and produces cited answers. Build mode inspects an approved workspace,
+uses guarded tools, runs tests, and reports verification. `LOCAL_ONLY` is the
+default privacy policy; network research and external handoffs are explicit
+operations.

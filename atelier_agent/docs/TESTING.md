@@ -57,7 +57,7 @@ pytest -k "calculator or store" -q     # filter by name
 
 ### 2a. Ingest
 ```bash
-atelier ingest ./Project.md ./myNotes.md          # or point at ~/YourNotes
+atelier ingest ./eval/fixtures/docqa_corpus/Project.md ./eval/fixtures/docqa_corpus/myNotes.md  # or point at ~/YourNotes
 atelier sources                                    # confirm what's indexed
 ```
 **Expect:** an "Ingest complete" panel (files indexed, chunks stored, vector
@@ -68,7 +68,8 @@ dim 768). `sources` lists the files.
 atelier ask "What are the hard constraints of this project, and what is the binding limit?"
 ```
 **Expect:** an answer that quotes your notes with citations like `[1] [2]`, plus
-a `Sources:` line. The "binding limit" wording should match `Project.md`
+a `Sources:` line. The "binding limit" wording should match the frozen
+`eval/fixtures/docqa_corpus/Project.md` input.
 verbatim — that proves it's grounded, not hallucinated.
 
 ### 2c. Prove retrieval is doing the work (before/after)

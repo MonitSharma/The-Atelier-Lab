@@ -21,6 +21,7 @@ The current expanded Atelier suites record 17/18 knowledge answers, 13/13 code t
 - [Learning path](docs/START_HERE.md)
 - [Run the local agent](atelier_agent/README.md)
 - [Atelier operator guide](docs/ATELIER_OPERATOR_GUIDE.md)
+- [Work with papers and documents](docs/WORKING_WITH_DOCUMENTS.md)
 - [Experiment registry](experiments/registry.yaml)
 - [Repository map](docs/REPOSITORY_MAP.md)
 - [Atelier Workbench plan](docs/ATELIER_WORKBENCH_PLAN.md)
@@ -37,7 +38,11 @@ The educational `foundation/minillm` package is CPU-friendly and has no dataset 
 
 ## Active phase
 
-The current phase closes the foundation learning loop: understand the primitives in `learning/`, run the offline `minillm` exercises, then deepen quantization and serving measurements without weakening reproducibility.
+The current phase is the operational Atelier workbench: use the local model
+stack on real research documents, measure retrieval and answer quality, and
+turn the strongest research questions into small, testable experiments. The
+foundation and learning tracks remain active but are no longer the only entry
+point.
 
 ## Phase 2 — Create the four-tier model stack
 
@@ -119,16 +124,9 @@ Keep all three subscriptions, but assign them different responsibilities instead
 
 This division of labor keeps the frontier models complementary and makes the local stack responsible for the work that benefits most from privacy, low latency, and predictable cost.
 
-### First-generation local download roster
+### Current model policy
 
-Install only these four models initially; reserve the fifth slot for the official Qwen3.8-27B release:
-
-| Role | Model | Quantization | Approx. size | Purpose |
-|---|---|---|---:|---|
-| Tiny worker/router | `LFM2.5-2.6B` | `Q6_K` | 2.22 GB | Routing, extraction, JSON, tool selection, query rewriting, and cheap repetitive work |
-| Embeddings/search | `qwen3-embedding:4b` | `Q4_K_M` | ~2.5 GB | 2,560-dimensional semantic search over papers, notes, code, and experiments |
-| Coding specialist | `Ornith-1.0-9B` | `Q5_K_M` | 6.47 GB | Repository exploration, coding, debugging, tests, and refactoring |
-| Vision/document | `Qwen3-VL-8B-Instruct` | `Q4_K_M` | 6.1 GB | Figures, tables, screenshots, diagrams, scanned pages, and OCR fallback |
-| Main local reasoner | `Qwen3.8-27B` | probably Q4-class | reserve 25 GB | Mathematics, research synthesis, quantum reasoning, private documents, and hard coding |
-
-The four immediate downloads total approximately 15.43 GB. Download and benchmark them one at a time. The Qwen3.8-27B slot stays empty until official weights are available; then compare GGUF Q4, MLX 4-bit, and possibly Q5 on the M3 Pro. Do not keep all large models loaded simultaneously: unified memory is the limiting resource.
+The authoritative installed/configured model table is maintained in the
+[operator guide](docs/ATELIER_OPERATOR_GUIDE.md). Do not use an old download
+roster from this README as an installation checklist. Add a model only after
+assigning it a role, checking its memory budget, and defining an evaluation.
