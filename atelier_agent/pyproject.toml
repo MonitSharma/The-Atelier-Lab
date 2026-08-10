@@ -53,6 +53,11 @@ target-version = "py311"
 select = ["E", "F", "I", "UP", "B"]
 ignore = ["E501"]
 
+[tool.ruff.lint.flake8-bugbear]
+# Typer's whole API is `def cmd(x: T = typer.Option(...))`. B008 exists to catch
+# accidental mutable defaults; these are the framework's intended idiom.
+extend-immutable-calls = ["typer.Argument", "typer.Option"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"

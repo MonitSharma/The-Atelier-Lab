@@ -1,8 +1,10 @@
-import os
 import json
+import os
 import re
 import unicodedata
+
 from tqdm import tqdm
+
 
 def calculate_quality_score(text, config):
     filters = config.get("filters", {})
@@ -66,7 +68,7 @@ def calculate_quality_score(text, config):
     return final_score, breakdown
 
 def filter_directory(input_dir, output_dir, config_path):
-    with open(config_path, "r") as f:
+    with open(config_path) as f:
         config = json.load(f)
     filters = config.get("filters", {})
     quality_threshold = filters.get("quality_threshold", 80)
@@ -94,7 +96,7 @@ def filter_directory(input_dir, output_dir, config_path):
             
             print(f"Filtering {filename}...")
             
-            with open(in_path, "r", encoding="utf-8") as fin, open(out_path, "w", encoding="utf-8") as fout:
+            with open(in_path, encoding="utf-8") as fin, open(out_path, "w", encoding="utf-8") as fout:
                 for line_json in tqdm(fin, desc="Filtering documents"):
                     stats["scanned"] += 1
                     doc = json.loads(line_json)

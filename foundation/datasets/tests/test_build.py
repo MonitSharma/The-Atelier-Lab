@@ -1,9 +1,11 @@
-import os
 import json
+import os
 import tempfile
+
 import pyarrow.parquet as pq
-import pytest
+
 from foundation.datasets.builder.build_dataset import compile_dataset
+
 
 def test_parquet_compilation():
     with tempfile.TemporaryDirectory() as tmp_clean, tempfile.TemporaryDirectory() as tmp_out, tempfile.TemporaryDirectory() as tmp_meta:
@@ -52,7 +54,7 @@ def test_parquet_compilation():
         # Verify manifest.json
         manifest_path = os.path.join(tmp_out, "manifest.json")
         assert os.path.exists(manifest_path)
-        with open(manifest_path, "r") as f:
+        with open(manifest_path) as f:
             manifest = json.load(f)
         assert manifest["version"] == "SanskritPile-v1"
         assert manifest["total_documents"] == 20

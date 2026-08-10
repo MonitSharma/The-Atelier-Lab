@@ -8,17 +8,18 @@ authorization so symlinks cannot escape an approved root.
 
 from __future__ import annotations
 
-import json
 import hashlib
+import json
 import os
 import re
 import tempfile
+from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Iterator, Literal
+from typing import Literal
 
 from atelier.config import settings
 
@@ -52,7 +53,7 @@ class Workspace:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, object]) -> "Workspace":
+    def from_dict(cls, data: dict[str, object]) -> Workspace:
         try:
             name = str(data["name"])
             root = Path(str(data["root"])).expanduser().resolve()

@@ -40,7 +40,7 @@ import statistics
 import time
 import urllib.request
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 HOST = "http://localhost:11434"
@@ -143,7 +143,7 @@ def main() -> None:
 
     conditions = [("short", SHORT_PROMPT), ("long", LONG_PROMPT)]
     report: dict = {
-        "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "timestamp": datetime.now(UTC).isoformat(timespec="seconds"),
         "host": "Apple M3 Pro / 36GB / macOS",
         "backend": "ollama",
         "num_predict": args.num_predict,

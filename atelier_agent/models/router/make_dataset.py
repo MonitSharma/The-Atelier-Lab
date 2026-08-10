@@ -35,7 +35,7 @@ EASY = [
     lambda: f"Compute {random.randint(100,999)} + {random.randint(100,999)}.",
     lambda: f"Convert the string '{random.choice(['hello','atelier','router'])}' to uppercase.",
     lambda: f"What is the capital of {random.choice(['France','Japan','Egypt','Peru'])}?",
-    lambda: f"Fix this one-line bug: `return a - b` should add a and b.",
+    lambda: "Fix this one-line bug: `return a - b` should add a and b.",
     lambda: f"Rename the variable `{random.choice(['x','tmp','val'])}` to `count` in one line.",
     lambda: f"Round {random.uniform(1,9):.3f} to two decimal places.",
     lambda: "Add a docstring to a single function.",

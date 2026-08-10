@@ -11,7 +11,6 @@ from __future__ import annotations
 import hashlib
 import os
 import subprocess
-import time
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
@@ -53,7 +52,7 @@ class Checkpoint:
     created_at: str = ""
 
     @classmethod
-    def capture(cls, root: Path, inspector: RepositoryInspector) -> "Checkpoint":
+    def capture(cls, root: Path, inspector: RepositoryInspector) -> Checkpoint:
         before: dict[str, bytes] = {}
         skipped: list[str] = []
         for path in inspector._files()[0]:  # bounded by the inspector's safety cap

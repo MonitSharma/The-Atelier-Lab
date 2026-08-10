@@ -4,7 +4,7 @@ SHELL := /bin/bash
 PY := .venv/bin/python
 export ATELIER_NO_BANNER := 1
 
-.PHONY: help setup test ingest eval eval-plots planner-data route-eval train-router train-planner-router demo mcp reproduce clean
+.PHONY: help setup lint test ingest eval eval-plots planner-data lint-fix route-eval train-router train-planner-router demo mcp reproduce clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -12,6 +12,12 @@ help: ## Show this help
 
 setup: ## Create venv and install deps (+ editable package)
 	uv venv && uv pip install -r requirements.txt && uv pip install -e .
+
+lint: ## Check lint rules (same command CI runs)
+	$(PY) -m ruff check .
+
+lint-fix: ## Apply the autofixable lint rules
+	$(PY) -m ruff check --fix .
 
 test: ## Run the fast unit suite (no model)
 	$(PY) -m pytest -q

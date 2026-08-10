@@ -111,6 +111,11 @@ def _tools_used(trace: list[dict[str, Any]]) -> list[str]:
     return tools
 
 
+def _repeated_calls(trace: list[dict[str, Any]]) -> int:
+    """How many steps were spent re-issuing a tool call that already failed."""
+    return sum(1 for entry in trace if entry.get("repeated_call"))
+
+
 def run_code_task(task_dir: Path, agent_runner: Callable[[str], Any] | None = None) -> dict[str, Any]:
     """Set up an isolated copy of a frozen task, run the agent, verify with pytest."""
     from tools.test_runner import run_tests
@@ -150,6 +155,8 @@ def run_code_task(task_dir: Path, agent_runner: Callable[[str], Any] | None = No
         "steps": getattr(result, "steps", None) if result else None,
         "tool_errors": _tool_errors(trace),
         "agent_finished": int(getattr(result, "success", False)) if result else 0,
+        "repeated_calls": _repeated_calls(trace),
+        "failure_reason": getattr(result, "failure_reason", None) if result else None,
         "runner_error": runner_error,
         "latency_s": elapsed,
         "test_summary": verify.get("summary", ""),
@@ -159,7 +166,7 @@ def run_code_task(task_dir: Path, agent_runner: Callable[[str], Any] | None = No
 def run_code(agent_runner: Callable[[str], Any] | None = None) -> dict[str, Any]:
     rows = [run_code_task(d, agent_runner) for d in sorted(CODE_DIR.iterdir())
             if d.is_dir() and (d / "task.json").exists()]
-    agg_keys = ["solved", "tool_errors", "steps"]
+    agg_keys = ["solved", "tool_errors", "steps", "repeated_calls"]
     return {
         "rows": rows,
         "aggregate": metrics.aggregate(rows, agg_keys),
@@ -225,6 +232,8 @@ def run_combined_task(
         "tool_errors": _tool_errors(trace),
         "tools_used": tools_used,
         "agent_finished": int(getattr(result, "success", False)) if result else 0,
+        "repeated_calls": _repeated_calls(trace),
+        "failure_reason": getattr(result, "failure_reason", None) if result else None,
         "runner_error": runner_error,
         "latency_s": elapsed,
         "test_summary": verify.get("summary", ""),
@@ -234,7 +243,7 @@ def run_combined_task(
 def run_combined(agent_runner: Callable[[str], Any] | None = None) -> dict[str, Any]:
     rows = [run_combined_task(d, agent_runner) for d in sorted(COMBINED_DIR.iterdir())
             if d.is_dir() and (d / "task.json").exists()]
-    agg_keys = ["solved", "tests_passed", "used_search_notes", "tool_errors", "steps"]
+    agg_keys = ["solved", "tests_passed", "used_search_notes", "tool_errors", "steps", "repeated_calls"]
     return {
         "rows": rows,
         "aggregate": metrics.aggregate(rows, agg_keys),

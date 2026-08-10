@@ -11,7 +11,7 @@ import platform
 import tempfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from agent.capability_router import CapabilityRouter
 from agent.project_memory import ProjectMemoryStore

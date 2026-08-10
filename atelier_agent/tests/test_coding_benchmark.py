@@ -1,5 +1,5 @@
-from eval.coding_benchmark import _local_path, _trace_metrics
 from atelier.config import settings
+from eval.coding_benchmark import _local_path, _trace_metrics
 from models.registry import specs_from_settings
 
 

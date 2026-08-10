@@ -6,8 +6,7 @@ import hashlib
 import json
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from pathlib import Path
+from datetime import UTC, datetime
 from typing import Any
 
 from atelier.config import settings
@@ -90,7 +89,7 @@ class MemoryStore:
         self._store.upsert_raw(
             ids=[mid], documents=[text], embeddings=[embedding], metadatas=[{
                 "tags": ",".join(tags or []),
-                "created_at": datetime.now(timezone.utc).isoformat(),
+                "created_at": datetime.now(UTC).isoformat(),
             }],
         )
         self._manifest.set_state(
@@ -139,7 +138,7 @@ def migrate_memory(*, embedder: Any = None, manifest: IndexManifest | None = Non
     old_mem = MemoryStore(embedder=embedder, store=old_store, manifest=manifest)
     records = old_mem.all()
     settings.ensure_dirs()
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     backup = settings.memory_backup_dir / f"memory-{stamp}.json"
     backup.write_text(json.dumps([
         {"id": m.id, "text": m.text, "tags": m.tags, "created_at": m.created_at}

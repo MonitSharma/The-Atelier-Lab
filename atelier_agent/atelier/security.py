@@ -17,7 +17,15 @@ _SECRET_PATTERNS = (
     re.compile(r"(?i)(api[_-]?key|token|access[_-]?token|auth[_-]?token|password|secret)\s*[:=]\s*[\"']?([A-Za-z0-9_./+=:-]{8,})"),
     re.compile(r"(?i)bearer\s+[A-Za-z0-9_./+=:-]{8,}"),
 )
-_SHELL_OPERATORS = re.compile(r"(?:;|\|\||&&|[|<>`$])")
+# Bare shell operators, matched against *parsed tokens* rather than the raw
+# string. Checking tokens (not a regex over the command) keeps quoted arguments
+# usable — ``rg "def foo()"`` is one token and stays legal — while ``ls > out``
+# and ``ls | wc`` still tokenize into an operator we reject.
+_OPERATOR_TOKENS = frozenset({";", "&", "&&", "|", "||", "<", ">", ">>", "<<", "2>", "&>"})
+# Control characters (notably newline) must never appear in a command: a newline
+# is a command separator to every shell, and ``shlex.split`` silently treats it
+# as ordinary whitespace, so it would otherwise sail past the allowlist.
+_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
 _DESTRUCTIVE_EXECUTABLES = frozenset({"rm", "rmdir", "unlink", "shred", "mkfs", "dd", "shutdown", "reboot", "killall"})
 _ALLOWED_EXECUTABLES = frozenset({
     "cat", "find", "git", "head", "ls", "pwd", "pytest", "python", "python3",
@@ -75,23 +83,49 @@ def detect_prompt_injection(value: Any) -> bool:
     return False
 
 
-def validate_shell_command(command: str, *, allow_destructive: bool = False) -> tuple[bool, str]:
-    if _SHELL_OPERATORS.search(command):
-        return False, "shell operators and redirections are blocked; use one command per tool call"
+def parse_shell_command(
+    command: str, *, allow_destructive: bool = False
+) -> tuple[list[str] | None, str]:
+    """Validate a command and return the exact argv the caller must execute.
+
+    Returning the token list is the point: callers run ``subprocess`` with
+    ``shell=False`` on precisely the argv that passed the allowlist, so there is
+    no second parse in which a metacharacter could reintroduce a command the
+    policy rejected. On denial the first element is ``None`` and the second is
+    the human-readable reason.
+
+    Note that ``python`` is on the allowlist, so ``python -c ...`` remains
+    arbitrary code execution *by design*. The allowlist bounds which programs
+    start, not what an allowed program may then do.
+    """
+    if _CONTROL_CHARS.search(command):
+        return None, "control characters (including newlines) are not allowed in a command"
     try:
         tokens = shlex.split(command)
     except ValueError as exc:
-        return False, f"invalid shell syntax: {exc}"
+        return None, f"invalid shell syntax: {exc}"
     if not tokens:
-        return False, "empty shell command"
+        return None, "empty shell command"
+    operators = sorted(_OPERATOR_TOKENS.intersection(tokens))
+    if operators:
+        return None, (
+            f"shell operators and redirections are blocked ({', '.join(operators)}); "
+            "use one command per tool call"
+        )
     executable = Path(tokens[0]).name
     if executable in _DESTRUCTIVE_EXECUTABLES and not allow_destructive:
-        return False, "destructive commands require an explicit human-approved operation"
+        return None, "destructive commands require an explicit human-approved operation"
     if executable not in _ALLOWED_EXECUTABLES and not (allow_destructive and executable in _DESTRUCTIVE_EXECUTABLES):
-        return False, f"executable '{executable}' is not on the Atelier allowlist"
+        return None, f"executable '{executable}' is not on the Atelier allowlist"
     if executable == "git" and len(tokens) > 1 and tokens[1] in {"clean", "reset", "checkout", "restore"} and not allow_destructive:
-        return False, "destructive Git operations require an explicit human-approved operation"
-    return True, "allowed"
+        return None, "destructive Git operations require an explicit human-approved operation"
+    return tokens, "allowed"
+
+
+def validate_shell_command(command: str, *, allow_destructive: bool = False) -> tuple[bool, str]:
+    """Boolean view of :func:`parse_shell_command` for preflight checks."""
+    tokens, reason = parse_shell_command(command, allow_destructive=allow_destructive)
+    return tokens is not None, reason
 
 
 @dataclass

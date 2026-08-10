@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import ast
 import itertools
 import math
 import re
-import ast
 from typing import Any
 
 import numpy as np
@@ -330,11 +330,14 @@ def solve_optimization(problem: dict[str, Any]) -> dict[str, Any]:
         relation = constraint.get("relation", "<=")
         rhs = _number(constraint["rhs"])
         if relation == "<=":
-            a_ub.append(row); b_ub.append(rhs)
+            a_ub.append(row)
+            b_ub.append(rhs)
         elif relation == ">=":
-            a_ub.append([-value for value in row]); b_ub.append(-rhs)
+            a_ub.append([-value for value in row])
+            b_ub.append(-rhs)
         elif relation == "=":
-            a_eq.append(row); b_eq.append(rhs)
+            a_eq.append(row)
+            b_eq.append(rhs)
         else:
             return {"status": "error", "error_type": "invalid_problem", "message": f"Unsupported relation {relation!r}."}
     bounds = [tuple(problem.get("bounds", {}).get(var, (0, None))) for var in variables]

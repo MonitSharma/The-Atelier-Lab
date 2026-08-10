@@ -1,4 +1,3 @@
-from pathlib import Path
 
 from rag.ingest import build_plan, execute_plan
 from rag.manifest import IndexManifest
@@ -36,7 +35,7 @@ class FakeStore:
         return len(old)
 
     def relocate_document(self, document_id, source):
-        for chunk, embedding in self.docs.values():
+        for chunk, _embedding in self.docs.values():
             if chunk.metadata["document_id"] == document_id:
                 chunk.source = source
         return 1

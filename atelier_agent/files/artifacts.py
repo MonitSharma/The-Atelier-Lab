@@ -59,7 +59,9 @@ def _table_profile(path: Path, rows: list[dict[str, Any]], kind: str, total: int
 def _delimited(path: Path) -> ArtifactProfile:
     with path.open(newline="", encoding="utf-8-sig", errors="replace") as handle:
         reader = csv.DictReader(handle, delimiter="\t" if path.suffix.lower() == ".tsv" else ",")
-        rows = [dict(row) for _, row in zip(range(1000), reader)]
+        # strict=False is intentional: this caps the sample at 1000 rows,
+        # and a shorter file legitimately exhausts the reader first.
+        rows = [dict(row) for _, row in zip(range(1000), reader, strict=False)]
     return _table_profile(path, rows, "tsv" if path.suffix.lower() == ".tsv" else "csv")
 
 

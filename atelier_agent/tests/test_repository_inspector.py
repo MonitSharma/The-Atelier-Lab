@@ -2,7 +2,6 @@ from pathlib import Path
 
 from repo.inspector import RepositoryInspector
 
-
 FIXTURE = Path(__file__).parent / "fixtures" / "repo_fixture"
 
 

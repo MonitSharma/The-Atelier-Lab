@@ -1,5 +1,5 @@
-from io import StringIO
 import os
+from io import StringIO
 
 from rich.console import Console
 
@@ -9,7 +9,7 @@ from atelier.cli import _retrieved_context_panels, _sync_console_width
 def test_console_width_refreshes_from_current_terminal(monkeypatch) -> None:
     console = Console(width=80, file=StringIO())
     monkeypatch.setattr(
-        "atelier.cli.shutil.get_terminal_size",
+        "atelier.cli._ui.shutil.get_terminal_size",
         lambda fallback: os.terminal_size((160, 40)),
     )
 

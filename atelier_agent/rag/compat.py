@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from atelier.config import settings
 from rag.manifest import IndexManifest
 from rag.store import VectorStore
 

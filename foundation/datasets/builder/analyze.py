@@ -1,10 +1,12 @@
-import os
 import json
 import math
+import os
 import re
 from collections import Counter
+
 import numpy as np
 from tqdm import tqdm
+
 
 def calculate_shannon_entropy(freqs, total_count):
     entropy = 0.0
@@ -28,7 +30,7 @@ def fit_zipf_slope(token_counts):
     return -slope # return s as positive value representing Zipf coefficient
 
 def analyze_corpus(cleaned_dir, output_report_dir, config_path):
-    with open(config_path, "r") as f:
+    with open(config_path) as f:
         config = json.load(f)
     
     os.makedirs(output_report_dir, exist_ok=True)
@@ -44,7 +46,7 @@ def analyze_corpus(cleaned_dir, output_report_dir, config_path):
         path = os.path.join(cleaned_dir, filename)
         print(f"Reading final text from {filename} for analysis...")
         
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             for line in f:
                 doc = json.loads(line)
                 all_text.append(doc["text"])
@@ -61,7 +63,7 @@ def analyze_corpus(cleaned_dir, output_report_dir, config_path):
     
     # Structural splits
     paragraphs = [p for p in combined_text.split("\n\n") if p.strip()]
-    lines = [l for l in combined_text.split("\n") if l.strip()]
+    lines = [line for line in combined_text.split("\n") if line.strip()]
     
     # Word splitting
     # Replace punctuation with spaces to split words accurately
@@ -124,12 +126,12 @@ def analyze_corpus(cleaned_dir, output_report_dir, config_path):
     metadata_dir = os.path.join(os.path.dirname(cleaned_dir), "metadata")
     dedup_stats = {}
     if os.path.exists(os.path.join(metadata_dir, "dedup_stats.json")):
-        with open(os.path.join(metadata_dir, "dedup_stats.json"), "r") as f:
+        with open(os.path.join(metadata_dir, "dedup_stats.json")) as f:
             dedup_stats = json.load(f)
             
     filter_stats = {}
     if os.path.exists(os.path.join(metadata_dir, "filter_stats.json")):
-        with open(os.path.join(metadata_dir, "filter_stats.json"), "r") as f:
+        with open(os.path.join(metadata_dir, "filter_stats.json")) as f:
             filter_stats = json.load(f)
             
     # Calculate duplicate rates

@@ -1,5 +1,7 @@
 from typing import Any
 
+from atelier.security import SecurityBoundary
+from atelier.workspace import WorkspaceContext, current_workspace_context, workspace_scope
 from tools.ast_edit import AST_EDIT_TOOL
 from tools.base import Tool
 from tools.calculator import CALCULATOR_TOOL
@@ -8,8 +10,19 @@ from tools.files import EDIT_FILE_TOOL, READ_FILE_TOOL, WRITE_FILE_TOOL
 from tools.knowledge import SEARCH_NOTES_TOOL
 from tools.memory_tools import RECALL_TOOL, REMEMBER_TOOL
 from tools.repo_map import REPO_MAP_TOOL
-from tools.repository import REPO_INSPECT_TOOL, REPO_SEARCH_TOOL, REPO_STATUS_TOOL, REPO_SYMBOLS_TOOL, REPO_TESTS_TOOL
-from tools.research import DOWNLOAD_PAPER_TOOL, RESEARCH_GRAPH_TOOL, RESEARCH_LOOKUP_TOOL, VERIFY_CITATION_TOOL
+from tools.repository import (
+    REPO_INSPECT_TOOL,
+    REPO_SEARCH_TOOL,
+    REPO_STATUS_TOOL,
+    REPO_SYMBOLS_TOOL,
+    REPO_TESTS_TOOL,
+)
+from tools.research import (
+    DOWNLOAD_PAPER_TOOL,
+    RESEARCH_GRAPH_TOOL,
+    RESEARCH_LOOKUP_TOOL,
+    VERIFY_CITATION_TOOL,
+)
 from tools.science import (
     OPTIMIZATION_COMPARE_TOOL,
     OPTIMIZATION_SOLVE_TOOL,
@@ -21,8 +34,6 @@ from tools.science import (
 from tools.search import SEARCH_TOOL
 from tools.shell import SHELL_TOOL
 from tools.test_runner import TEST_RUNNER_TOOL
-from atelier.workspace import WorkspaceContext, current_workspace_context, workspace_scope
-from atelier.security import SecurityBoundary
 
 
 class ToolRegistry:

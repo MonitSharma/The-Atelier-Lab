@@ -1,8 +1,8 @@
 import ast
 import operator
-from typing import Final, Any
-from tools.base import Tool
+from typing import Any, Final
 
+from tools.base import Tool
 
 _BINARY_OPERATORS: Final = {
     ast.Add: operator.add,

@@ -9,6 +9,12 @@ drives the whole toolbox (knowledge + build). Design choices that matter:
   that lets build mode read a test failure and try again (PROJECT.md §8 Phase 4).
 * **Observation capping**: large tool outputs (a file dump, a test log) are
   truncated before re-entering context, so a single step can't blow the window.
+* **Context budget**: capping each observation bounds one step but not ten, so
+  older exchanges are pruned to a sliding window (see :func:`ReActAgent._prune`).
+* **Loop breaking**: two failure modes waste the whole step budget on small
+  local models — repeating a tool call that already failed, and emitting
+  unparseable output forever. Both are detected and stopped, and the resulting
+  ``AgentResult.failure_reason`` says which one happened.
 * **Trace logging**: every run is written to ``data/traces`` for debugging and
   the eventual eval harness (PROJECT.md §9).
 """
@@ -27,6 +33,14 @@ from atelier.workspace import WorkspaceContext
 from tools.registry import ToolRegistry, create_default_registry
 
 MAX_OBSERVATION_CHARS = 8000
+#: How many assistant/observation exchanges stay verbatim in context. Older ones
+#: are replaced by a one-line summary. At the 8000-char observation cap, ten
+#: unpruned steps can push ~80k characters at an 8B model's context window.
+DEFAULT_HISTORY_PAIRS = 6
+#: Consecutive malformed model responses tolerated before giving up. Without a
+#: budget, a model stuck emitting prose burns every step on parse errors and
+#: reports the same "ran out of steps" as a run that was making progress.
+DEFAULT_PARSE_ERROR_BUDGET = 3
 
 SYSTEM_TEMPLATE = """\
 You are Atelier, a local AI agent that completes tasks by reasoning and using \
@@ -73,6 +87,16 @@ class AgentResult:
     steps: int
     trace: list[dict[str, Any]] = field(default_factory=list)
     trace_path: str | None = None
+    #: Why an unsuccessful run stopped — ``step_budget``, ``parse_error_budget``,
+    #: or ``None`` when it succeeded. Distinguishing these matters: a run that
+    #: burned its budget on malformed JSON is a different failure from one that
+    #: was genuinely still working.
+    failure_reason: str | None = None
+
+
+def _call_signature(tool: str, arguments: dict[str, Any]) -> str:
+    """Stable identity for a tool call, so exact repeats can be recognised."""
+    return json.dumps({"tool": tool, "arguments": arguments}, sort_keys=True, default=str)
 
 
 def _clean_json(raw: str) -> dict[str, Any]:
@@ -111,6 +135,8 @@ class ReActAgent:
         log: bool = True,
         on_event: Any = None,
         use_memory: bool = False,
+        history_pairs: int = DEFAULT_HISTORY_PAIRS,
+        parse_error_budget: int = DEFAULT_PARSE_ERROR_BUDGET,
     ) -> None:
         self.registry = registry or create_default_registry()
         self.role = role
@@ -120,6 +146,30 @@ class ReActAgent:
         self.log = log
         self.on_event = on_event  # optional callable(event: dict) for UIs
         self.use_memory = use_memory
+        self.history_pairs = history_pairs
+        self.parse_error_budget = parse_error_budget
+
+    def _prune(self, messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Keep the system prompt, the goal, and the most recent exchanges.
+
+        Everything before the window collapses into one line recording how many
+        steps were dropped, so the model still knows work happened earlier
+        without carrying every observation's full text.
+        """
+        head, history = messages[:2], messages[2:]
+        keep = self.history_pairs * 2
+        if len(history) <= keep:
+            return messages
+        dropped = len(history) - keep
+        summary = {
+            "role": "user",
+            "content": (
+                f"[{dropped // 2} earlier step(s) elided to stay within the context "
+                "window. Their observations are gone; re-run a tool if you need "
+                "that information again.]"
+            ),
+        }
+        return [*head, summary, *history[-keep:]]
 
     def _recall_preamble(self, goal: str) -> str:
         """Pull relevant long-term memories into the system context."""
@@ -158,9 +208,14 @@ class ReActAgent:
             {"role": "user", "content": goal},
         ]
         trace: list[dict[str, Any]] = []
+        #: Signatures of tool calls that already came back as an error, so an
+        #: identical retry can be short-circuited rather than re-executed.
+        failed_calls: dict[str, str] = {}
+        consecutive_parse_errors = 0
 
         for step in range(1, self.max_steps + 1):
             t0 = time.time()
+            messages = self._prune(messages)
             raw = chat(
                 messages,
                 role=self.role,
@@ -180,16 +235,25 @@ class ReActAgent:
             try:
                 decision = _clean_json(raw)
             except (json.JSONDecodeError, ValueError) as exc:
+                consecutive_parse_errors += 1
                 err = {"status": "error", "error_type": "invalid_model_output", "message": str(exc)}
                 entry["error"] = err
                 trace.append(entry)
                 self._emit({"step": step, "kind": "parse_error", "detail": str(exc)})
+                if consecutive_parse_errors >= self.parse_error_budget:
+                    self._emit({"step": step, "kind": "abort", "reason": "parse_error_budget"})
+                    return AgentResult(
+                        answer=None, success=False, steps=step, trace=trace,
+                        trace_path=self._save_trace(goal, trace),
+                        failure_reason="parse_error_budget",
+                    )
                 messages.append({"role": "assistant", "content": raw})
                 messages.append({"role": "user", "content":
                                  "Your last response was not valid. Return exactly one JSON "
                                  f"object using the required schema. Error: {json.dumps(err)}"})
                 continue
 
+            consecutive_parse_errors = 0
             entry["decision"] = decision
 
             if decision["type"] == "final":
@@ -212,7 +276,28 @@ class ReActAgent:
                 observation = {"status": "error", "error_type": "invalid_arguments",
                                "message": "arguments must be a JSON object."}
             else:
-                observation = self.registry.execute(tool_name, arguments)
+                signature = _call_signature(tool_name, arguments)
+                previous_error = failed_calls.get(signature)
+                if previous_error is not None:
+                    # The prompt asks the model not to repeat a failing call; a
+                    # small local model does it anyway. Answering from the record
+                    # costs no tool execution and makes the loop say plainly that
+                    # this path is exhausted.
+                    observation = {
+                        "status": "error",
+                        "error_type": "repeated_failing_call",
+                        "message": (
+                            f"This exact {tool_name} call already failed: {previous_error}. "
+                            "Repeating it will not help — change the arguments, use a "
+                            "different tool, or give your final answer."
+                        ),
+                    }
+                    entry["repeated_call"] = True
+                    self._emit({"step": step, "kind": "repeated_call", "tool": tool_name})
+                else:
+                    observation = self.registry.execute(tool_name, arguments)
+                    if observation.get("status") in {"error", "denied"}:
+                        failed_calls[signature] = str(observation.get("message", ""))[:200]
 
             entry["tool"] = tool_name
             entry["observation"] = observation
@@ -227,7 +312,8 @@ class ReActAgent:
 
         trace_path = self._save_trace(goal, trace)
         return AgentResult(answer=None, success=False, steps=self.max_steps,
-                           trace=trace, trace_path=trace_path)
+                           trace=trace, trace_path=trace_path,
+                           failure_reason="step_budget")
 
 
 def run_task(goal: str, *, role: str = "brain", max_steps: int = 10,

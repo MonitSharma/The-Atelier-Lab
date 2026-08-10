@@ -3,18 +3,20 @@
 Dense (embedding) retrieval is great at meaning but can miss exact terms — a
 rare identifier, a specific number, an acronym. BM25 nails those. We build a
 compact in-memory BM25 index from the documents already in the vector store
-(no extra dependency, no duplicate corpus) and cache it, rebuilding only when
-the store's chunk count changes.
+(no extra dependency, no duplicate corpus) and cache it — in memory for the
+process, and on disk next to the vector store so a fresh process does not pay
+the rebuild either. Both caches are keyed on the store's write generation, so
+the corpus is read back only when it has actually changed.
 """
 
 from __future__ import annotations
 
-import hashlib
 import math
+import pickle
 import re
+from pathlib import Path
 from typing import Any
 
-from atelier.config import settings
 from rag.store import VectorStore
 
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
@@ -78,12 +80,69 @@ class BM25Index:
 _cache: dict[str, Any] = {"fingerprint": None, "index": None}
 
 
+def _fingerprint(store: VectorStore) -> str:
+    """Identify the corpus revision without reading the corpus.
+
+    The previous fingerprint pulled every document out of Chroma and SHA-1'd the
+    concatenation *on every query* — O(corpus) I/O plus hashing per retrieval,
+    which is what made hybrid search degrade as the library grew. The store's
+    write generation answers the same question ("has anything changed?") in a
+    single small file read, and the chunk count guards against a store whose
+    sidecar counter was lost.
+    """
+    return f"{store.path}:{store.count()}:{store.generation()}"
+
+
+def _cache_path(store: VectorStore) -> Path:
+    return Path(store.path) / "bm25_index.pickle"
+
+
+def _load_cached(store: VectorStore, fingerprint: str) -> BM25Index | None:
+    """Load a previously built index, if it matches the current corpus.
+
+    The cache lives inside the user's own vector-store directory, alongside the
+    Chroma database it is derived from, and is only ever written by this
+    process — the same trust level as the database itself. A mismatch, a missing
+    file, or any unpickling failure simply falls back to rebuilding.
+    """
+    path = _cache_path(store)
+    try:
+        with path.open("rb") as handle:
+            payload = pickle.load(handle)
+    except (OSError, pickle.UnpicklingError, EOFError, AttributeError, ValueError):
+        return None
+    if not isinstance(payload, dict) or payload.get("fingerprint") != fingerprint:
+        return None
+    index = payload.get("index")
+    return index if isinstance(index, BM25Index) else None
+
+
+def _store_cached(store: VectorStore, fingerprint: str, index: BM25Index) -> None:
+    path = _cache_path(store)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        # Write-then-rename so a crash mid-write cannot leave a torn cache.
+        temporary = path.with_suffix(".pickle.tmp")
+        with temporary.open("wb") as handle:
+            pickle.dump({"fingerprint": fingerprint, "index": index}, handle,
+                        protocol=pickle.HIGHEST_PROTOCOL)
+        temporary.replace(path)
+    except (OSError, pickle.PicklingError):
+        pass  # caching is an optimization; never fail a query over it
+
+
 def get_bm25(store: VectorStore | None = None) -> BM25Index:
     store = store or VectorStore()
-    got = store.get_all()
-    documents = got.get("documents", [])
-    fingerprint = hashlib.sha1("\0".join(documents).encode("utf-8")).hexdigest()
-    if _cache["index"] is None or _cache["fingerprint"] != fingerprint:
-        _cache["index"] = BM25Index(got.get("documents", []), got.get("metadatas", []))
-        _cache["fingerprint"] = fingerprint
-    return _cache["index"]
+    fingerprint = _fingerprint(store)
+    if _cache["index"] is not None and _cache["fingerprint"] == fingerprint:
+        return _cache["index"]
+
+    index = _load_cached(store, fingerprint)
+    if index is None:
+        got = store.get_all()
+        index = BM25Index(got.get("documents", []), got.get("metadatas", []))
+        _store_cached(store, fingerprint, index)
+
+    _cache["index"] = index
+    _cache["fingerprint"] = fingerprint
+    return index

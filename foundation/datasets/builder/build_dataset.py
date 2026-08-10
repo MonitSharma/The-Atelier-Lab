@@ -1,9 +1,10 @@
-import os
-import json
 import datetime
+import json
+import os
+
 import pyarrow as pa
 import pyarrow.parquet as pq
-from tqdm import tqdm
+
 
 def compile_dataset(cleaned_dir, output_dir, metadata_dir):
     os.makedirs(output_dir, exist_ok=True)
@@ -14,7 +15,7 @@ def compile_dataset(cleaned_dir, output_dir, metadata_dir):
             continue
             
         path = os.path.join(cleaned_dir, filename)
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             for line in f:
                 documents.append(json.loads(line))
                 
@@ -69,7 +70,7 @@ def compile_dataset(cleaned_dir, output_dir, metadata_dir):
     }
     
     if os.path.exists(manifest_source_path):
-        with open(manifest_source_path, "r") as f:
+        with open(manifest_source_path) as f:
             source_manifest = json.load(f)
             manifest.update(source_manifest)
             

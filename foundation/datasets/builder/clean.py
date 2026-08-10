@@ -1,7 +1,9 @@
-import os
 import json
+import os
 import re
+
 from tqdm import tqdm
+
 
 def clean_document(text, config):
     filters = config.get("filters", {})
@@ -62,7 +64,7 @@ def clean_document(text, config):
     return "\n".join(cleaned_lines).strip()
 
 def clean_directory(input_dir, output_dir, config_path):
-    with open(config_path, "r") as f:
+    with open(config_path) as f:
         config = json.load(f)
         
     os.makedirs(output_dir, exist_ok=True)
@@ -76,7 +78,7 @@ def clean_directory(input_dir, output_dir, config_path):
         
         print(f"Cleaning {filename}...")
         count = 0
-        with open(in_path, "r", encoding="utf-8") as fin, open(out_path, "w", encoding="utf-8") as fout:
+        with open(in_path, encoding="utf-8") as fin, open(out_path, "w", encoding="utf-8") as fout:
             for line in tqdm(fin, desc="Cleaning documents"):
                 doc = json.loads(line)
                 doc["text"] = clean_document(doc["text"], config)

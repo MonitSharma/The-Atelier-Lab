@@ -1,9 +1,9 @@
 from tools.science import (
     compare_optimization_solutions,
+    compare_quantum_backends,
     inspect_qasm_text,
     simulate_qasm_text,
     solve_optimization,
-    compare_quantum_backends,
     transpile_qasm_text,
     validate_optimization,
 )

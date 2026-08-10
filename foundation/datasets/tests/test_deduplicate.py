@@ -1,8 +1,9 @@
-import os
 import json
+import os
 import tempfile
-import pytest
+
 from foundation.datasets.builder.deduplicate import deduplicate_directory
+
 
 def test_deduplicate_run():
     # Setup temp dirs
@@ -37,7 +38,7 @@ def test_deduplicate_run():
         assert os.path.exists(out_file)
         
         results = []
-        with open(out_file, "r", encoding="utf-8") as f:
+        with open(out_file, encoding="utf-8") as f:
             for line in f:
                 results.append(json.loads(line))
                 

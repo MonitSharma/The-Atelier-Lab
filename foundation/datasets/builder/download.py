@@ -1,8 +1,10 @@
-import os
-import json
 import hashlib
+import json
+import os
+
 from datasets import load_dataset
 from tqdm import tqdm
+
 
 def get_hash(text):
     return hashlib.sha256(text.encode("utf-8")).hexdigest()

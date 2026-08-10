@@ -35,6 +35,33 @@ class VectorStore:
             name=collection or settings.collection_name,
             metadata={"hnsw:space": "cosine"},
         )
+        self._count: int | None = None
+
+    # --- Change tracking ---------------------------------------------------
+    # Derived indexes (BM25) need to know "has anything changed?" without
+    # reading the corpus back out. A monotonic counter in a sidecar file next to
+    # the Chroma database answers that in one small read, and survives across
+    # processes. Chunk count alone would not: an edit can replace a chunk
+    # without changing how many there are.
+
+    def _generation_path(self) -> Path:
+        return Path(self.path) / f"{self._collection.name}.generation"
+
+    def generation(self) -> int:
+        """Monotonic revision of this collection's contents."""
+        try:
+            return int(self._generation_path().read_text(encoding="utf-8").strip() or 0)
+        except (OSError, ValueError):
+            return 0
+
+    def _bump_generation(self) -> None:
+        path = self._generation_path()
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(str(self.generation() + 1), encoding="utf-8")
+        except OSError:  # a read-only store still works, just without caching
+            pass
+        self._count = None
 
     def add(self, chunks: list[Chunk], embeddings: list[list[float]]) -> int:
         if not chunks:
@@ -52,6 +79,7 @@ class VectorStore:
         self._collection.upsert(
             ids=ids, documents=documents, embeddings=embeddings, metadatas=metadatas
         )
+        self._bump_generation()
         return len(ids)
 
     def replace_document(self, document_id: str, chunks: list[Chunk], embeddings: list[list[float]]) -> int:
@@ -102,11 +130,13 @@ class VectorStore:
             return 0
         self._collection.upsert(ids=ids, documents=documents,
                                 embeddings=embeddings, metadatas=metadatas)
+        self._bump_generation()
         return len(ids)
 
     def delete(self, ids: list[str]) -> None:
         if ids:
             self._collection.delete(ids=ids)
+            self._bump_generation()
 
     def delete_source(self, source: str) -> int:
         """Remove all chunks belonging to one source before replacement."""
@@ -143,13 +173,23 @@ class VectorStore:
             metadatas.append(updated)
         if ids:
             self._collection.update(ids=ids, metadatas=metadatas)
+            self._bump_generation()
         return len(ids)
 
     def get_all(self) -> dict[str, Any]:
         return self._collection.get(include=["documents", "metadatas"])
 
     def count(self) -> int:
-        return self._collection.count()
+        """Chunk count, cached until this instance writes.
+
+        ``count()`` sits on the hot retrieval path (twice per query, plus once
+        per BM25 cache check), and each call is a round-trip to Chroma.
+        Mutations through this instance invalidate the cache; a concurrent
+        writer in another process is picked up by the next fresh instance.
+        """
+        if self._count is None:
+            self._count = self._collection.count()
+        return self._count
 
     def embedding_dimension(self) -> int | None:
         if self.count() == 0:
@@ -167,6 +207,7 @@ class VectorStore:
         self._collection = self._client.get_or_create_collection(
             name=name, metadata={"hnsw:space": "cosine"}
         )
+        self._bump_generation()
 
     def sources(self) -> list[str]:
         """Distinct source files currently indexed."""
