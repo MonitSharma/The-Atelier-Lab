@@ -102,6 +102,10 @@ atelier workspace add ~/code_projects/my-project \
 atelier workspace open my-project
 ```
 
+If a prior command already created a read-only `cwd-*` entry, use
+`atelier workspace grant NAME --capabilities read,write,execute` instead of
+adding the same root again.
+
 Automatic activation never grants network access. `atelier workspace list`
 shows the active roots; close old automatic entries with
 `atelier workspace close NAME`.

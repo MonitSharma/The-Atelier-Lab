@@ -109,7 +109,7 @@ def test_default_source_workspace_cannot_be_written_from_another_directory(
     manager.activate_directory(victim)
 
     assert manager.get("atelier").capabilities == {"read"}
-    with pytest.raises(WorkspaceError, match="does not grant 'write'"):
+    with pytest.raises(WorkspaceError, match="read-only"):
         manager.context().resolve(str(security_file), "write")
 
     with workspace_scope(manager.context()):
@@ -137,6 +137,22 @@ def test_source_checkout_requires_explicit_upgrade_for_writes(
     manager.open(explicit.name)
 
     assert manager.context().resolve(str(security_file), "write").workspace.name == "atelier-dev"
+
+
+def test_add_upgrades_an_auto_created_workspace(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    manager = WorkspaceManager(tmp_path / "registry.json")
+    auto = manager.activate_directory(project)
+
+    upgraded = manager.add(
+        project,
+        name="user-chosen-name",
+        capabilities={"read", "write", "execute"},
+    )
+
+    assert upgraded.name == auto.name
+    assert upgraded.capabilities == {"read", "write", "execute"}
 
 
 def test_missing_workspace_approval_survives_reload(tmp_path: Path) -> None:

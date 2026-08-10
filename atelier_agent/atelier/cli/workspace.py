@@ -22,7 +22,7 @@ def workspace_add(
     ),
     privacy: str = typer.Option("LOCAL_ONLY", "--privacy", help="LOCAL_ONLY or CLOUD_ALLOWED."),
 ) -> None:
-    """Approve a directory as an Atelier workspace without opening it."""
+    """Approve a directory, or upgrade its existing non-system grant."""
     from atelier.workspace import WorkspaceError, get_workspace_manager
 
     requested = {item.strip() for item in capabilities.split(",") if item.strip()}
@@ -34,7 +34,32 @@ def workspace_add(
         console.print(f"[red]{exc}[/]")
         raise typer.Exit(code=2) from exc
     console.print(
-        f"[green]Approved[/] {workspace.name}: {workspace.root} "
+        f"[green]Approved/updated[/] {workspace.name}: {workspace.root} "
+        f"({', '.join(sorted(workspace.capabilities))}; {workspace.privacy})"
+    )
+
+
+@workspace_app.command("grant")
+def workspace_grant(
+    name: str = typer.Argument(..., help="Approved workspace name."),
+    capabilities: str = typer.Option(
+        ..., "--capabilities", help="Complete capability set: read,write,execute,network."
+    ),
+    privacy: str | None = typer.Option(None, "--privacy", help="Override privacy policy."),
+) -> None:
+    """Explicitly replace a workspace's capability grant."""
+    from atelier.workspace import WorkspaceError, get_workspace_manager
+
+    requested = {item.strip() for item in capabilities.split(",") if item.strip()}
+    try:
+        workspace = get_workspace_manager().grant_capabilities(
+            name, requested, privacy=privacy.upper() if privacy else None
+        )
+    except WorkspaceError as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    console.print(
+        f"[green]Granted[/] {workspace.name}: "
         f"({', '.join(sorted(workspace.capabilities))}; {workspace.privacy})"
     )
 

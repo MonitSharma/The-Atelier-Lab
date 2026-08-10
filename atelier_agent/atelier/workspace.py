@@ -12,6 +12,7 @@ import hashlib
 import json
 import os
 import re
+import shlex
 import tempfile
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -103,9 +104,7 @@ class WorkspaceContext:
             ),
         )
         if capability not in owner.capabilities:
-            raise WorkspaceError(
-                f"Workspace '{owner.name}' does not grant '{capability}' access."
-            )
+            raise WorkspaceError(_capability_error(owner, capability))
         if capability == "network":
             self.require_network(owner)
         return ResolvedPath(candidate, owner)
@@ -113,10 +112,14 @@ class WorkspaceContext:
     def require_network(self, workspace: Workspace | None = None) -> None:
         owner = workspace or self.active
         if "network" not in owner.capabilities:
-            raise WorkspaceError(f"Workspace '{owner.name}' does not grant 'network' access.")
+            raise WorkspaceError(_capability_error(owner, "network"))
         if owner.privacy != "CLOUD_ALLOWED":
+            requested = ",".join(sorted(set(owner.capabilities) | {"network"}))
             raise WorkspaceError(
-                f"Workspace '{owner.name}' is LOCAL_ONLY; network access is disabled."
+                f"Workspace '{owner.name}' is LOCAL_ONLY; network access is disabled. "
+                f"Grant network explicitly with: atelier workspace grant "
+                f"{shlex.quote(owner.name)} --capabilities {requested} "
+                "--privacy CLOUD_ALLOWED"
             )
 
 
@@ -161,6 +164,25 @@ def _validate_capabilities(capabilities: frozenset[str], privacy: str) -> None:
         raise WorkspaceError("Privacy policy must be LOCAL_ONLY or CLOUD_ALLOWED.")
     if "network" in capabilities and privacy != "CLOUD_ALLOWED":
         raise WorkspaceError("Network capability requires the CLOUD_ALLOWED privacy policy.")
+
+
+def _capability_error(workspace: Workspace, capability: Capability) -> str:
+    """Return an actionable, least-privilege recovery instruction."""
+    if workspace.system:
+        suggested_name = f"{workspace.name}-dev"
+        requested = ",".join(sorted(set(workspace.capabilities) | {capability}))
+        return (
+            f"Workspace '{workspace.name}' is read-only. Approve an explicit editable "
+            f"workspace with: atelier workspace add {shlex.quote(str(workspace.root))} "
+            f"--name {shlex.quote(suggested_name)} --capabilities {requested}"
+        )
+    requested = ",".join(sorted(set(workspace.capabilities) | {capability}))
+    privacy = " --privacy CLOUD_ALLOWED" if capability == "network" else ""
+    return (
+        f"Workspace '{workspace.name}' does not grant '{capability}' access. "
+        f"Grant it with: atelier workspace grant {shlex.quote(workspace.name)} "
+        f"--capabilities {requested}{privacy}"
+    )
 
 
 class WorkspaceManager:
@@ -258,18 +280,55 @@ class WorkspaceManager:
             raise WorkspaceError(f"Workspace root must be an existing directory: {path}")
         if root == Path(root.anchor):
             raise WorkspaceError("The filesystem root cannot be an approved workspace.")
+        resolved_capabilities = frozenset(capabilities or {"read"})
+        _validate_capabilities(resolved_capabilities, privacy)
+        existing_root = next((existing for existing in self._workspaces.values() if existing.root == root), None)
+        if existing_root is not None and not existing_root.system:
+            if name and name in self._workspaces and name != existing_root.name:
+                raise WorkspaceError(f"Workspace already exists: {name}")
+            effective_privacy = existing_root.privacy if existing_root.privacy == "CLOUD_ALLOWED" else privacy
+            return self.grant_capabilities(
+                existing_root.name,
+                set(existing_root.capabilities) | set(resolved_capabilities),
+                privacy=effective_privacy,
+            )
         workspace_name = name or root.name or "workspace"
         _validate_name(workspace_name)
         if workspace_name in self._workspaces:
             raise WorkspaceError(f"Workspace already exists: {workspace_name}")
-        if any(existing.root == root and not existing.system for existing in self._workspaces.values()):
-            raise WorkspaceError(f"Workspace root is already approved: {root}")
-        resolved_capabilities = frozenset(capabilities or {"read"})
-        _validate_capabilities(resolved_capabilities, privacy)
         workspace = Workspace(workspace_name, root, resolved_capabilities, privacy, attached=False)
         self._workspaces[workspace_name] = workspace
         self._save()
         return workspace
+
+    def grant_capabilities(
+        self,
+        name: str,
+        capabilities: set[str] | frozenset[str],
+        *,
+        privacy: str | None = None,
+    ) -> Workspace:
+        """Explicitly replace a workspace's capability grant."""
+        workspace = self.get(name)
+        resolved_capabilities = frozenset(capabilities)
+        target_privacy = privacy or workspace.privacy
+        _validate_capabilities(resolved_capabilities, target_privacy)
+        if workspace.system and not resolved_capabilities <= {"read"}:
+            raise WorkspaceError(
+                f"System workspace '{name}' is permanently read-only. "
+                "Create a separate explicit workspace with `atelier workspace add`."
+            )
+        updated = Workspace(
+            workspace.name,
+            workspace.root,
+            resolved_capabilities,
+            target_privacy,
+            attached=workspace.attached,
+            system=workspace.system,
+        )
+        self._workspaces[name] = updated
+        self._save()
+        return updated
 
     def open(self, name: str) -> Workspace:
         workspace = self.get(name)
