@@ -11,10 +11,17 @@ path is a locator and content identity remains stable across renames.
 from __future__ import annotations
 
 import hashlib
+import os
 from pathlib import Path
 from typing import Any
 
+# Chroma reads this environment variable while constructing its telemetry
+# component. Set it before importing Chroma, then also pass an explicit
+# Settings object below so the policy is enforced across supported versions.
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
+
 import chromadb
+from chromadb.config import Settings as ChromaSettings
 
 from atelier.config import settings
 from rag.chunk import Chunk
@@ -30,7 +37,13 @@ class VectorStore:
     def __init__(self, path: str | None = None, collection: str | None = None) -> None:
         settings.ensure_dirs()
         self.path = path or str(settings.vector_dir)
-        self._client = chromadb.PersistentClient(path=self.path)
+        # Keep the local-only promise explicit. Chroma's default telemetry
+        # setting has changed across releases, so do not rely on the
+        # dependency default to remain opt-out.
+        self._client = chromadb.PersistentClient(
+            path=self.path,
+            settings=ChromaSettings(anonymized_telemetry=False),
+        )
         self._collection = self._client.get_or_create_collection(
             name=collection or settings.collection_name,
             metadata={"hnsw:space": "cosine"},
