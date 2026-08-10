@@ -185,10 +185,21 @@ class WorkflowEngine:
             if step == "report state":
                 return {"git": inspector.git_status(), "diff": inspector.git_diff()}
         elif workflow in {"paper_fast", "paper_deep_read"}:
-            from rag.paper import characterize
+            from rag.paper import characterize, extract_pdf_pages
 
             path = self._resolve_path(state.input.get("path"), "read")
             if step in {"identify", "characterize"}:
+                if state.input.get("model_free"):
+                    pages = extract_pdf_pages(path)
+                    text = "\n".join(str(page.get("text", "")) for page in pages)
+                    return {
+                        "status": "success",
+                        "mode": "model_free",
+                        "path": str(path),
+                        "pages": len(pages),
+                        "characters": len(text),
+                        "note": "Deterministic extraction only; model characterization is a separate workflow stage.",
+                    }
                 return characterize(path)
             if step == "extract":
                 return {"path": str(path), "bytes": path.stat().st_size, "extraction": "native PDF extraction"}

@@ -175,12 +175,17 @@ class AtelierService:
             result["workflow"] = self.workflow_start(str(decision["workflow"]), workflow_input)
         return result
 
-    def paper_action(self, action: str, path: str, *, project: str = "default") -> dict[str, Any]:
+    def paper_action(
+        self, action: str, path: str, *, project: str = "default", model_free: bool = False,
+    ) -> dict[str, Any]:
         workflows = {"deep_read": "paper_deep_read", "characterize": "paper_fast", "explain": "paper_fast"}
         workflow = workflows.get(action)
         if workflow is None:
             raise ValueError(f"Unsupported paper action: {action}")
-        return self.workflow_start(workflow, {"path": path, "project": project})
+        input_data = {"path": path, "project": project}
+        if model_free:
+            input_data["model_free"] = True
+        return self.workflow_start(workflow, input_data)
 
     def repo_action(self, action: str, path: str = ".", *, project: str = "default", goal: str = "") -> dict[str, Any]:
         if action == "inspect":

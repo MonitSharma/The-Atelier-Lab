@@ -147,7 +147,7 @@ def run_clean_acceptance(root: str | Path) -> dict[str, Any]:
             ))),
         ])
 
-        paper_run = service.paper_action("deep_read", "paper.pdf", project="clean")
+        paper_run = service.paper_action("deep_read", "paper.pdf", project="clean", model_free=True)
         checks.append(_check(
             "clean-paper-approval",
             lambda: "waiting_approval" if paper_run["status"] == "waiting_approval" else paper_run["status"],
