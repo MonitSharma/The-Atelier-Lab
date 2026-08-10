@@ -1,90 +1,49 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
-  <title id="title">Atelier end-to-end workflow</title>
-  <desc id="desc">Local documents and repositories move through provenance-aware ingestion, retrieval, model routing, tools, and verified outputs.</desc>
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#08111f"/>
-      <stop offset="1" stop-color="#111b31"/>
-    </linearGradient>
-    <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#55d6e8"/>
-      <stop offset="1" stop-color="#4aa3ff"/>
-    </linearGradient>
-    <linearGradient id="violet" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#d88cff"/>
-      <stop offset="1" stop-color="#8c7bff"/>
-    </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000" flood-opacity=".25"/>
-    </filter>
-    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
-      <path d="M0,0 L9,4.5 L0,9 Z" fill="#6f86ad"/>
-    </marker>
-  </defs>
-  <rect width="1200" height="560" rx="28" fill="url(#bg)"/>
-  <circle cx="1040" cy="80" r="170" fill="#7c5cff" opacity=".08"/>
-  <circle cx="130" cy="510" r="190" fill="#42d7e8" opacity=".06"/>
-  <text x="60" y="62" fill="#f4f7ff" font-family="Inter,Arial,sans-serif" font-size="27" font-weight="700">THE ATELIER LAB</text>
-  <text x="60" y="91" fill="#91a6c9" font-family="Inter,Arial,sans-serif" font-size="15">one local workbench for research, study, code, and deterministic tools</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
+  <title id="title">Atelier research and coding workflow</title>
+  <desc id="desc">A restrained four-step workflow: read material, ask grounded questions, build with repository tools, and verify with citations and tests.</desc>
+  <rect width="1200" height="520" rx="10" fill="#fbfaf7"/>
+  <text x="70" y="64" fill="#797a80" font-family="IBM Plex Mono, SFMono-Regular, monospace" font-size="13" letter-spacing="2">THE ATELIER LAB  /  WORKFLOW</text>
+  <text x="70" y="112" fill="#16171d" font-family="Newsreader, Georgia, serif" font-size="38">Read deeply. Ask clearly. Build carefully.</text>
+  <text x="70" y="143" fill="#4c4c54" font-family="IBM Plex Sans, Arial, sans-serif" font-size="16">One local workbench for research papers, code, and scientific experiments.</text>
+  <line x1="70" y1="178" x2="1130" y2="178" stroke="#d8d9dd"/>
 
-  <g filter="url(#shadow)">
-    <rect x="55" y="145" width="185" height="190" rx="18" fill="#121f35" stroke="#355173"/>
-    <rect x="275" y="145" width="205" height="190" rx="18" fill="#121f35" stroke="#355173"/>
-    <rect x="515" y="145" width="205" height="190" rx="18" fill="#121f35" stroke="#355173"/>
-    <rect x="755" y="145" width="185" height="190" rx="18" fill="#121f35" stroke="#355173"/>
-    <rect x="975" y="145" width="170" height="190" rx="18" fill="#121f35" stroke="#355173"/>
+  <g font-family="IBM Plex Sans, Arial, sans-serif">
+    <rect x="70" y="220" width="235" height="152" rx="4" fill="#f4f3f0" stroke="#d8d9dd"/>
+    <text x="94" y="250" fill="#6457c1" font-family="IBM Plex Mono, SFMono-Regular, monospace" font-size="12" letter-spacing="1.4">01  READ</text>
+    <text x="94" y="286" fill="#16171d" font-family="Newsreader, Georgia, serif" font-size="25">Bring evidence in.</text>
+    <text x="94" y="317" fill="#4c4c54" font-size="14">papers · notes · repos</text>
+    <text x="94" y="342" fill="#797a80" font-size="13">structured extraction + citations</text>
+
+    <rect x="335" y="220" width="235" height="152" rx="4" fill="#f4f3f0" stroke="#d8d9dd"/>
+    <text x="359" y="250" fill="#6457c1" font-family="IBM Plex Mono, SFMono-Regular, monospace" font-size="12" letter-spacing="1.4">02  ASK</text>
+    <text x="359" y="286" fill="#16171d" font-family="Newsreader, Georgia, serif" font-size="25">Find what matters.</text>
+    <text x="359" y="317" fill="#4c4c54" font-size="14">semantic + lexical search</text>
+    <text x="359" y="342" fill="#797a80" font-size="13">grounded answers with sources</text>
+
+    <rect x="600" y="220" width="235" height="152" rx="4" fill="#f4f3f0" stroke="#d8d9dd"/>
+    <text x="624" y="250" fill="#6457c1" font-family="IBM Plex Mono, SFMono-Regular, monospace" font-size="12" letter-spacing="1.4">03  BUILD</text>
+    <text x="624" y="286" fill="#16171d" font-family="Newsreader, Georgia, serif" font-size="25">Turn insight into code.</text>
+    <text x="624" y="317" fill="#4c4c54" font-size="14">inspect · edit · run tests</text>
+    <text x="624" y="342" fill="#797a80" font-size="13">guarded repository workflows</text>
+
+    <rect x="865" y="220" width="265" height="152" rx="4" fill="#e8e8ff" stroke="#bcb7e4"/>
+    <text x="889" y="250" fill="#483a9a" font-family="IBM Plex Mono, SFMono-Regular, monospace" font-size="12" letter-spacing="1.4">04  VERIFY</text>
+    <text x="889" y="286" fill="#16171d" font-family="Newsreader, Georgia, serif" font-size="25">Keep the evidence.</text>
+    <text x="889" y="317" fill="#4c4c54" font-size="14">citations · tests · traces</text>
+    <text x="889" y="342" fill="#797a80" font-size="13">review before you trust or publish</text>
   </g>
 
-  <g font-family="Inter,Arial,sans-serif">
-    <text x="78" y="180" fill="#55d6e8" font-size="13" font-weight="700" letter-spacing="1.5">INPUTS</text>
-    <text x="78" y="215" fill="#f4f7ff" font-size="17" font-weight="700">Your material</text>
-    <text x="78" y="246" fill="#b8c8e2" font-size="14">PDF · DOCX · PPTX</text>
-    <text x="78" y="269" fill="#b8c8e2" font-size="14">notes · images · EPUB</text>
-    <text x="78" y="292" fill="#b8c8e2" font-size="14">ZIP · spreadsheets · code</text>
-    <text x="78" y="318" fill="#7087aa" font-size="12">explicit local paths</text>
-
-    <text x="298" y="180" fill="#55d6e8" font-size="13" font-weight="700" letter-spacing="1.5">1 · PREPARE</text>
-    <text x="298" y="215" fill="#f4f7ff" font-size="17" font-weight="700">Ingest &amp; preserve</text>
-    <text x="298" y="246" fill="#b8c8e2" font-size="14">extract text and tables</text>
-    <text x="298" y="269" fill="#b8c8e2" font-size="14">OCR / local vision</text>
-    <text x="298" y="292" fill="#b8c8e2" font-size="14">page, slide, image,</text>
-    <text x="298" y="312" fill="#b8c8e2" font-size="14">archive citations</text>
-
-    <text x="538" y="180" fill="#55d6e8" font-size="13" font-weight="700" letter-spacing="1.5">2 · FIND</text>
-    <text x="538" y="215" fill="#f4f7ff" font-size="17" font-weight="700">Retrieve evidence</text>
-    <text x="538" y="246" fill="#b8c8e2" font-size="14">Qwen embedding vectors</text>
-    <text x="538" y="269" fill="#b8c8e2" font-size="14">BM25 lexical search</text>
-    <text x="538" y="292" fill="#b8c8e2" font-size="14">RRF fusion + reranking</text>
-    <text x="538" y="318" fill="#7087aa" font-size="12">cited passages, not raw guesses</text>
-
-    <text x="778" y="180" fill="#d88cff" font-size="13" font-weight="700" letter-spacing="1.5">3 · ACT</text>
-    <text x="778" y="215" fill="#f4f7ff" font-size="17" font-weight="700">Route &amp; use tools</text>
-    <text x="778" y="246" fill="#b8c8e2" font-size="14">worker · brain · coder</text>
-    <text x="778" y="269" fill="#b8c8e2" font-size="14">guarded file / repo tools</text>
-    <text x="778" y="292" fill="#b8c8e2" font-size="14">quantum / optimization</text>
-    <text x="778" y="318" fill="#7087aa" font-size="12">local by default</text>
-
-    <text x="998" y="180" fill="#d88cff" font-size="13" font-weight="700" letter-spacing="1.5">4 · PROVE</text>
-    <text x="998" y="215" fill="#f4f7ff" font-size="17" font-weight="700">Useful output</text>
-    <text x="998" y="246" fill="#b8c8e2" font-size="14">cited answer</text>
-    <text x="998" y="269" fill="#b8c8e2" font-size="14">study plan</text>
-    <text x="998" y="292" fill="#b8c8e2" font-size="14">tested code change</text>
-    <text x="998" y="318" fill="#7087aa" font-size="12">trace + certificate</text>
+  <g stroke="#b5b6bc" stroke-width="1.5" fill="none">
+    <path d="M305 296 H330"/><path d="M570 296 H595"/><path d="M835 296 H860"/>
+  </g>
+  <g fill="#6457c1">
+    <circle cx="318" cy="296" r="3"/><circle cx="583" cy="296" r="3"/><circle cx="848" cy="296" r="3"/>
   </g>
 
-  <g stroke="#6f86ad" stroke-width="2.5" fill="none" marker-end="url(#arrow)">
-    <path d="M240 240 H270"/>
-    <path d="M480 240 H510"/>
-    <path d="M720 240 H750"/>
-    <path d="M940 240 H970"/>
-  </g>
-
-  <rect x="55" y="392" width="1090" height="105" rx="18" fill="#0d1729" stroke="#263d61"/>
-  <text x="82" y="425" fill="#91a6c9" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="700" letter-spacing="1.5">CONTROL PLANE</text>
-  <text x="82" y="456" fill="#f4f7ff" font-family="Inter,Arial,sans-serif" font-size="16">workspace boundaries</text>
-  <text x="290" y="456" fill="#f4f7ff" font-family="Inter,Arial,sans-serif" font-size="16">privacy policy</text>
-  <text x="463" y="456" fill="#f4f7ff" font-family="Inter,Arial,sans-serif" font-size="16">SQLite manifests</text>
-  <text x="685" y="456" fill="#f4f7ff" font-family="Inter,Arial,sans-serif" font-size="16">audit traces</text>
-  <text x="860" y="456" fill="#f4f7ff" font-family="Inter,Arial,sans-serif" font-size="16">human review flags</text>
-  <text x="82" y="480" fill="#7087aa" font-family="Inter,Arial,sans-serif" font-size="12">Every model call sits behind explicit local state, capabilities, and evidence.</text>
+  <line x1="70" y1="425" x2="1130" y2="425" stroke="#d8d9dd"/>
+  <text x="70" y="462" fill="#4c4c54" font-family="IBM Plex Sans, Arial, sans-serif" font-size="14">LOCAL BY DEFAULT</text>
+  <text x="305" y="462" fill="#4c4c54" font-family="IBM Plex Sans, Arial, sans-serif" font-size="14">WORKSPACE BOUNDARIES</text>
+  <text x="590" y="462" fill="#4c4c54" font-family="IBM Plex Sans, Arial, sans-serif" font-size="14">MODEL ROUTING</text>
+  <text x="820" y="462" fill="#4c4c54" font-family="IBM Plex Sans, Arial, sans-serif" font-size="14">HUMAN REVIEW</text>
+  <text x="70" y="486" fill="#797a80" font-family="IBM Plex Mono, SFMono-Regular, monospace" font-size="12">The point is not more models. It is a dependable path from question to evidence to tested work.</text>
 </svg>
