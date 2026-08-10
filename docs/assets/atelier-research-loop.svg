@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="500" viewBox="0 0 1200 500" role="img" aria-labelledby="title desc">
+  <title id="title">Atelier research reading loop</title>
+  <desc id="desc">A five-step paper reading loop: ingest, inspect, search, ask, and verify.</desc>
+  <rect width="1200" height="500" rx="10" fill="#fbfaf7"/>
+  <text x="70" y="62" fill="#797a80" font-family="IBM Plex Mono, SFMono-Regular, monospace" font-size="13" letter-spacing="2">ATELIER  /  RESEARCH LOOP</text>
+  <text x="70" y="110" fill="#16171d" font-family="Newsreader, Georgia, serif" font-size="38">Read a paper in passes, not in one giant prompt.</text>
+  <text x="70" y="141" fill="#4c4c54" font-family="IBM Plex Sans, Arial, sans-serif" font-size="16">Keep the source close, narrow the question, and make every conclusion inspectable.</text>
+  <line x1="70" y1="175" x2="1130" y2="175" stroke="#d8d9dd"/>
+
+  <g font-family="IBM Plex Sans, Arial, sans-serif">
+    <circle cx="145" cy="274" r="53" fill="#f4f3f0" stroke="#d8d9dd"/>
+    <text x="145" y="267" text-anchor="middle" fill="#6457c1" font-family="IBM Plex Mono, SFMono-Regular, monospace" font-size="12">01</text>
+    <text x="145" y="291" text-anchor="middle" fill="#16171d" font-family="Newsreader, Georgia, serif" font-size="21">Ingest</text>
+    <text x="145" y="355" text-anchor="middle" fill="#4c4c54" font-size="14">make evidence searchable</text>
+
+    <circle cx="365" cy="274" r="53" fill="#f4f3f0" stroke="#d8d9dd"/>
+    <text x="365" y="267" text-anchor="middle" fill="#6457c1" font-family="IBM Plex Mono, SFMono-Regular, monospace" font-size="12">02</text>
+    <text x="365" y="291" text-anchor="middle" fill="#16171d" font-family="Newsreader, Georgia, serif" font-size="21">Inspect</text>
+    <text x="365" y="355" text-anchor="middle" fill="#4c4c54" font-size="14">check sources and structure</text>
+
+    <circle cx="585" cy="274" r="53" fill="#f4f3f0" stroke="#d8d9dd"/>
+    <text x="585" y="267" text-anchor="middle" fill="#6457c1" font-family="IBM Plex Mono, SFMono-Regular, monospace" font-size="12">03</text>
+    <text x="585" y="291" text-anchor="middle" fill="#16171d" font-family="Newsreader, Georgia, serif" font-size="21">Search</text>
+    <text x="585" y="355" text-anchor="middle" fill="#4c4c54" font-size="14">find the relevant passages</text>
+
+    <circle cx="805" cy="274" r="53" fill="#f4f3f0" stroke="#d8d9dd"/>
+    <text x="805" y="267" text-anchor="middle" fill="#6457c1" font-family="IBM Plex Mono, SFMono-Regular, monospace" font-size="12">04</text>
+    <text x="805" y="291" text-anchor="middle" fill="#16171d" font-family="Newsreader, Georgia, serif" font-size="21">Ask</text>
+    <text x="805" y="355" text-anchor="middle" fill="#4c4c54" font-size="14">synthesize with citations</text>
+
+    <circle cx="1025" cy="274" r="53" fill="#e8e8ff" stroke="#bcb7e4"/>
+    <text x="1025" y="267" text-anchor="middle" fill="#483a9a" font-family="IBM Plex Mono, SFMono-Regular, monospace" font-size="12">05</text>
+    <text x="1025" y="291" text-anchor="middle" fill="#16171d" font-family="Newsreader, Georgia, serif" font-size="21">Verify</text>
+    <text x="1025" y="355" text-anchor="middle" fill="#4c4c54" font-size="14">check claims and next steps</text>
+  </g>
+  <g stroke="#b5b6bc" stroke-width="1.5" fill="none">
+    <path d="M198 274 H312"/><path d="M418 274 H532"/><path d="M638 274 H752"/><path d="M858 274 H972"/>
+  </g>
+  <g fill="#6457c1"><circle cx="255" cy="274" r="3"/><circle cx="475" cy="274" r="3"/><circle cx="695" cy="274" r="3"/><circle cx="915" cy="274" r="3"/></g>
+  <rect x="70" y="410" width="1060" height="42" rx="3" fill="#f4f3f0" stroke="#d8d9dd"/>
+  <text x="90" y="436" fill="#4c4c54" font-family="IBM Plex Mono, SFMono-Regular, monospace" font-size="12">Tip: ask for objective → method → assumptions → risks → experiments, then inspect with --show-context.</text>
+</svg>

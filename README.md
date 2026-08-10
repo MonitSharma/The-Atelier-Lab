@@ -82,9 +82,116 @@ python3 scripts/check_repo.py
 python3 scripts/validate_experiments.py
 ```
 
+## How to use Atelier
+
+### The basic mental model
+
+Atelier has two ways to work:
+
+1. **Interactive session** — run `atelier` once, then navigate, ingest files, ask questions, inspect repositories, and leave with `exit`.
+2. **One-shot commands** — run a single command directly from a normal terminal, useful for scripts, repeatable checks, and explicit workspace paths.
+
+Both surfaces use the same local runtime, model configuration, vector index, memory, and workspace rules.
+
+### Your first ten minutes
+
+```bash
+# 1. Confirm the runtime, models, index, and workspace state.
+atelier doctor
+atelier models status
+
+# 2. Start the persistent prompt.
+atelier
+```
+
+Inside the prompt:
+
+```text
+atelier › pwd                         # where the session is working
+atelier › ls                          # see the current directory
+atelier › cd ~/Documents/papers       # move to a research folder
+atelier › ingest .                    # index supported material below it
+atelier › sources                     # confirm what is indexed
+atelier › search "your topic"        # inspect evidence first
+atelier › ask --show-context "..."    # ask a grounded question
+```
+
+The index is stored under `~/Atelier`, while the original files remain where they are. Ingestion does not modify or upload the source material. If a file was indexed before an extraction upgrade, use `ingest --force PATH` to regenerate its chunks and metadata.
+
+### Which command should I use?
+
+| If you want to... | Use | Why |
+|---|---|---|
+| Add documents or code to the local library | `atelier ingest PATH` | Extracts supported material and creates searchable chunks |
+| Check whether ingestion worked | `atelier sources` | Lists indexed sources and their paths |
+| See the evidence without synthesis | `atelier search "QUERY"` | Shows retrieved passages without asking a model to answer |
+| Ask a grounded research question | `atelier ask "QUESTION"` | Retrieves local evidence, reasons over it, and cites sources |
+| Inspect a paper as a structured artifact | `atelier paper FILE.pdf` | Creates a cached characterization before deeper reading |
+| Ask for a repository task | `atelier agent "TASK"` | Flexible inspect → tool → reason workflow |
+| Make a constrained code change | `atelier code-fix "TASK"` | Guarded edit → tests → diff certificate workflow |
+| Save an explicit preference or project fact | `atelier remember "FACT"` | Stores durable local memory only when you request it |
+| See the system state | `atelier doctor` | Checks runtime, models, index, memory, and workspaces |
+| Expose the optional local browser/API surface | `atelier serve` | Starts the loopback service; not needed for normal CLI use |
+
+### Working with paths and workspaces
+
+Atelier starts in the directory from which it was launched. Inside the prompt, use normal navigation:
+
+```text
+atelier › cd ~/code_projects/my-project
+atelier › pwd
+atelier › repo inspect .
+```
+
+For a one-shot command, make the root explicit:
+
+```bash
+atelier --workspace ~/code_projects/my-project repo inspect .
+atelier --workspace ~/Documents/papers ingest .
+atelier --workspace ~/code_projects/my-project code-fix \
+  "Add a regression test for the parser" --path . --no-escalate --json
+```
+
+The workspace root is the privacy and capability boundary. `read` is enough for inspection and retrieval; `write` is required for edits; `execute` is required to run tests or programs; `network` is separate and off by default. `atelier workspace list` shows the current registry.
+
+### Asking better questions
+
+Start broad, then narrow. A reliable paper-reading sequence is:
+
+```text
+1. What is the central question and claimed contribution?
+2. What data, method, baselines, and metrics are used?
+3. Which assumptions are explicit, and which are inferred?
+4. What are the strongest risks, limitations, and falsifiers?
+5. What experiment or implementation should happen next?
+```
+
+Useful options:
+
+```bash
+atelier ask --show-context "Summarize the method and cite the relevant sections."
+atelier ask -k 8 "Compare the baselines and explain the difference in assumptions."
+atelier ask --heavy "Synthesize the mathematical argument and identify gaps."
+```
+
+Use `--show-context` whenever an answer matters. If retrieval is weak, first try a more specific query, inspect `search`, increase `-k`, or ingest the relevant source directly. A fluent answer is not evidence that the right passage was retrieved.
+
+### Stopping and troubleshooting
+
+- `Ctrl-C` stops the current child command and returns to `atelier ›`.
+- `exit` or `Ctrl-D` closes the interactive session.
+- `clear` redraws the banner without closing Atelier.
+- If the knowledge base is empty, run `ingest PATH` and then `sources`.
+- If a model is missing, run `atelier doctor` and `atelier models status`; Atelier does not download missing models automatically.
+- If a document changed, use `ingest --force PATH`.
+- If `serve` is running, stop it with `Ctrl-C` in the terminal where the server is running.
+- Do not run `mcp` manually as a normal conversation command; it waits for an external MCP host to send JSON-RPC messages.
+
 ## Worked examples
 
 ### 1. Understand the QAtelier research plan
+
+![Atelier research reading loop](docs/assets/atelier-research-loop.svg)
 
 Start with a text-first pass, then ask progressively more specific questions:
 
@@ -111,6 +218,8 @@ atelier › paper-visual ~/Downloads/QAtelier_Quantum_Adapters_Research_Plan.pdf
 ```
 
 ### 2. Explore and modify a repository
+
+![Atelier coding workflow](docs/assets/atelier-build-loop.svg)
 
 Use deterministic inspection before asking a model to edit anything:
 
