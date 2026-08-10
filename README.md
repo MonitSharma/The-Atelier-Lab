@@ -161,6 +161,9 @@ atelier workspace add ~/code_projects/my-project \
 atelier workspace open my-project
 ```
 
+If Atelier has already auto-created a read-only `cwd-*` workspace, grant it
+explicitly instead: `atelier workspace grant NAME --capabilities read,write,execute`.
+
 The workspace root is the privacy and capability boundary. `read` is enough for inspection and retrieval; `write` is required for edits; `execute` is required to run tests or programs; `network` is separate and off by default. Automatically discovered directories receive `read` only. To let an agent edit and test a repository, approve those capabilities explicitly with `atelier workspace add ... --capabilities read,write,execute`, then open it. `atelier workspace list` shows the current registry.
 
 ### Asking better questions
