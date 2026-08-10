@@ -193,7 +193,7 @@ in one task.
 
 ### 4d. Pick the model size
 ```bash
-atelier agent "..."          # qwen3:14b (brain) — default
+atelier agent "..."          # qwen3:8b (brain) — temporary default
 atelier agent "..." --heavy  # gemma4:26b — harder reasoning, slower
 ```
 
@@ -237,7 +237,7 @@ atelier memory                              # list all stored facts
 **Expect:** `recall` returns the stored fact ranked by a similarity score, even
 though the query wording differs. Prove persistence across processes:
 ```bash
-python -c "from agent.memory import get_memory; get_memory().remember('the brain model is qwen3:14b')"
+python -c "from agent.memory import get_memory; get_memory().remember('the brain model is qwen3:8b')"
 python -c "from agent.memory import get_memory; print(get_memory().recall('which model reasons?')[0].text)"
 ```
 **Expect:** the second (separate) process recalls what the first stored.

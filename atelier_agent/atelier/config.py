@@ -41,8 +41,8 @@ class Settings(BaseSettings):
     ollama_url: str = "http://localhost:11434"
     model_provider: str = "ollama"
     mlx_model_path: str | None = None
-    #: Hard reasoning + build mode. Fits comfortably in 36 GB.
-    brain_model: str = "qwen3:14b"
+    #: Temporary reasoning + build model until the larger local slot is ready.
+    brain_model: str = "qwen3:8b"
     #: Coding specialist selected by the Step 07 frozen benchmark.
     coder_model: str = "qwen3:8b"
     #: Fast, cheap subtasks / routing.

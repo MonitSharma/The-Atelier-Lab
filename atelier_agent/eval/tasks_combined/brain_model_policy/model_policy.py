@@ -1,4 +1,4 @@
-BRAIN_MODEL = "qwen3:4b"
+BRAIN_MODEL = "qwen3:8b"
 
 
 def default_brain_model():
