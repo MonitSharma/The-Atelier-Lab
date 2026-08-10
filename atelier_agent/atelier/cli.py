@@ -12,6 +12,7 @@ Run `python -m atelier.cli ...` if you haven't `pip install -e .`'d the package.
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -59,6 +60,64 @@ console = Console()
 INGEST_PATHS_ARG = typer.Argument(None, help="Files or folders to index. Defaults to data/corpus.")
 EVAL_PLOT_REPORT_OPT = typer.Option(None, "--report", help="Specific report JSON to plot.")
 EVAL_PLOT_OUT_OPT = typer.Option(None, "--out", help="Directory for generated SVG plots.")
+
+
+def _sync_console_width(target: Console = console) -> None:
+    """Refresh Rich's width after a Terminal resize.
+
+    Rich normally reads the terminal size lazily, but a ``COLUMNS`` value
+    inherited when Atelier starts can pin the console to the old width. The
+    interactive shell also stays alive across window resizes, so refresh the
+    dimensions immediately before rendering command output.
+    """
+    try:
+        columns = shutil.get_terminal_size(fallback=(80, 24)).columns
+    except OSError:
+        return
+    if columns > 0:
+        # Rich has no public setter for a live console width. Clearing the
+        # cached height keeps terminal height dynamic while this updates the
+        # width from the current window rather than stale COLUMNS metadata.
+        target._width = columns  # type: ignore[attr-defined]
+        target._height = None  # type: ignore[attr-defined]
+
+
+def _retrieved_context_panels(hits: list[dict], *, width: int | None = None) -> list[Panel]:
+    """Build full-width, independently readable retrieval cards."""
+    panels: list[Panel] = []
+    for i, hit in enumerate(hits, start=1):
+        meta = hit.get("metadata", {})
+        source = Path(meta.get("source", "?")).name
+        location: list[str] = []
+        for key, label in (("page", "p."), ("slide", "slide"), ("table", "table")):
+            if meta.get(key) is not None:
+                location.append(f"{label} {meta[key]}")
+        if meta.get("heading"):
+            location.append(f"heading: {meta['heading']}")
+        if meta.get("section"):
+            location.append(f"section: {meta['section']}")
+        if meta.get("speaker_notes"):
+            location.append("speaker notes")
+        if meta.get("image_member"):
+            location.append(f"image: {meta['image_member']}")
+        if meta.get("archive_member"):
+            location.append(f"archive: {meta['archive_member']}")
+        if meta.get("human_review"):
+            location.append("HUMAN REVIEW FLAG")
+        title = f"[{i}] {source}"
+        if location:
+            title += "  ·  " + "  ·  ".join(location)
+        panels.append(
+            Panel(
+                Text(str(hit.get("text", "")), overflow="fold", no_wrap=False),
+                title=Text(title),
+                border_style="blue",
+                expand=True,
+                width=width,
+                padding=(0, 1),
+            )
+        )
+    return panels
 
 
 @workspace_app.command("add")
@@ -414,6 +473,7 @@ def _root(
     """Enter Atelier in the current directory or an explicitly selected workspace."""
     from atelier.workspace import WorkspaceError, get_workspace_manager
 
+    _sync_console_width()
     try:
         get_workspace_manager().activate_directory(workspace or Path.cwd())
     except WorkspaceError as exc:
@@ -628,6 +688,7 @@ def search(
     from rag.retrieve import retrieve
     from rag.compat import IndexCompatibilityError
 
+    _sync_console_width()
     try:
         with console.status("Searching the local research library..."):
             hits = retrieve(query, k=k, source=source, section_type=section_type)
@@ -646,7 +707,15 @@ def search(
         if debug:
             title += f"  score={hit.get('final_score', hit.get('score', 0)):.4f}"
             title += f" adj={hit.get('section_adjustment', 1.0):.2f}"
-        console.print(Panel(Text(hit["text"]), title=Text(title), border_style="blue"))
+        console.print(
+            Panel(
+                Text(hit["text"], overflow="fold", no_wrap=False),
+                title=Text(title),
+                border_style="blue",
+                expand=True,
+                padding=(0, 1),
+            )
+        )
 
 
 @app.command()
@@ -677,9 +746,9 @@ def ask(
 ) -> None:
     """Answer a question grounded in your indexed knowledge."""
     from rag.answer import answer_question
-    from rag.retrieve import format_context
     from rag.compat import IndexCompatibilityError
 
+    _sync_console_width()
     role = "heavy" if heavy else "brain"
     try:
         with console.status(f"Retrieving + reasoning ({settings.heavy_model if heavy else settings.brain_model})..."):
@@ -689,8 +758,18 @@ def ask(
         raise typer.Exit(code=2) from exc
 
     if show_context and result.hits:
-        console.print(Panel(Text(format_context(result.hits)), title="Retrieved context", border_style="blue"))
-    console.print(Panel(Text(result.text), title="Answer", border_style="green"))
+        console.print(f"[bold blue]Retrieved context · {len(result.hits)} passages[/]")
+        for context_panel in _retrieved_context_panels(result.hits, width=console.width):
+            console.print(context_panel)
+    console.print(
+        Panel(
+            Text(result.text, overflow="fold", no_wrap=False),
+            title="Answer",
+            border_style="green",
+            expand=True,
+            padding=(0, 1),
+        )
+    )
     if result.sources:
         console.print("[dim]Sources: " + ", ".join(result.sources) + "[/]")
 
@@ -719,6 +798,7 @@ def chat(
     """Interactive knowledge-mode session (Ctrl-D / 'exit' to quit)."""
     from rag.answer import answer_question
 
+    _sync_console_width()
     role = "heavy" if heavy else "brain"
     console.print(Panel("Atelier knowledge chat. Ask about your notes. 'exit' to quit.", border_style="cyan"))
     while True:
@@ -733,7 +813,15 @@ def chat(
             continue
         with console.status("thinking..."):
             result = answer_question(q, role=role)
-        console.print(Panel(Text(result.text), border_style="green"))
+        _sync_console_width()
+        console.print(
+            Panel(
+                Text(result.text, overflow="fold", no_wrap=False),
+                border_style="green",
+                expand=True,
+                padding=(0, 1),
+            )
+        )
         if result.sources:
             console.print("[dim]Sources: " + ", ".join(result.sources) + "[/]")
 

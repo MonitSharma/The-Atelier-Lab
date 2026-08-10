@@ -117,6 +117,10 @@ more retrieved passages:
 atelier ask -k 8 "Separate explicit assumptions from recommendations in the plan."
 ```
 
+The banner and result panels follow the current Terminal width. If you
+maximize or resize Terminal while an interactive `atelier` session is open,
+the next command refreshes the layout automatically.
+
 Use `--heavy` only for difficult synthesis. It uses the 26B local model and is
 slower and more memory-intensive:
 
