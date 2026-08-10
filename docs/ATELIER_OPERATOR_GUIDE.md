@@ -36,6 +36,21 @@ The command opens the interactive Atelier session. Type `help` for commands
 and `exit` to leave it. Pressing Ctrl-C while a child command is running now
 cancels that command and returns to the `atelier ›` prompt.
 
+The same prompt accepts ordinary terminal programs and directory navigation:
+
+```text
+atelier › pwd
+atelier › ls -la
+atelier › cd ~/Documents/papers
+atelier › find . -name '*.pdf'
+atelier › git status
+atelier › paper report.pdf --ingest
+```
+
+`cd` changes both the process directory and the active Atelier workspace.
+Commands are executed without a shell, so pipes and redirections are not
+interpreted inside the Atelier prompt; use a normal terminal for shell syntax.
+
 For a direct one-time installation in a new checkout:
 
 ```bash
