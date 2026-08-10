@@ -53,3 +53,12 @@ experiments:
     main_result: 43.8% base versus 100% in-distribution held-out accuracy after LoRA.
     reproduction_command: make -C atelier_agent train-router
     current: true
+  - id: qatelier-quantum-adapter-2026
+    name: QAtelier quantum adapters
+    track: quantum_adapters
+    status: planned
+    location: research/qatelier
+    primary_question: Can a small quantum adapter provide a useful inductive bias over frozen foundation-model representations?
+    main_result: Not run; no result is claimed.
+    reproduction_command: See research/qatelier/PROGRESS.md; experiment runner pending.
+    current: true

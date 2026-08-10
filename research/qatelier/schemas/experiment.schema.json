@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://the-atelier-lab.local/research/qatelier/schemas/experiment.schema.json",
+  "title": "QAtelier experiment metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "experiment_id",
+    "question",
+    "hypothesis",
+    "controls",
+    "changed_variables",
+    "seed",
+    "hardware",
+    "software",
+    "metrics",
+    "artifacts",
+    "reproduction"
+  ],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1},
+    "experiment_id": {"type": "string", "minLength": 1},
+    "question": {"type": "string", "minLength": 1},
+    "hypothesis": {"$ref": "#/$defs/hypothesis"},
+    "controls": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/control"}
+    },
+    "changed_variables": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/changedVariable"}
+    },
+    "seed": {"$ref": "#/$defs/seedMetadata"},
+    "hardware": {"$ref": "#/$defs/hardwareMetadata"},
+    "software": {"$ref": "#/$defs/softwareMetadata"},
+    "metrics": {"$ref": "#/$defs/metricPlan"},
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/artifact"}
+    },
+    "reproduction": {"$ref": "#/$defs/reproduction"},
+    "status": {"type": "string"},
+    "notes": {"type": "string"}
+  },
+  "$defs": {
+    "hypothesis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primary", "null", "falsifiers"],
+      "properties": {
+        "primary": {"type": "string", "minLength": 1},
+        "null": {"type": "string", "minLength": 1},
+        "falsifiers": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description", "matched_dimensions"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "description": {"type": "string", "minLength": 1},
+        "matched_dimensions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "changedVariable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "values", "selection_rule"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "values": {"type": "array", "minItems": 1},
+        "selection_rule": {"type": "string", "minLength": 1},
+        "held_constant": {"type": "boolean"}
+      }
+    },
+    "seedMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "split_seed", "purpose"],
+      "properties": {
+        "value": {"type": "integer"},
+        "split_seed": {"type": "integer"},
+        "purpose": {"type": "string", "minLength": 1}
+      }
+    },
+    "hardwareMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["execution_mode", "provider", "backend"],
+      "properties": {
+        "execution_mode": {"enum": ["simulator", "emulator", "hardware"]},
+        "provider": {"type": ["string", "null"]},
+        "backend": {"type": ["string", "null"]},
+        "device_qubits": {"type": ["integer", "null"], "minimum": 1},
+        "shots": {"type": ["integer", "null"], "minimum": 1},
+        "noise_model": {"type": ["string", "null"]},
+        "run_timestamp": {"type": ["string", "null"], "format": "date-time"}
+      }
+    },
+    "softwareMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime", "dependencies", "code_revision"],
+      "properties": {
+        "runtime": {"type": "string", "minLength": 1},
+        "dependencies": {"type": "object", "additionalProperties": {"type": "string"}},
+        "code_revision": {"type": "string", "minLength": 1},
+        "operating_system": {"type": "string"},
+        "framework": {"type": "string"}
+      }
+    },
+    "metricPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primary", "secondary", "uncertainty", "resources"],
+      "properties": {
+        "primary": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "secondary": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "uncertainty": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "resources": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "path", "purpose"],
+      "properties": {
+        "kind": {"type": "string", "minLength": 1},
+        "path": {"type": "string", "minLength": 1},
+        "purpose": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[A-Fa-f0-9]{64}$"}
+      }
+    },
+    "reproduction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "environment", "data_manifest", "config_path"],
+      "properties": {
+        "command": {"type": "string", "minLength": 1},
+        "environment": {"type": "string", "minLength": 1},
+        "data_manifest": {"type": "string", "minLength": 1},
+        "config_path": {"type": "string", "minLength": 1},
+        "expected_outputs": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

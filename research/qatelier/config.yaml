@@ -1,0 +1,172 @@
+schema_version: 1
+
+experiment:
+  id: qatelier-quantum-adapter
+  question: >-
+    Does a small parameterized quantum adapter applied to frozen foundation-model
+    representations provide a useful, reproducible inductive bias beyond
+    parameter- and representation-matched classical adapters?
+  hypothesis:
+    primary: >-
+      Any useful quantum-adapter effect should persist on held-out data after
+      freezing the representation, sharing the compressor, matching trainable
+      parameters, and accounting for estimation and execution resources.
+    null: >-
+      A representation-matched classical adapter is at least as good when
+      parameter, data, optimization, and resource budgets are matched.
+    falsifiers:
+      - The quantum adapter does not beat or match the strongest classical control within uncertainty.
+      - Any development-set improvement disappears on held-out or distribution-shifted data.
+      - The effect depends on an unmatched parameter, tuning, shot, or representation budget.
+
+representation:
+  backbone:
+    status: frozen
+    model_id: record_exact_model_identifier_before_run
+    model_version: record_exact_version_before_run
+    weights_digest: record_digest_before_run
+    trainable: false
+    extraction_split: train_only_for_fitting_downstream_transforms
+    output_artifact: representation_manifest_and_digest
+  preprocessing:
+    fit_scope: training_split_only
+    transform_reused_for: [validation, held_out_test, out_of_distribution, hardware_replay]
+    normalization: version_and_record_parameters
+
+compression:
+  method: shared_low_dimensional_compressor
+  fit_scope: training_split_only
+  dimensions: [8, 16, 32]
+  candidates:
+    - id: linear_pca
+      trainable_parameters: fitted_on_training_split_only
+    - id: linear_projection
+      trainable_parameters: fitted_on_training_split_only
+  shared_between: [quantum_adapter, classical_adapters]
+  selection_split: development_only
+  frozen_after_selection: true
+  artifact: compressor_parameters_and_digest
+
+datasets:
+  manifest: record_dataset_manifest_and_version_before_run
+  split_policy:
+    train: fit_representation_transforms_and_adapters
+    validation: select_models_and_screen_circuits
+    held_out_test: final_evaluation_only
+    out_of_distribution: held_out_distribution_shift_evaluation
+  regimes:
+    - id: low_data
+      purpose: test_sample_efficiency under reduced labeled-data budgets
+      labeled_training_sizes: [16, 32, 64, 128]
+      evaluation: held_out_test
+    - id: out_of_distribution
+      purpose: test transfer beyond the training distribution
+      shift_definition: preregister_and_record_before_run
+      evaluation: out_of_distribution
+    - id: controlled_high_order_correlation
+      purpose: test sensitivity to controlled interaction structure
+      interaction_orders: [2, 3, 4]
+      evaluation: held_out_test
+  leakage_check: required
+
+seeds:
+  values: [0, 1, 2, 3, 4]
+  role: independent_training_and_evaluation_repetitions
+  split_seed: fixed_and_recorded_separately
+  selection_rule: aggregate_across_seeds_without_post_hoc_seed_selection
+
+metrics:
+  primary:
+    - held_out_accuracy_or_task_score
+    - sample_efficiency_at_fixed_data_budget
+  secondary:
+    - calibration_or_probability_quality
+    - optimization_stability
+    - out_of_distribution_score
+    - high_order_correlation_score
+  uncertainty:
+    - seed_mean_and_standard_deviation
+    - confidence_interval_or_bootstrap_interval
+  resources:
+    - trainable_parameter_count
+    - wall_time_seconds
+    - circuit_evaluations
+    - shots
+    - peak_memory_mb
+    - energy_or_power_proxy_when_available
+  reporting:
+    compare_against: strongest_representation_and_parameter_matched_classical_control
+    report_per_seed: true
+    report_failed_runs: true
+
+circuit_screening:
+  mode: simulator_only_before_hardware_gate
+  candidate_qubits: [2, 4, 6]
+  candidate_depths: [1, 2, 4, 8]
+  entanglement_patterns: [linear, all_to_all]
+  ansatz_families: [hardware_efficient, data_reuploading]
+  shot_budgets: [1024, 4096, 16384]
+  optimization_restarts: 3
+  screen_on: development_split_only
+  fixed_after_selection: true
+  selection:
+    max_selected_circuits: 3
+    rank_by:
+      - validation_score_with_uncertainty
+      - matched_parameter_budget
+      - circuit_evaluations
+      - shot_cost
+    tie_break: preregistered_smallest_resource_cost
+
+staged_gates:
+  - id: protocol_lock
+    name: lock_question_hypothesis_and_controls
+    entry_requirements:
+      - experiment_metadata_complete
+      - controls_and_changed_variables_declared
+      - seed_values_and_metrics_declared
+    advancement_artifacts: [experiment_record, preregistration_digest]
+  - id: representation_lock
+    name: freeze_representation_and_shared_compression
+    entry_requirements:
+      - backbone_identifier_version_and_digest_recorded
+      - compressor_fit_on_training_split_only
+      - identical_compressed_inputs_available_for_all_adapters
+    advancement_artifacts: [representation_manifest, compressor_artifact, leakage_check]
+  - id: classical_control_lock
+    name: establish_matched_classical_reference
+    entry_requirements:
+      - parameter_budget_matched
+      - optimization_budget_matched
+      - validation_and_test_boundaries_locked
+    advancement_artifacts: [classical_baseline_results, budget_audit]
+  - id: simulation_screen
+    name: screen_candidate_circuits
+    entry_requirements:
+      - screening_uses_development_split_only
+      - circuit_and_shot_budgets_recorded
+      - failed_and_selected_candidates_archived
+    advancement_artifacts: [screening_results, selected_circuit_manifest]
+  - id: held_out_evaluation
+    name: evaluate_frozen_selected_models
+    entry_requirements:
+      - selected_models_and_compressor_are_frozen
+      - all_configured_seeds_are_run_or_failures_are_recorded
+      - primary_metrics_and_uncertainty_are_reported
+      - resource_accounting_is_complete
+    advancement_artifacts: [held_out_results, uncertainty_summary, resource_audit]
+  - id: hardware_validation
+    name: validate_only_if_simulation_evidence_survives
+    entry_requirements:
+      - held_out_effect_survives_classical_and_resource_controls
+      - hardware_execution_plan_is_approved
+      - backend_name_noise_context_shots_and_timestamp_will_be_recorded
+    execution_scope: metadata_only_until_gate_approval
+    advancement_artifacts: [hardware_run_metadata, hardware_results, simulator_hardware_comparison]
+
+hardware:
+  scope: metadata_only
+  allowed_execution_modes: [simulator, emulator, hardware]
+  candidate_providers: [IBM Quantum, Quantinuum]
+  backend_selection: record_public_backend_name_and_run_context_at_execution_time
+  secret_material: never_serialized_in_this_experiment_metadata
