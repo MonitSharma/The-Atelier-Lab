@@ -1,0 +1,34 @@
+schema_version: 1
+experiment_id: qatelier-s0-reproduction
+status: preregistered_not_run
+encoder:
+  model_id: sentence-transformers/paraphrase-mpnet-base-v2
+  revision: null
+  weights_digest: null
+dataset:
+  name: SST-2
+  version: null
+  split_manifest: null
+representation:
+  pooling: mean
+  normalization: null
+  compressor:
+    method: pca
+    output_dim: 4
+    fit_split: train
+protocol:
+  labeled_training_sizes: [16, 32, 64, 128]
+  confirmation_seeds: [101, 103, 107, 109, 113]
+  development_seeds: [11, 13, 17]
+  finite_shots: 4096
+  quantum_families: [QIA-P, QIA-L]
+  quantum_qubits: [2, 4]
+  quantum_reuploads: [1, 2]
+hardware:
+  execution_mode: simulator
+  physical_quantinuum_allowed: false
+artifacts:
+  embedding_manifest: null
+  compressor_artifact: null
+  raw_results_directory: raw
+  figures_directory: figures

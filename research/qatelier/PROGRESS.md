@@ -67,8 +67,12 @@ The following credential-free infrastructure is now implemented on `qatelier`:
 - train-only PCA/whitening artifacts, frozen encoder identity manifests, and
   pair-representation construction under [`data/`](data/);
 - explicit QAtelier test and credential-free smoke steps in CI.
+- an S0 preregistration under
+  [`experiments/s0_reproduction/`](experiments/s0_reproduction/); its runner
+  fails closed until the exact encoder, dataset, split, embedding, and
+  compressor locks are committed.
 
-Focused QAtelier verification currently passes: 66 tests plus 7 benchmark
+Focused QAtelier verification currently passes: 67 tests plus 7 benchmark
 subtests, with Ruff clean. No provider job was submitted.
 
 The repository-wide verification has two pre-existing/unrelated blockers in the
