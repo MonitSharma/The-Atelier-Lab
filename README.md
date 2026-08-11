@@ -20,6 +20,7 @@ The project also contains a structured learning track for implementing language 
 |---|---|
 | Knowledge mode | Ingest and question papers, DOCX, PPTX, spreadsheets, notes, images, EPUBs, archives, and source code |
 | Research mode | Page-aware extraction, semantic + lexical retrieval, citations, paper characterization, visual evidence, and research planning |
+| Deep research | Bounded web + scholarly discovery, safe page extraction, counter-search, cited synthesis, and persisted verification |
 | Build mode | Repository inspection, guarded edits, tests, diff review, and a verification certificate |
 | Scientific tools | Deterministic quantum-circuit inspection/simulation and optimization validation |
 | Memory | Local semantic memory, explicit project memory, workflow checkpoints, traces, and audit logs |
@@ -128,6 +129,7 @@ The index is stored under `~/Atelier`, while the original files remain where the
 | Ask a grounded research question | `atelier ask "QUESTION"` | Retrieves local evidence, reasons over it, and cites sources |
 | Inspect a paper as a structured artifact | `atelier paper FILE.pdf` | Creates a cached characterization before deeper reading |
 | Ask for a repository task | `atelier agent "TASK"` | Flexible inspect → tool → reason workflow |
+| Investigate an external research question | `atelier deep-research "QUESTION"` | Iterates across approved web and scholarly sources and returns a cited report |
 | Make a constrained code change | `atelier code-fix "TASK"` | Guarded edit → tests → diff certificate workflow |
 | Save an explicit preference or project fact | `atelier remember "FACT"` | Stores durable local memory only when you request it |
 | See the system state | `atelier doctor` | Checks runtime, models, index, memory, and workspaces |
@@ -187,6 +189,37 @@ atelier ask --heavy "Synthesize the mathematical argument and identify gaps."
 ```
 
 Use `--show-context` whenever an answer matters. If retrieval is weak, first try a more specific query, inspect `search`, increase `-k`, or ingest the relevant source directly. A fluent answer is not evidence that the right passage was retrieved.
+
+### Deep research
+
+Deep research is an explicitly networked workflow. Grant `network` capability
+to a `CLOUD_ALLOWED` workspace, then run:
+
+```bash
+atelier deep-research \
+  "What evidence supports reliable tool use by small local language models?"
+atelier deep-research --depth deep --verify-dois \
+  "Which retrieval and verification methods reduce citation errors?"
+```
+
+The controller plans subquestions, searches the general web through a bounded
+no-key RSS provider plus Wikipedia summaries, Nobel Prize data, Semantic Scholar,
+arXiv, and Crossref, deduplicates
+records, safely extracts selected static webpages, performs a counter-evidence
+pass, and stops on coverage, budget, or diminishing returns. Every stage is
+checkpointed under the Atelier runtime home. Web fetches require public HTTPS,
+revalidate DNS and redirects, honor robots.txt, pace requests per domain, cap
+response types and sizes, remove active HTML, hash extracted content, redact
+secret-shaped strings, and quarantine prompt-injection-shaped pages. Important
+claims still require human review against the primary source before publication.
+
+Research quality is evaluated with the frozen suite at
+`benchmarks/research_deep/questions.json`. Compare local models with
+`atelier benchmark-research --model qwen3:8b --model <candidate>`. The benchmark
+records citation integrity, coverage completeness, expected-fact matches,
+source-domain hits, latency, and each persisted workflow run for later review.
+Use `atelier workflow retention` for a dry-run cleanup plan; add `--apply` only
+after inspecting the exact candidate files.
 
 For time-sensitive questions, use words such as `recent`, `latest`, or `current` explicitly. Atelier parses dates such as `YYYY-MM-DD` from source metadata and filenames, expands the retrieval candidates, and ranks dated sources newest-first. It also displays the date in the retrieved context. This improves chronology; it does not replace checking the source coverage or verifying a live claim.
 

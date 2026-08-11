@@ -34,6 +34,7 @@ from tools.science import (
 from tools.search import SEARCH_TOOL
 from tools.shell import SHELL_TOOL
 from tools.test_runner import TEST_RUNNER_TOOL
+from tools.web_research import WEB_FETCH_TOOL, WEB_SEARCH_TOOL
 
 
 class ToolRegistry:
@@ -148,6 +149,8 @@ def create_default_registry(
         RESEARCH_GRAPH_TOOL,
         VERIFY_CITATION_TOOL,
         DOWNLOAD_PAPER_TOOL,
+        WEB_SEARCH_TOOL,
+        WEB_FETCH_TOOL,
         QUANTUM_INSPECT_TOOL,
         QUANTUM_TRANSPILE_TOOL,
         QUANTUM_COMPARE_BACKENDS_TOOL,

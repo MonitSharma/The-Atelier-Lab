@@ -88,8 +88,9 @@ def _print_guide() -> None:
         "[bold cyan]The daily Atelier loop[/]\n\n"
         "[bold]1. ingest[/] a paper, document, image, archive, study folder, or code folder\n"
         "[bold]2. ask[/] research, study, or document questions grounded in your indexed material\n"
-        "[bold]3. agent[/] ask Atelier to inspect or change an approved repository\n"
-        "[bold]4. code-fix[/] run the certified inspect → edit → test workflow\n\n"
+        "[bold]3. deep-research[/] investigate an external question with bounded counter-search\n"
+        "[bold]4. agent[/] ask Atelier to inspect or change an approved repository\n"
+        "[bold]5. code-fix[/] run the certified inspect → edit → test workflow\n\n"
         "Everything is local by default. Use [bold]doctor[/] when something is unclear.",
         title="Atelier quick guide", border_style="cyan",
     ))
@@ -101,6 +102,7 @@ def _print_guide() -> None:
     table.add_row("search QUERY", "Inspect matching passages without model synthesis")
     table.add_row("ask QUESTION", "Get a grounded answer with citations")
     table.add_row("paper PDF", "Create a cached scientific-paper characterization")
+    table.add_row("deep-research QUESTION", "Run iterative web + scholarly discovery and cited synthesis")
     table.add_row("agent TASK", "Combine research lookup with repository work")
     table.add_row("code-fix TASK", "Make and test a controlled code change")
     table.add_row("remember / recall", "Store or retrieve durable project facts")

@@ -33,6 +33,15 @@ Status: **Atelier v1.0 verified locally; optional extensions remain**
   model reasoning for scientific documents and structured files.
 - Explicit network research lookup records provenance and is denied under
   `LOCAL_ONLY` or without an attached network-capable workspace.
+- `research_deep` adds a durable five-stage controller over general-web and
+  scholarly providers: question framing, model-assisted subquestion planning,
+  bounded search with a mandatory counter-evidence pass, cited synthesis, and
+  deterministic citation-ID/content-hash verification. General-web extraction
+  pins validated public DNS answers, revalidates redirects, honors robots.txt,
+  rate-limits by domain, accepts bounded static HTML/text only, canonicalizes
+  URLs, hashes content, redacts secret-shaped text, and quarantines detected
+  prompt injection. Runs stop on sufficiency, configured budgets, source caps,
+  repeated queries, or diminishing returns.
 - Research lookup responses are cached under the external runtime home;
   related/cited-by discovery, Crossref citation verification, and allowlisted
   paper downloads with SHA-256 sidecars are available as explicit operations.
@@ -72,8 +81,8 @@ UPSC preparation before it can replace the temporary brain.
 
 ## Remaining roadmap work
 
-- broader research-source coverage beyond the current Crossref/arXiv/Semantic
-  Scholar operations;
+- additional pluggable search providers beyond the current no-key Bing RSS,
+  Crossref, arXiv, and Semantic Scholar operations;
 - richer quantum transpilation and provider-backed backend comparison;
 - broader hardened security isolation beyond the current capability boundary,
   prompt-injection markers, secret redaction, one-use destructive confirmations,

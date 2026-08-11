@@ -108,6 +108,26 @@ def workflow_recover(run_id: str = typer.Argument(...)) -> None:
     console.print_json(json.dumps(result, default=str))
 
 
+@workflow_app.command("retention")
+def workflow_retention(
+    keep_successful: int = typer.Option(20, "--keep-successful", min=0, help="Protect this many recent completed/partial runs."),
+    failed_days: int = typer.Option(30, "--failed-days", min=0, help="Only consider failed/cancelled runs older than this."),
+    apply: bool = typer.Option(False, "--apply", help="Delete the exact dry-run candidates."),
+) -> None:
+    """Plan workflow-log cleanup; deletion requires explicit --apply."""
+    from atelier.config import settings
+    from atelier.workflow_retention import apply_retention, retention_candidates
+
+    candidates = retention_candidates(
+        settings.workflow_dir, keep_successful=keep_successful, failed_days=failed_days,
+    )
+    if apply:
+        removed = apply_retention(candidates)
+        console.print_json(json.dumps({"status": "applied", "removed": removed}))
+    else:
+        console.print_json(json.dumps({"status": "dry_run", "candidates": candidates}, default=str))
+
+
 @security_app.command("request")
 def security_request(operation: str = typer.Argument(..., help="Exact destructive command or operation to approve once.")) -> None:
     """Issue a one-use confirmation token; the token must match the exact operation."""

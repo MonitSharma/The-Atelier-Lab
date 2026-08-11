@@ -92,7 +92,6 @@ class CapabilityRouter:
         lowered = task.lower()
         privacy = workspace.active.privacy if workspace else "LOCAL_ONLY"
         explicit_network = any(term in lowered for term in ("search the web", "search online", "internet", "doi", "arxiv", "crossref"))
-        network_blocked = explicit_network and privacy != "CLOUD_ALLOWED"
         chars = context_chars if context_chars is not None else len(task)
 
         role = "worker"
@@ -116,9 +115,20 @@ class CapabilityRouter:
             reason = "Use deterministic extraction/retrieval first, then increase reasoning only for deep reading."
             escalations.append("escalate to heavy if extraction quality or evidence coverage is insufficient")
         elif domain == "research":
-            role, workflow, use_memory = "brain", "research_verify", memory_available
-            tools = ("search_notes", "search", "read_file")
-            reason = "Research verification needs provenance-aware retrieval and explicit network policy."
+            deep_request = any(marker in lowered for marker in (
+                "deep research", "comprehensive research", "literature review",
+                "research report", "investigate thoroughly",
+            ))
+            role, workflow, use_memory = "brain", ("research_deep" if deep_request else "research_verify"), memory_available
+            tools = (
+                "web_search", "web_fetch", "research_lookup", "research_graph",
+                "verify_citation", "search_notes",
+            )
+            reason = (
+                "Deep research uses bounded iterative discovery, counter-search, and cited synthesis."
+                if deep_request else
+                "Research verification needs provenance-aware retrieval and explicit network policy."
+            )
             escalations.append("abstain from external lookup when LOCAL_ONLY blocks the requested source")
         elif domain == "study":
             deep_study = difficulty == "hard" or any(
@@ -158,6 +168,8 @@ class CapabilityRouter:
             tools = ("search_notes", "read_file", "calculator")
             reason = "The generic task is long or cross-cutting, so use the reasoning role."
 
+        requires_network = explicit_network or workflow == "research_deep"
+        network_blocked = requires_network and privacy != "CLOUD_ALLOWED"
         if chars > settings.max_context_chars:
             escalations.append("summarize or retrieve selectively before exceeding the context budget")
         if network_blocked:
@@ -165,7 +177,7 @@ class CapabilityRouter:
                 domain=domain, workflow=workflow, role=role, model="", difficulty=difficulty,
                 modality=modality, tools=tools, privacy=privacy, context_chars=chars,
                 context_budget=settings.max_context_chars, use_memory=use_memory,
-                requires_network=True, abstain=True,
+                requires_network=requires_network, abstain=True,
                 reason="The requested external lookup conflicts with LOCAL_ONLY privacy.",
                 escalation_conditions=tuple(escalations),
             )
@@ -175,7 +187,7 @@ class CapabilityRouter:
             domain=domain, workflow=workflow, role=role, model=model,
             difficulty=difficulty, modality=modality, tools=tools, privacy=privacy,
             context_chars=chars, context_budget=settings.max_context_chars,
-            use_memory=use_memory, requires_network=explicit_network,
+            use_memory=use_memory, requires_network=requires_network,
             abstain=False, reason=reason,
             escalation_conditions=tuple(escalations),
         )

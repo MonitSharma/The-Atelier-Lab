@@ -1,9 +1,9 @@
 """Central configuration for Atelier.
 
 Everything tunable lives here, overridable via environment variables (prefix
-``ATELIER_``) or a local ``.env`` file. Nothing here reaches the network except
-the local Ollama endpoint and a one-time embedding-model download from Hugging
-Face. No keys, no paid services — that is a hard constraint (PROJECT.md §1).
+``ATELIER_``) or a local ``.env`` file. Model inference remains local. External
+research is available only inside an explicitly network-enabled CLOUD_ALLOWED
+workspace, and the default providers require no keys or paid services.
 
 Example overrides::
 

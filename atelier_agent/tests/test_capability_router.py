@@ -18,6 +18,16 @@ def test_local_only_external_lookup_abstains() -> None:
     assert decision.model == ""
 
 
+def test_deep_research_routes_to_bounded_network_workflow() -> None:
+    decision = CapabilityRouter(backend="heuristic").decide("Do deep research on reliable local AI agents")
+    assert decision.domain == "research"
+    assert decision.workflow == "research_deep"
+    assert decision.requires_network
+    assert decision.abstain
+    assert "web_search" in decision.tools
+    assert "web_fetch" in decision.tools
+
+
 def test_paper_route_uses_memory() -> None:
     decision = CapabilityRouter(backend="heuristic").decide("Summarize this paper's methodology")
     assert decision.domain == "paper"
@@ -45,8 +55,8 @@ def test_upsc_recall_route_uses_worker_for_short_questions() -> None:
 
 def test_frozen_capability_routing_evaluation_passes():
     report = run_capability_eval()
-    assert report["cases"] == 16
-    assert report["successes"] == 16
+    assert report["cases"] == 17
+    assert report["successes"] == 17
     assert report["domain_accuracy"] == 1.0
     assert report["workflow_accuracy"] == 1.0
     assert report["abstention_accuracy"] == 1.0

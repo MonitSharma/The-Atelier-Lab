@@ -4,11 +4,11 @@ from tools.registry import create_default_registry
 
 def test_workflow_catalog_has_recovery_and_approval_metadata():
     workflows = list_workflows()
-    assert {workflow.name for workflow in workflows} >= {"paper_fast", "code_fix", "research_verify", "quantum_analyze", "optimization_validate"}
+    assert {workflow.name for workflow in workflows} >= {"paper_fast", "code_fix", "research_verify", "research_deep", "quantum_analyze", "optimization_validate"}
     assert all(workflow.steps and workflow.recovery for workflow in workflows)
     assert get_workflow("code_fix").approval_gate
 
 
 def test_science_and_research_tools_are_registered():
     names = {tool.name for tool in create_default_registry().list_tools()}
-    assert {"research_lookup", "quantum_inspect", "optimization_validate"} <= names
+    assert {"research_lookup", "web_search", "web_fetch", "quantum_inspect", "optimization_validate"} <= names

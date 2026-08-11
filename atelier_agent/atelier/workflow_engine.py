@@ -28,7 +28,7 @@ from atelier.workspace import (
     workspace_scope,
 )
 
-RunStatus = Literal["queued", "running", "waiting_approval", "completed", "failed", "cancelled"]
+RunStatus = Literal["queued", "running", "waiting_approval", "completed", "partial", "failed", "cancelled"]
 
 
 def _now() -> str:
@@ -68,6 +68,7 @@ class WorkflowState:
     step_index: int = 0
     outputs: dict[str, Any] = field(default_factory=dict)
     evidence: list[dict[str, Any]] = field(default_factory=list)
+    trace: list[dict[str, Any]] = field(default_factory=list)
     checkpoints: list[WorkflowCheckpoint] = field(default_factory=list)
     approval_required: str | None = None
     approved: bool = False
@@ -87,7 +88,7 @@ class WorkflowState:
             run_id=str(payload["run_id"]), workflow=str(payload["workflow"]),
             status=str(payload["status"]), input=dict(payload.get("input", {})),
             step_index=int(payload.get("step_index", 0)), outputs=dict(payload.get("outputs", {})),
-            evidence=list(payload.get("evidence", [])), checkpoints=checkpoints,
+            evidence=list(payload.get("evidence", [])), trace=list(payload.get("trace", [])), checkpoints=checkpoints,
             approval_required=payload.get("approval_required"), approved=bool(payload.get("approved", False)),
             error=payload.get("error"), created_at=str(payload.get("created_at", _now())),
             updated_at=str(payload.get("updated_at", _now())),
@@ -145,7 +146,7 @@ class WorkflowEngine:
     def _digest(state: WorkflowState) -> str:
         payload = json.dumps({"run_id": state.run_id, "workflow": state.workflow,
                               "step_index": state.step_index, "outputs": state.outputs,
-                              "evidence": state.evidence}, sort_keys=True, default=str)
+                              "evidence": state.evidence, "trace": state.trace}, sort_keys=True, default=str)
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
     @staticmethod
@@ -252,6 +253,20 @@ class WorkflowEngine:
                         return verify_citation(arguments)
                 return {"status": "skipped", "reason": "No explicit citation supplied."}
             return {"status": "ready", "step": step}
+        elif workflow == "research_deep":
+            from agent.brain import chat
+            from agent.research_workflow import DeepResearchWorkflow
+
+            with workspace_scope(self.manager.context()):
+                model = state.input.get("model")
+                model_call = None
+                if isinstance(model, str) and model.strip():
+                    selected_model = model.strip()
+
+                    def model_call(messages, **kwargs):
+                        return chat(messages, model=selected_model, **kwargs)
+
+                return DeepResearchWorkflow(model_call=model_call).execute_step(step, state.input, state.outputs)
         elif workflow == "quantum_analyze":
             from tools.science import inspect_qasm_text, simulate_qasm_text
 
@@ -316,14 +331,26 @@ class WorkflowEngine:
                 state.checkpoints.append(checkpoint)
                 result = self._execute_step(state, spec, step)
                 state.outputs[step] = _jsonable(result)
+                if isinstance(result, dict) and isinstance(result.get("research_trace"), list):
+                    state.trace.extend(_jsonable(result["research_trace"]))
                 state.evidence.append({"step": step, "status": result.get("status", "success") if isinstance(result, dict) else "success", "result": _jsonable(result), "recorded_at": _now()})
                 state.step_index += 1
                 state.approval_required = None
                 self._save(state)
-            state.status = "completed"
+            verification = state.outputs.get("verify report", {}) if state.workflow == "research_deep" else {}
+            state.status = "partial" if isinstance(verification, dict) and verification.get("status") == "partial" else "completed"
             self._save(state)
             return state
         except (WorkspaceError, OSError, ValueError, KeyError, RuntimeError, TypeError) as exc:
+            exception_trace = getattr(exc, "trace", None)
+            if isinstance(exception_trace, list):
+                state.trace.extend(_jsonable(exception_trace))
+                state.evidence.append({
+                    "step": step if "step" in locals() else "unknown",
+                    "status": "failed",
+                    "result": {"status": "failed", "message": str(exc), "research_trace": _jsonable(exception_trace)},
+                    "recorded_at": _now(),
+                })
             state.status = "failed"
             state.error = str(exc)
             self._save(state)
@@ -349,7 +376,7 @@ class WorkflowEngine:
 
     def recover(self, run_id: str) -> WorkflowState:
         state = self.get(run_id)
-        if state.status not in {"failed", "running", "waiting_approval"}:
+        if state.status not in {"failed", "partial", "running", "waiting_approval"}:
             raise ValueError(f"Workflow cannot be recovered from status: {state.status}")
         if state.checkpoints:
             checkpoint = state.checkpoints[-1]

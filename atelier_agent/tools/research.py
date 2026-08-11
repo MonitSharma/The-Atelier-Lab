@@ -10,12 +10,15 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import tempfile
+import time
 from collections.abc import Callable
 from datetime import UTC, datetime
 from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
+from urllib.error import HTTPError
 from urllib.parse import quote, urlencode, urlparse
 from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 from xml.etree import ElementTree
@@ -25,6 +28,8 @@ from atelier.workspace import WorkspaceError, current_workspace_context
 from tools.base import Tool
 
 _OPEN = Callable[[Request], Any]
+_RETRYABLE_HTTP_STATUS = frozenset({429, 500, 502, 503, 504})
+_MAX_HTTP_ATTEMPTS = 3
 
 
 def _network_error() -> dict[str, Any] | None:
@@ -61,13 +66,33 @@ def _write_cache(url: str, response: dict[str, Any]) -> None:
     path.write_text(json.dumps({"url": url, "cached_at": datetime.now(UTC).isoformat(), "response": response}), encoding="utf-8")
 
 
+def _retry_delay(error: HTTPError, attempt: int) -> float:
+    retry_after = error.headers.get("Retry-After") if error.headers else None
+    try:
+        return min(8.0, max(0.25, float(retry_after))) if retry_after else min(8.0, 2.0 ** attempt)
+    except (TypeError, ValueError):
+        return min(8.0, 2.0 ** attempt)
+
+
+def _open_with_retry(request: Request, opener: _OPEN | None, *, timeout: float) -> Any:
+    open_call = opener or urlopen
+    for attempt in range(_MAX_HTTP_ATTEMPTS):
+        try:
+            return open_call(request, timeout=timeout)
+        except HTTPError as exc:
+            if exc.code not in _RETRYABLE_HTTP_STATUS or attempt >= _MAX_HTTP_ATTEMPTS - 1:
+                raise
+            time.sleep(_retry_delay(exc, attempt))
+    raise RuntimeError("HTTP retry loop exhausted")
+
+
 def _http_json(url: str, opener: _OPEN | None = None, *, cache_ttl: int = 86_400) -> dict[str, Any]:
     if opener is None:
         cached = _cached_json(url, cache_ttl)
         if cached is not None:
             return cached
     request = Request(url, headers={"Accept": "application/json", "User-Agent": "Atelier/1.0"})
-    with (opener or urlopen)(request, timeout=20) as response:  # noqa: S310 - URL is fixed below
+    with _open_with_retry(request, opener, timeout=20) as response:  # noqa: S310 - URL is fixed below
         payload = json.loads(response.read().decode("utf-8"))
     if opener is None:
         _write_cache(url, payload)
@@ -113,7 +138,7 @@ def _arxiv(query: str, max_results: int, opener: _OPEN | None = None) -> list[di
         f"https://export.arxiv.org/api/query?{params}",
         headers={"Accept": "application/atom+xml", "User-Agent": "Atelier/1.0"},
     )
-    with (opener or urlopen)(request, timeout=20) as response:  # noqa: S310 - fixed host
+    with _open_with_retry(request, opener, timeout=20) as response:  # noqa: S310 - fixed host
         root = ElementTree.fromstring(response.read())
     ns = {"atom": "http://www.w3.org/2005/Atom"}
     records = []
@@ -142,6 +167,97 @@ def _semantic_scholar(query: str, max_results: int, opener: _OPEN | None = None)
     return records
 
 
+_GENERIC_ENTITY_WORDS = frozenset({
+    "Nobel", "Prize", "Award", "What", "When", "Where", "Which", "How",
+})
+
+
+def _entity_name(query: str) -> str:
+    # Do not stop at words such as "books" or "works": in a natural-language
+    # query the person often appears after the subject of the question.
+    # Selecting capitalized, non-generic terms also keeps follow-up queries
+    # such as "What are all the books written by Albert Camus?" anchored to
+    # the actual entity instead of the page titled "What".
+    words = re.findall(r"[A-Z][A-Za-z0-9'-]{2,}", re.sub(r"site:\S+", "", query, flags=re.IGNORECASE))
+    return " ".join(word for word in words if word not in _GENERIC_ENTITY_WORDS)[:200].strip()
+
+
+def _wikipedia(query: str, max_results: int, opener: _OPEN | None = None) -> list[dict[str, Any]]:
+    name = _entity_name(query)
+    if not name:
+        return []
+    title = name.replace(" ", "_")
+    try:
+        payload = _http_json(f"https://en.wikipedia.org/api/rest_v1/page/summary/{quote(title, safe='_')}", opener)
+    except HTTPError as exc:
+        if exc.code != 404:
+            raise
+        search_params = urlencode({"action": "query", "list": "search", "srsearch": name, "format": "json", "srlimit": 1})
+        search_payload = _http_json(f"https://en.wikipedia.org/w/api.php?{search_params}", opener)
+        hits = search_payload.get("query", {}).get("search", [])
+        if not hits or not hits[0].get("title"):
+            return []
+        title = str(hits[0]["title"]).replace(" ", "_")
+        payload = _http_json(f"https://en.wikipedia.org/api/rest_v1/page/summary/{quote(title, safe='_')}", opener)
+    extract = str(payload.get("extract") or "").strip()
+    if not extract:
+        return []
+    # The summary endpoint is intentionally short. A bounded plaintext
+    # extract lets factual questions use the page's works/bibliography section
+    # without executing page JavaScript or accepting arbitrary HTML.
+    try:
+        params = urlencode({
+            "action": "query", "prop": "extracts", "explaintext": "1",
+            "titles": title, "format": "json", "exsectionformat": "plain",
+        })
+        full_payload = _http_json(f"https://en.wikipedia.org/w/api.php?{params}", opener)
+        pages = full_payload.get("query", {}).get("pages", {})
+        page = next(iter(pages.values()), {}) if isinstance(pages, dict) else {}
+        full_extract = str(page.get("extract") or "").strip()
+        if full_extract:
+            extract = full_extract
+    except (HTTPError, OSError, ValueError, KeyError, TypeError):
+        pass
+    evidence_parts = [extract[:2_000]]
+    for marker in ("Novels", "Books", "Works", "Essays", "Selected bibliography"):
+        position = extract.casefold().find(marker.casefold())
+        if position >= 0:
+            evidence_parts.append(extract[position:position + 4_000])
+    evidence_text = "\n\n".join(dict.fromkeys(evidence_parts))
+    desktop = payload.get("content_urls", {}).get("desktop", {})
+    return [{
+        "title": str(payload.get("title") or name), "summary": evidence_text[:5000], "text": evidence_text[:20_000],
+        "url": desktop.get("page") or f"https://en.wikipedia.org/wiki/{quote(title, safe='_')}",
+        "published": payload.get("timestamp"), "authors": [name],
+    }][:max_results]
+
+
+def _nobel(query: str, max_results: int, opener: _OPEN | None = None) -> list[dict[str, Any]]:
+    name = _entity_name(query)
+    if not name:
+        return []
+    params = urlencode({"name": name, "limit": max_results})
+    payload = _http_json(f"https://api.nobelprize.org/2.1/laureates?{params}", opener)
+    records: list[dict[str, Any]] = []
+    for laureate in payload.get("laureates", [])[:max_results]:
+        known = laureate.get("knownName", {}).get("en") or name
+        for prize in laureate.get("nobelPrizes", []):
+            category = prize.get("categoryFullName", {}).get("en") or prize.get("category", {}).get("en") or "Nobel Prize"
+            motivation = prize.get("motivation", {}).get("en") or ""
+            facts_url = next((
+                link.get("href") for link in prize.get("links", [])
+                if link.get("rel") == "external"
+            ), f"https://www.nobelprize.org/laureate/{laureate.get('id', '')}")
+            records.append({
+                "title": f"{known} — {category} {prize.get('awardYear', '')}".strip(),
+                "summary": f"Official Nobel motivation: {motivation}".strip(),
+                "url": facts_url, "published": str(prize.get("awardYear") or ""),
+                "authors": [known], "award_year": prize.get("awardYear"),
+                "motivation": motivation, "official": True,
+            })
+    return records[:max_results]
+
+
 def lookup_research(arguments: dict[str, Any], *, opener: _OPEN | None = None) -> dict[str, Any]:
     denied = _network_error()
     if denied:
@@ -149,8 +265,8 @@ def lookup_research(arguments: dict[str, Any], *, opener: _OPEN | None = None) -
     source = arguments.get("source", "crossref")
     query = arguments.get("query")
     doi = arguments.get("doi")
-    if source not in {"crossref", "arxiv", "semantic_scholar"}:
-        return {"status": "error", "error_type": "invalid_source", "message": "Use crossref, arxiv, or semantic_scholar."}
+    if source not in {"crossref", "arxiv", "semantic_scholar", "wikipedia", "nobel"}:
+        return {"status": "error", "error_type": "invalid_source", "message": "Use crossref, arxiv, semantic_scholar, wikipedia, or nobel."}
     if not isinstance(query, str) or not query.strip():
         if not isinstance(doi, str) or not doi.strip() or source != "crossref":
             return {"status": "error", "error_type": "invalid_arguments", "message": "Provide an explicit query, or a Crossref DOI."}
@@ -168,9 +284,18 @@ def lookup_research(arguments: dict[str, Any], *, opener: _OPEN | None = None) -
         elif source == "arxiv":
             records = _arxiv(query, max_results, opener)
             request_url = "https://export.arxiv.org/api/query"
-        else:
+        elif source == "semantic_scholar":
             records = _semantic_scholar(query, max_results, opener)
             request_url = "https://api.semanticscholar.org/graph/v1/paper/search"
+        elif source == "wikipedia":
+            records = _wikipedia(query, max_results, opener)
+            request_url = "https://en.wikipedia.org/api/rest_v1/page/summary"
+        else:
+            records = _nobel(query, max_results, opener)
+            request_url = "https://api.nobelprize.org/2.1/laureates"
+    except HTTPError as exc:
+        error_type = "rate_limited" if exc.code == 429 else "research_http_error"
+        return {"status": "error", "error_type": error_type, "message": f"Research provider returned HTTP {exc.code}."}
     except Exception as exc:  # noqa: BLE001 - return a structured tool result
         return {"status": "error", "error_type": "research_request_failed", "message": str(exc)}
     return {
@@ -346,7 +471,7 @@ RESEARCH_LOOKUP_TOOL = Tool(
     input_schema={
         "type": "object",
         "properties": {
-            "source": {"type": "string", "enum": ["crossref", "arxiv", "semantic_scholar"]},
+            "source": {"type": "string", "enum": ["crossref", "arxiv", "semantic_scholar", "wikipedia", "nobel"]},
             "query": {"type": "string"}, "doi": {"type": "string"},
             "max_results": {"type": "integer", "minimum": 1, "maximum": 20},
         },

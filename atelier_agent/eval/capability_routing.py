@@ -20,6 +20,7 @@ FROZEN_CASES: tuple[dict[str, Any], ...] = (
     {"id": "vision.scan", "task": "OCR this scanned equation image", "domain": "vision", "workflow": "figure_inspect", "abstain": False},
     {"id": "research.local", "task": "verify this citation against the local paper", "domain": "research", "workflow": "research_verify", "abstain": False},
     {"id": "research.web-denied", "task": "search the web for the latest DOI", "domain": "research", "workflow": "research_verify", "abstain": True},
+    {"id": "research.deep-denied", "task": "do deep research on reliable local AI agents", "domain": "research", "workflow": "research_deep", "abstain": True},
     {"id": "quantum.qasm", "task": "simulate this Qiskit circuit", "domain": "quantum", "workflow": "quantum_analyze", "abstain": False},
     {"id": "quantum.backend", "task": "compare quantum backends for this circuit", "domain": "quantum", "workflow": "quantum_analyze", "abstain": False},
     {"id": "optimization.lp", "task": "solve this linear program with constraints", "domain": "optimization", "workflow": "optimization_validate", "abstain": False},
