@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f5f0" />
+    <meta name="description" content="The Atelier Lab — a local-first research workbench for grounded questions, guarded code changes, and reproducible AI experiments." />
+    <meta property="og:title" content="The Atelier Lab — Local-first AI research" />
+    <meta property="og:description" content="A private workbench for reading, building, measuring, and learning with local models." />
+    <meta property="og:type" content="website" />
+    <title>The Atelier Lab — Local-first AI research</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="topbar" id="top">
+      <div class="topbar-inner">
+        <a class="brand" href="#top" aria-label="The Atelier Lab home">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span class="brand-name">The Atelier Lab</span>
+        </a>
+        <nav class="navlinks" aria-label="Primary navigation">
+          <a href="#system" data-section="system">System</a>
+          <a href="#evidence" data-section="evidence">Evidence</a>
+          <a href="#roadmap" data-section="roadmap">Roadmap</a>
+          <a href="https://github.com/MonitSharma/The-Atelier-Lab" target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a>
+        </nav>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-nav">
+          <span class="menu-icon" aria-hidden="true"><i></i><i></i></span>
+          <span>Menu</span>
+        </button>
+      </div>
+      <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation" hidden>
+        <a href="#system" data-section="system">System <span aria-hidden="true">01</span></a>
+        <a href="#evidence" data-section="evidence">Evidence <span aria-hidden="true">02</span></a>
+        <a href="#roadmap" data-section="roadmap">Roadmap <span aria-hidden="true">03</span></a>
+        <a href="https://github.com/MonitSharma/The-Atelier-Lab" target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a>
+      </nav>
+      <div class="reading-progress" aria-hidden="true"><span id="scroll-progress"></span></div>
+    </header>
+
+    <main>
+      <section class="hero wrap reveal" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="kicker"><span class="pulse-dot" aria-hidden="true"></span> The Atelier Lab · research in the open</p>
+          <h1 id="hero-title">A private workbench for <em>thinking</em> with machines.</h1>
+          <p class="hero-lead">Atelier turns a local computer into a dependable research partner — one place to read evidence, ask grounded questions, change code carefully, and learn what actually works.</p>
+          <div class="hero-actions">
+            <a class="btn" href="#system">Explore the system <span aria-hidden="true">↓</span></a>
+            <a class="btn btn-ghost" href="https://github.com/MonitSharma/The-Atelier-Lab" target="_blank" rel="noopener">View the repository <span aria-hidden="true">↗</span></a>
+          </div>
+          <div class="hero-notes" aria-label="Project principles">
+            <span>Local-first</span><span>Model-agnostic</span><span>Evidence before fluency</span>
+          </div>
+        </div>
+        <div class="hero-terminal" aria-label="Example Atelier session">
+          <div class="terminal-top"><span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span><span>atelier / local session</span><span class="terminal-lock">LOCAL_ONLY</span></div>
+          <div class="terminal-body">
+            <div class="terminal-line muted"># one loop, from source to confidence</div>
+            <div class="terminal-line"><span class="prompt">atelier ›</span> ingest ~/papers/attention.pdf</div>
+            <div class="terminal-result"><span class="ok">✓</span> extracted · characterized · indexed <b>42 pages</b></div>
+            <div class="terminal-line"><span class="prompt">atelier ›</span> ask --show-context</div>
+            <div class="terminal-line indent">"What is the strongest limitation?"<span class="cursor" aria-hidden="true"></span></div>
+            <div class="terminal-result"><span class="ok">✓</span> 8 passages retrieved · citations attached</div>
+            <div class="terminal-line"><span class="prompt">atelier ›</span> verify --artifact claim.json</div>
+            <div class="terminal-result"><span class="ok">✓</span> evidence recorded · certificate ready</div>
+          </div>
+          <div class="terminal-footer"><span>3 operations</span><span>0 uploads</span><span>1 audit trail</span></div>
+        </div>
+      </section>
+
+      <section class="section intro-section reveal" id="overview" aria-labelledby="overview-title">
+        <div class="wrap split-intro">
+          <div class="section-label"><span>01</span> The idea</div>
+          <div>
+            <h2 id="overview-title" class="section-title">The useful unit is not a chatbot. It is a <em>research loop.</em></h2>
+            <p class="section-lead">Most AI interfaces begin with a blank prompt. Atelier begins with your approved workspace, your sources, and a clear boundary around what the system is allowed to do.</p>
+            <p class="body-copy">It is the operational center of The Atelier Lab: a local CLI, a replaceable web surface, and a shared service for documents, repositories, models, memory, and deterministic tools. The user stays in the loop; the system makes evidence, provenance, and verification easier to inspect.</p>
+            <div class="principle-line"><span class="principle-number">01</span><span>Retrieve first.</span><span class="principle-number">02</span><span>Reason with context.</span><span class="principle-number">03</span><span>Verify before you trust it.</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section system-section reveal" id="system" aria-labelledby="system-title">
+        <div class="wrap">
+          <div class="section-label"><span>02</span> How it works</div>
+          <div class="section-heading-row">
+            <div>
+              <h2 id="system-title" class="section-title">From a file to a <em>defensible answer.</em></h2>
+              <p class="section-lead">Every request passes through explicit stages, so a fluent response never has to stand in for evidence.</p>
+            </div>
+            <div class="architecture-tag">characterize → route → retrieve → reason → verify</div>
+          </div>
+
+          <div class="loop-grid">
+            <a class="loop-card" href="docs/ATELIER_WORKBENCH_PLAN.md"><span class="loop-number">01</span><span class="loop-symbol">◎</span><h3>Characterize</h3><p>Parse the artifact first. Detect its shape, source, sections, figures, schemas, and what kind of work it needs.</p><span class="loop-meta"><span>deterministic foundation</span><b>Read more ↗</b></span></a>
+            <a class="loop-card" href="docs/ATELIER_WORKBENCH_PLAN.md"><span class="loop-number">02</span><span class="loop-symbol">↗</span><h3>Route</h3><p>Choose the cheapest capable model and workflow based on domain, modality, privacy, context, and difficulty.</p><span class="loop-meta"><span>capability-first</span><b>Read more ↗</b></span></a>
+            <a class="loop-card" href="docs/RESEARCH_METHOD.md"><span class="loop-number">03</span><span class="loop-symbol">⌕</span><h3>Retrieve</h3><p>Combine semantic and lexical search with section-aware ranking, diversity, and citations.</p><span class="loop-meta"><span>hybrid evidence</span><b>Read more ↗</b></span></a>
+            <a class="loop-card" href="docs/ATELIER_OPERATOR_GUIDE.md"><span class="loop-number">04</span><span class="loop-symbol">∴</span><h3>Reason</h3><p>Use local models, guarded tools, and durable project context to answer, build, compare, or explore.</p><span class="loop-meta"><span>human-directed</span><b>Read more ↗</b></span></a>
+            <a class="loop-card" href="docs/EXPERIMENT_STANDARD.md"><span class="loop-number">05</span><span class="loop-symbol">✓</span><h3>Verify</h3><p>Run tests, inspect diffs, check feasibility, preserve provenance, and leave an artifact another person can inspect.</p><span class="loop-meta"><span>confidence with receipts</span><b>Read more ↗</b></span></a>
+          </div>
+
+          <div class="architecture-panel">
+            <div class="architecture-copy"><span class="mini-label">The shared layer</span><h3>One workbench. Many interfaces.</h3><p>CLI, web, and Finder actions all talk to the same local service. Your workspace and privacy policy travel with the task.</p><a class="text-link" href="docs/ATELIER_WORKBENCH_PLAN.md">Read the workbench plan <span aria-hidden="true">↗</span></a></div>
+            <div class="architecture-map" role="img" aria-label="Atelier architecture plot showing CLI, web, and Finder feeding the local Atelier service, which produces workspace, model, memory, and audit outputs">
+              <div class="plot-labels"><span>Input surfaces</span><span>Shared layer</span><span>Work products</span></div>
+              <div class="plot-flow">
+                <div class="plot-list plot-inputs"><span>CLI</span><span>WEB</span><span>FINDER</span></div>
+                <div class="plot-connector" aria-hidden="true"><i></i></div>
+                <div class="map-core"><span class="core-dot" aria-hidden="true"></span><strong>Atelier</strong><small>local service</small><b>same task context</b></div>
+                <div class="plot-connector reverse" aria-hidden="true"><i></i></div>
+                <div class="plot-list plot-outputs"><span>workspace + privacy</span><span>models + tools + memory</span><span>artifacts + provenance + audit</span></div>
+              </div>
+              <div class="plot-note"><span aria-hidden="true">↔</span> One policy boundary, carried across every surface.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section capabilities-section reveal" aria-labelledby="capabilities-title">
+        <div class="wrap">
+          <div class="section-label"><span>03</span> What is already here</div>
+          <div class="section-heading-row">
+            <div><h2 id="capabilities-title" class="section-title">A small system with <em>serious edges.</em></h2><p class="section-lead">The baseline is intentionally practical: enough surface area to do real work, enough structure to measure it.</p></div>
+            <div class="status-pill"><span aria-hidden="true">●</span> v1.0 verified locally</div>
+          </div>
+          <div class="capability-grid">
+            <article class="capability-card"><span class="capability-index">A / 01</span><h3>Knowledge mode</h3><p>Ingest papers, DOCX, PPTX, spreadsheets, notes, images, EPUBs, archives, and source code into a local library.</p><a href="docs/ATELIER_USER_GUIDE.md">User guide <span aria-hidden="true">↗</span></a></article>
+            <article class="capability-card"><span class="capability-index">A / 02</span><h3>Research mode</h3><p>Characterize papers, retrieve grounded passages, inspect figures, compare sources, and keep the citations attached.</p><a href="docs/RESEARCH_METHOD.md">Research method <span aria-hidden="true">↗</span></a></article>
+            <article class="capability-card"><span class="capability-index">A / 03</span><h3>Build mode</h3><p>Inspect repositories, make constrained edits, run targeted tests, review the diff, and produce a verification certificate.</p><a href="docs/EXPERIMENT_STANDARD.md">Experiment standard <span aria-hidden="true">↗</span></a></article>
+            <article class="capability-card"><span class="capability-index">A / 04</span><h3>Scientific tools</h3><p>Inspect and simulate small quantum circuits, validate optimization candidates, and keep deterministic checks close to the reasoning.</p><a href="docs/CURRENT_ARCHITECTURE.md">Current architecture <span aria-hidden="true">↗</span></a></article>
+            <article class="capability-card"><span class="capability-index">A / 05</span><h3>Memory</h3><p>Store explicit project facts, task state, artifacts, decisions, provenance, and expiry without persisting conversations by default.</p><a href="docs/ATELIER_WORKBENCH_PLAN.md">Memory model <span aria-hidden="true">↗</span></a></article>
+            <article class="capability-card"><span class="capability-index">A / 06</span><h3>Privacy boundary</h3><p>Approved workspaces, capability-scoped tools, LOCAL_ONLY by default, secret redaction, and explicit network escalation.</p><a href="docs/LIMITATIONS.md">Limitations <span aria-hidden="true">↗</span></a></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section evidence-section reveal" id="evidence" aria-labelledby="evidence-title">
+        <div class="wrap">
+          <div class="section-label"><span>04</span> Evidence, not theatre</div>
+          <div class="evidence-layout">
+            <div>
+              <h2 id="evidence-title" class="section-title">Measure the loop. <em>Record the misses.</em></h2>
+              <p class="section-lead">The lab treats negative results and hard limits as useful output. These are small frozen suites — signals to investigate, not claims of general intelligence.</p>
+              <a class="btn btn-ghost evidence-btn" href="benchmarks/README.md">Browse the benchmarks <span aria-hidden="true">↗</span></a>
+            </div>
+            <div class="metrics-card">
+              <div class="metric-row"><div class="metric-label"><strong>Knowledge answers</strong><span>17 / 18 correct</span></div><div class="metric-bar"><span style="width:94%"></span></div></div>
+              <div class="metric-row"><div class="metric-label"><strong>Code tasks</strong><span>13 / 13 solved</span></div><div class="metric-bar"><span style="width:100%"></span></div></div>
+              <div class="metric-row"><div class="metric-label"><strong>Combined tasks</strong><span>10 / 10 solved</span></div><div class="metric-bar"><span style="width:100%"></span></div></div>
+              <div class="metric-row"><div class="metric-label"><strong>Router lift</strong><span>43.8% → 100%</span></div><div class="metric-bar"><span style="width:100%"></span><i style="width:44%"></i></div></div>
+              <div class="metrics-note">Frozen local suites · measured on Apple Silicon · see the repository for scope and caveats.</div>
+            </div>
+          </div>
+          <div class="results-strip">
+            <div><span class="result-value">39.3</span><span class="result-unit">tok/s</span><span class="result-label">qwen3:4b decode</span></div>
+            <div><span class="result-value">223</span><span class="result-unit">chunks</span><span class="result-label">verified three-paper index</span></div>
+            <div><span class="result-value">36</span><span class="result-unit">GB</span><span class="result-label">unified memory constraint</span></div>
+            <div><span class="result-value">$0</span><span class="result-unit">cloud</span><span class="result-label">default local path</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section roadmap-section reveal" id="roadmap" aria-labelledby="roadmap-title">
+        <div class="wrap">
+          <div class="section-label"><span>05</span> What happens next</div>
+          <div class="section-heading-row roadmap-heading"><div><h2 id="roadmap-title" class="section-title">Close the loops, then <em>push the frontier.</em></h2><p class="section-lead">The roadmap is a practice system: every phase ends in an artifact, a measured result, or an honest failure analysis.</p></div><a class="text-link" href="ROADMAP.md">Open the living roadmap <span aria-hidden="true">↗</span></a></div>
+          <div class="roadmap-grid">
+            <article class="roadmap-card current"><span class="phase-tag">Now · Phase A</span><h3>Deployment mastery</h3><p>Close the current experiments and make the local serving trade-offs legible.</p><ul><li>Run the 20k-step foundation experiment</li><li>Measure quantization and batch-size curves</li><li>Stand up a reproducible serving benchmark</li></ul><span class="exit-bar">Exit bar · explain the throughput / latency curve from your own numbers.</span></article>
+            <article class="roadmap-card"><span class="phase-tag">Next · Phase B</span><h3>Architecture depth</h3><p>Build the model from first principles, then test each design choice.</p><ul><li>Annotated transformer from scratch</li><li>RoPE, RMSNorm, SwiGLU, and GQA ablations</li><li>Mini scaling-law study on the laptop</li></ul><span class="exit-bar">Exit bar · understand the deltas, not just the vocabulary.</span></article>
+            <article class="roadmap-card"><span class="phase-tag">Later · Phases C–E</span><h3>Original contribution</h3><p>Move from learning the stack to asking a question the stack can answer.</p><ul><li>SFT → DPO → GRPO on a small model</li><li>Kernels, efficiency, MoE, and parallelism</li><li>Publish a reproducible open result</li></ul><span class="exit-bar">Exit bar · a stranger can rerun it.</span></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="closing-cta wrap reveal" aria-labelledby="cta-title">
+        <div class="cta-orbit" aria-hidden="true">
+          <span class="orbit-ring orbit-ring-a"><i class="orbit-electron"></i></span>
+          <span class="orbit-ring orbit-ring-b"><i class="orbit-electron"></i></span>
+          <span class="orbit-ring orbit-ring-c"><i class="orbit-electron"></i></span>
+          <span class="orbital-nucleus"></span>
+        </div>
+        <div class="cta-content"><p class="kicker">Open work · careful systems · local evidence</p><h2 id="cta-title">Build a better relationship with the machine.</h2><p>Read the source, run the experiments, and follow the work as it gets more capable — without becoming less inspectable.</p><div class="hero-actions"><a class="btn" href="https://github.com/MonitSharma/The-Atelier-Lab" target="_blank" rel="noopener">Explore on GitHub <span aria-hidden="true">↗</span></a><a class="btn btn-ghost" href="README.md">Read the project README <span aria-hidden="true">↗</span></a></div></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-grid">
+        <div><a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"></span><span class="brand-name">The Atelier Lab</span></a><p class="footer-note">Local-first AI research · by Monit Sharma</p></div>
+        <div class="footer-links"><a href="https://github.com/MonitSharma" target="_blank" rel="noopener">GitHub</a><a href="mailto:monitsharma437@gmail.com">Email</a></div>
+      </div>
+      <div class="wrap footer-bottom"><span>© 2026 Monit Sharma</span><span>Designed as a connected system.</span></div>
+    </footer>
+    <script src="script.js"></script>
+  </body>
+</html>
