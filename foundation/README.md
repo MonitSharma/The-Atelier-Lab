@@ -6,6 +6,13 @@ The goal of this layer is to implement, evaluate, and scale local architectures 
 
 ---
 
+## Current research direction
+
+The active from-scratch model work is documented in:
+
+* [Local Sparse Language Model Research Plan](../docs/foundation/LOCAL_SPARSE_LANGUAGE_MODEL_RESEARCH_PLAN.md) — research question, architecture comparisons, Apple Silicon constraints, and supporting literature.
+* [Atelier Foundation Learning and Execution Plan](../docs/foundation/ATELIER_FOUNDATION_EXECUTION_PLAN.md) — implementation order, learning workflow, hard exit gates, and the first session checklist.
+
 *   **`datasets/`**: Active dataset sharding pipelines, curation rules, and BPE tokenization.
     *   [**`sanskritpile/`**](datasets/sanskritpile/): Multi-version curated Sanskrit corpora and tokenizer reporting.
     *   [**`english/`**](datasets/english/): Character-matched and byte-matched English baseline dataset metadata.
