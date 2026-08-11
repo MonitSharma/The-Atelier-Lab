@@ -32,6 +32,14 @@ WORKFLOWS: tuple[WorkflowSpec, ...] = (
     WorkflowSpec("code_fix", "Make and verify a repository change", ("inspect", "plan", "baseline tests", "edit", "targeted tests", "regression", "certificate"), ("read", "write", "execute"), "approval before destructive rollback", "checkpoint and optionally rollback"),
     WorkflowSpec("data_analyze", "Profile and analyze a structured artifact", ("profile", "validate", "summarize", "cite inputs"), ("read",), "human review before write/export", "retain profile and warnings"),
     WorkflowSpec("research_verify", "Verify an explicit external research claim", ("query approved source", "record provenance", "compare local evidence", "report uncertainty"), ("read", "network"), "human review before download or publication", "return provenance and retry metadata"),
+    WorkflowSpec(
+        "research_deep",
+        "Run bounded web + scholarly research with safe extraction, counter-search, and cited synthesis",
+        ("frame question", "plan subquestions", "search and iterate", "synthesize", "verify report"),
+        ("read", "network"),
+        "human review before publication",
+        "resume from the last persisted research checkpoint",
+    ),
     WorkflowSpec("quantum_analyze", "Inspect and validate a quantum circuit", ("parse", "count resources", "transpile/simulate if available", "report limits"), ("read",), "human review before backend execution", "preserve parser and dependency evidence"),
     WorkflowSpec("optimization_validate", "Validate a proposed optimization solution", ("parse problem", "check feasibility", "compute objective", "compare solutions"), ("read",), "human review before solver/backend run", "return failed checks without mutation"),
 )

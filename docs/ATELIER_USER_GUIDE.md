@@ -4,13 +4,18 @@ Atelier is a local-first research and coding workbench. Its everyday workflow
 is intentionally small:
 
 ```text
-ingest → search/ask → agent or code-fix
+ingest → search/ask or deep-research → agent or code-fix
 ```
 
 `ingest` builds a local searchable library. `search` shows evidence without
 asking a model to synthesize it. `ask` answers from that evidence. `agent` can
 combine retrieval with repository tools, while `code-fix` is the more
 constrained inspect → edit → test workflow.
+
+`deep-research` is the explicitly networked path for an external research
+question. It iterates over general-web and scholarly providers, safely extracts
+selected static pages, searches for counterevidence, and returns a cited report
+with a persisted trace.
 
 The default privacy mode is local. Ollama serves models on the Mac, and the
 indexed documents, vectors, traces, and memory live under `~/Atelier`.
@@ -54,6 +59,7 @@ them.
 | `atelier search QUERY` | Retrieves passages without model synthesis | No |
 | `atelier ask QUESTION` | Answers from retrieved local evidence | No |
 | `atelier paper FILE.pdf` | Creates a cached Fast Paper characterization | Yes, cache only |
+| `atelier deep-research QUESTION` | Runs bounded web + scholarly discovery and cited synthesis | Yes, network cache and workflow trace |
 | `atelier agent TASK` | Runs the full research + repository agent | Possibly |
 | `atelier code-fix TASK` | Runs the guarded coding workflow | Possibly |
 | `atelier remember TEXT` | Stores a durable memory fact | Yes |
@@ -128,7 +134,34 @@ slower and more memory-intensive:
 atelier ask --heavy "Compare the plan's hypotheses and proposed falsifiers."
 ```
 
-### 4. Work with a repository
+### 4. Run deep research
+
+Before repository work, external research can be run from a network-approved
+workspace:
+
+```bash
+atelier workspace add ~/Atelier/research \
+  --name research --capabilities read,network --privacy CLOUD_ALLOWED
+atelier workspace open research
+atelier deep-research --depth standard \
+  "What evidence supports reliable tool use by small local language models?"
+```
+
+Use `--depth quick`, `standard`, or `deep` to select bounded defaults. Add
+`--verify-dois` to recheck up to ten DOI records against Crossref, or
+`--max-web-pages` to tighten the page-fetch budget. The current providers are
+the no-key Bing RSS web surface, Semantic Scholar, arXiv, and Crossref.
+Web extraction supports static public HTTPS HTML and plain text. It does not
+execute JavaScript, authenticate, bypass paywalls, or ignore robots.txt.
+
+Inspect the web primitives directly when debugging source coverage:
+
+```bash
+atelier research web-search "reliable local AI agents"
+atelier research fetch https://example.org/research/article
+```
+
+### 5. Work with a repository
 
 Start with a deterministic inspection:
 
@@ -174,7 +207,7 @@ atelier workspace open my-repo
 atelier code-fix "Run the tests and fix the failing parser." --path ~/code_projects/MyRepo
 ```
 
-### 5. Remember project decisions
+### 6. Remember project decisions
 
 ```bash
 atelier remember "QAtelier remains a parallel research branch until hardware evidence is complete."

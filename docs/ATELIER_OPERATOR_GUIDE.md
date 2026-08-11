@@ -150,6 +150,10 @@ atelier paper ~/Documents/papers/paper.pdf --ingest
 atelier paper-visual ~/Documents/papers/paper.pdf --render --json
 atelier search "regret bound under stochastic demand"
 atelier ask -k 8 --show-context "Summarize the method and limitations."
+atelier deep-research --depth deep --max-web-pages 12 \
+  "What evidence supports reliable tool use by small local language models?"
+atelier research web-search "reliable local AI agents"
+atelier research fetch https://example.org/research/article
 atelier research graph "quantum logistics tail risk"
 atelier research verify-citation --doi 10.xxxx/example
 ```
@@ -157,6 +161,10 @@ atelier research verify-citation --doi 10.xxxx/example
 `paper` performs deterministic identity, extraction, and characterization.
 `paper-visual` records page evidence, captions, tables, rendered images, and
 optional OCR status. Model reasoning happens after evidence preparation.
+`deep-research` combines bounded general-web and scholarly discovery. Webpage
+text is accepted only after public-HTTPS, DNS/redirect, robots, pacing,
+content-type, size, extraction, hashing, secret-redaction, and prompt-injection
+checks; the workflow will not cite a web result lacking safe extracted content.
 
 ### Repository exploration and coding
 

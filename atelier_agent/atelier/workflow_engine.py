@@ -252,6 +252,11 @@ class WorkflowEngine:
                         return verify_citation(arguments)
                 return {"status": "skipped", "reason": "No explicit citation supplied."}
             return {"status": "ready", "step": step}
+        elif workflow == "research_deep":
+            from agent.research_workflow import DeepResearchWorkflow
+
+            with workspace_scope(self.manager.context()):
+                return DeepResearchWorkflow().execute_step(step, state.input, state.outputs)
         elif workflow == "quantum_analyze":
             from tools.science import inspect_qasm_text, simulate_qasm_text
 

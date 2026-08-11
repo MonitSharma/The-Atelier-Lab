@@ -131,8 +131,8 @@ optimization, or general—then choose the cheapest capable workflow. Decisions
 must include modality, tools, privacy, context, difficulty, memory, abstention,
 and escalation conditions. Implemented with the deterministic
 `CapabilityRouter`, including LOCAL_ONLY network abstention, explicit
-escalation conditions, and a frozen 16-case human-labeled evaluation
-(`atelier route-eval`, currently 16/16).
+escalation conditions, and a frozen 17-case human-labeled evaluation
+(`atelier route-eval`, currently 17/17 including deep-research routing).
 
 ### Step 10 — Model lifecycle — complete
 
@@ -288,6 +288,37 @@ performance gates. Evidence is recorded in
 The local release does not claim provider-backed quantum execution, external
 solver availability, kernel-level isolation, signed artifacts, automatic cloud
 routing, or live frontier handoffs. Those remain explicit future extensions.
+
+### Step 27 — Bounded deep research — complete
+
+Added the `research_deep` workflow and the visible `atelier deep-research`
+command. The durable controller frames a question, asks the local brain for
+subquestions and diverse searches, gathers and deduplicates records from
+Semantic Scholar, arXiv, and Crossref, forces a counter-evidence pass for
+multi-round runs, and stops on sufficiency, source/round budgets, repeated
+queries, or diminishing returns. Synthesis is evidence-bound to stable source
+IDs, verification rejects missing or invented citation IDs, and the final
+Markdown report remains inside the persisted workflow state. Model-free tests
+exercise the orchestration without network or inference dependencies.
+
+### Step 28 — Hardened general-web research — complete
+
+Added `web_search` and `web_fetch` tools and made `web` a default
+`research_deep` provider. The no-key search adapter consumes the bounded Bing
+RSS surface; the fetcher accepts only public HTTPS targets, denies credentials,
+sensitive query parameters, IP literals, private/reserved DNS answers, and
+non-standard ports, pins the validated DNS answer for TLS, and revalidates
+every redirect. It honors robots.txt, applies per-domain pacing, caps redirects,
+bytes, characters, and content types, extracts static main text without active
+HTML, canonicalizes same-host URLs, hashes raw and extracted content, redacts
+secret-shaped strings, and marks prompt-injection-shaped pages as unusable for
+synthesis. Cached search and page records are DNS-policy revalidated before
+reuse. Direct CLI operations are available as `atelier research web-search`
+and `atelier research fetch`.
+
+Future provider work can add a user-selected API or private SearXNG adapter
+behind the same search contract. JavaScript rendering, authentication, paywall
+access, and bot-challenge circumvention remain deliberately out of scope.
 
 ## Separate expertise roadmap
 

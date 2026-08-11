@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import typer
+from rich.markdown import Markdown
 from rich.table import Table
 
 from atelier.cli._app import (
@@ -146,3 +147,88 @@ def research_download(
 ) -> None:
     """Download an explicitly selected paper into the active cloud-approved workspace."""
     _run_research_operation("download", {"url": url, "destination": destination, "overwrite": overwrite})
+
+
+def _run_web_operation(operation: str, arguments: dict[str, object]) -> None:
+    from atelier.workspace import WorkspaceError, get_workspace_manager, workspace_scope
+    from tools.web_research import fetch_webpage, search_web
+
+    try:
+        context = get_workspace_manager().context()
+        with workspace_scope(context):
+            result = search_web(arguments) if operation == "search" else fetch_webpage(arguments)
+    except WorkspaceError as exc:
+        result = {"status": "denied", "error_type": "workspace_denied", "message": str(exc)}
+    console.print_json(json.dumps(result, default=str))
+    if result.get("status") != "success":
+        raise typer.Exit(code=2)
+
+
+@research_app.command("web-search")
+def research_web_search(
+    query: str = typer.Argument(...),
+    max_results: int = typer.Option(5, "--max-results", min=1, max=10),
+) -> None:
+    """Search the general web through the bounded no-key provider."""
+    _run_web_operation("search", {"query": query, "max_results": max_results})
+
+
+@research_app.command("fetch")
+def research_fetch_webpage(
+    url: str = typer.Argument(...),
+    max_chars: int = typer.Option(20_000, "--max-chars", min=500, max=50_000),
+    max_bytes: int = typer.Option(2_000_000, "--max-bytes", min=1_000, max=5_000_000),
+) -> None:
+    """Safely fetch and extract one public HTTPS webpage."""
+    _run_web_operation("fetch", {
+        "url": url, "max_chars": max_chars, "max_bytes": max_bytes,
+    })
+
+
+@app.command("deep-research")
+@research_app.command("deep")
+def deep_research_command(
+    question: str = typer.Argument(..., help="Research question to investigate."),
+    depth: str = typer.Option("standard", "--depth", help="quick, standard, or deep."),
+    sources: str = typer.Option(
+        "web,semantic_scholar,arxiv,crossref", "--sources",
+        help="Comma-separated web and scholarly providers.",
+    ),
+    max_rounds: int | None = typer.Option(None, "--max-rounds", min=1, max=5),
+    max_sources: int | None = typer.Option(None, "--max-sources", min=3, max=60),
+    max_web_pages: int | None = typer.Option(None, "--max-web-pages", min=0, max=30),
+    verify_dois: bool = typer.Option(False, "--verify-dois", help="Recheck up to ten DOI records against Crossref."),
+    model_free: bool = typer.Option(False, "--model-free", help="Exercise deterministic orchestration without synthesis."),
+    project: str = typer.Option("default", "--project"),
+    as_json: bool = typer.Option(False, "--json", help="Print the complete persisted workflow state."),
+) -> None:
+    """Run bounded iterative research, counter-search, synthesis, and citation checks."""
+    from atelier.service import AtelierService
+    from atelier.workspace import WorkspaceError, get_workspace_manager
+
+    selected_sources = [item.strip() for item in sources.split(",") if item.strip()]
+    try:
+        result = AtelierService(manager=get_workspace_manager()).deep_research(
+            question,
+            depth=depth,
+            project=project,
+            sources=selected_sources,
+            max_rounds=max_rounds,
+            max_sources=max_sources,
+            max_web_pages=max_web_pages,
+            verify_dois=verify_dois,
+            model_free=model_free,
+        )
+    except (KeyError, TypeError, ValueError, WorkspaceError) as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    if as_json or result.get("status") != "completed":
+        console.print_json(json.dumps(result, default=str))
+    else:
+        report = result.get("outputs", {}).get("verify report", {}).get("report_markdown")
+        if isinstance(report, str):
+            console.print(Markdown(report))
+        else:
+            console.print_json(json.dumps(result, default=str))
+    if result.get("status") == "failed":
+        raise typer.Exit(code=2)

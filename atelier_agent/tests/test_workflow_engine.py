@@ -19,6 +19,17 @@ def _engine(tmp_path):
     return WorkflowEngine(manager=manager, storage_dir=tmp_path / "workflows"), manager, root
 
 
+def _network_engine(tmp_path):
+    root = tmp_path / "workspace"
+    root.mkdir()
+    manager = WorkspaceManager(tmp_path / "registry.json")
+    manager.add(root, name="workspace", capabilities={"read", "network"}, privacy="CLOUD_ALLOWED")
+    manager.open("workspace")
+    if "atelier" in {item.name for item in manager.list()}:
+        manager.close("atelier")
+    return WorkflowEngine(manager=manager, storage_dir=tmp_path / "workflows"), manager
+
+
 def test_repo_workflow_persists_checkpoints_and_evidence(tmp_path):
     engine, manager, root = _engine(tmp_path)
     (root / "README.md").write_text("# Example\n", encoding="utf-8")
@@ -85,3 +96,33 @@ def test_figure_workflow_persists_page_evidence_before_interpretation(tmp_path):
     resumed = engine.approve(state.run_id)
     assert resumed.status == "completed"
     assert resumed.outputs["cite pages"]["status"] == "ready"
+
+
+def test_deep_research_workflow_persists_iterative_report(tmp_path, monkeypatch):
+    def fake_lookup(arguments):
+        query = arguments["query"].replace(" ", "-")
+        provider = arguments["source"]
+        return {"status": "success", "records": [{
+            "title": f"{provider} {query}", "doi": f"10.1/{provider}.{query}",
+            "summary": "Bounded evidence.", "year": 2026,
+        }]}
+
+    monkeypatch.setattr("agent.research_workflow.lookup_research", fake_lookup)
+    engine, manager = _network_engine(tmp_path)
+    service = AtelierService(
+        manager=manager,
+        workflow_engine=engine,
+        project_memory=ProjectMemoryStore(tmp_path / "project-memory.sqlite3"),
+    )
+    state = service.dispatch("research_deep", {
+        "question": "How does bounded research work?",
+        "depth": "standard",
+        "sources": ["crossref"],
+        "model_free": True,
+    })
+
+    assert state["status"] == "completed"
+    assert len(state["checkpoints"]) == 5
+    assert state["outputs"]["search and iterate"]["rounds"]
+    assert state["outputs"]["verify report"]["citation_integrity"] is True
+    assert "# Deep research:" in state["outputs"]["verify report"]["report_markdown"]

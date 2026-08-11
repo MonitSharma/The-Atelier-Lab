@@ -7,4 +7,6 @@ def test_web_workbench_contains_core_panels_and_local_api_calls():
         assert label in page
     assert "fetch('/route'" in page
     assert "fetch('/search'" in page
+    assert "Deep research" in page
+    assert "fetch('/research_deep'" in page
     assert "fetch('/workflow_approve'" in page

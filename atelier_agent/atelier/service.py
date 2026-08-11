@@ -196,6 +196,37 @@ class AtelierService:
             return self.execute_tool("test_runner", {"path": path})
         raise ValueError(f"Unsupported repository action: {action}")
 
+    def deep_research(
+        self,
+        question: str,
+        *,
+        depth: str = "standard",
+        project: str = "default",
+        sources: list[str] | None = None,
+        max_rounds: int | None = None,
+        max_sources: int | None = None,
+        max_web_pages: int | None = None,
+        verify_dois: bool = False,
+        model_free: bool = False,
+    ) -> dict[str, Any]:
+        """Start a durable, bounded deep-research run."""
+        input_data: dict[str, Any] = {
+            "question": question,
+            "depth": depth,
+            "project": project,
+            "verify_dois": verify_dois,
+            "model_free": model_free,
+        }
+        if sources is not None:
+            input_data["sources"] = sources
+        if max_rounds is not None:
+            input_data["max_rounds"] = max_rounds
+        if max_sources is not None:
+            input_data["max_sources"] = max_sources
+        if max_web_pages is not None:
+            input_data["max_web_pages"] = max_web_pages
+        return self.workflow_start("research_deep", input_data)
+
     def finder_action(self, action: str, path: str, *, task: str | None = None) -> dict[str, Any]:
         from atelier.finder import execute_finder_action
 
@@ -261,6 +292,17 @@ class AtelierService:
                 return self.library()
             if operation == "search":
                 return self.search(str(arguments["query"]), int(arguments.get("k", 6)))
+            if operation == "web_search":
+                return self.execute_tool("web_search", {
+                    "query": str(arguments["query"]),
+                    "max_results": int(arguments.get("max_results", 5)),
+                })
+            if operation in {"web_fetch", "fetch_webpage"}:
+                return self.execute_tool("web_fetch", {
+                    "url": str(arguments["url"]),
+                    "max_chars": int(arguments.get("max_chars", 20_000)),
+                    "max_bytes": int(arguments.get("max_bytes", 2_000_000)),
+                })
             if operation in {"chat", "task_input"}:
                 return self.chat(str(arguments["task"]), start=bool(arguments.get("start", False)), input_data=arguments.get("input"))
             if operation in {"source", "source_view"}:
@@ -271,6 +313,21 @@ class AtelierService:
                 return self.paper_action(str(arguments["action"]), str(arguments["path"]), project=str(arguments.get("project", "default")))
             if operation == "repo_action":
                 return self.repo_action(str(arguments["action"]), str(arguments.get("path", ".")), project=str(arguments.get("project", "default")), goal=str(arguments.get("goal", "")))
+            if operation in {"research_deep", "deep_research"}:
+                raw_sources = arguments.get("sources")
+                if raw_sources is not None and not isinstance(raw_sources, list):
+                    raise TypeError("sources must be an array")
+                return self.deep_research(
+                    str(arguments["question"]),
+                    depth=str(arguments.get("depth", "standard")),
+                    project=str(arguments.get("project", "default")),
+                    sources=raw_sources,
+                    max_rounds=arguments.get("max_rounds"),
+                    max_sources=arguments.get("max_sources"),
+                    max_web_pages=arguments.get("max_web_pages"),
+                    verify_dois=bool(arguments.get("verify_dois", False)),
+                    model_free=bool(arguments.get("model_free", False)),
+                )
             if operation == "finder_action":
                 return self.finder_action(str(arguments["action"]), str(arguments["path"]), task=arguments.get("task"))
             if operation == "memory":
