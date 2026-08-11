@@ -206,8 +206,10 @@ class AtelierService:
         max_rounds: int | None = None,
         max_sources: int | None = None,
         max_web_pages: int | None = None,
+        max_report_sources: int | None = None,
         verify_dois: bool = False,
         model_free: bool = False,
+        model: str | None = None,
     ) -> dict[str, Any]:
         """Start a durable, bounded deep-research run."""
         input_data: dict[str, Any] = {
@@ -225,6 +227,10 @@ class AtelierService:
             input_data["max_sources"] = max_sources
         if max_web_pages is not None:
             input_data["max_web_pages"] = max_web_pages
+        if max_report_sources is not None:
+            input_data["max_report_sources"] = max_report_sources
+        if model:
+            input_data["model"] = model
         return self.workflow_start("research_deep", input_data)
 
     def finder_action(self, action: str, path: str, *, task: str | None = None) -> dict[str, Any]:
@@ -325,8 +331,10 @@ class AtelierService:
                     max_rounds=arguments.get("max_rounds"),
                     max_sources=arguments.get("max_sources"),
                     max_web_pages=arguments.get("max_web_pages"),
+                    max_report_sources=arguments.get("max_report_sources"),
                     verify_dois=bool(arguments.get("verify_dois", False)),
                     model_free=bool(arguments.get("model_free", False)),
+                    model=str(arguments["model"]) if arguments.get("model") else None,
                 )
             if operation == "finder_action":
                 return self.finder_action(str(arguments["action"]), str(arguments["path"]), task=arguments.get("task"))

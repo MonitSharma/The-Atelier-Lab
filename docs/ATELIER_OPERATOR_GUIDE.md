@@ -152,6 +152,8 @@ atelier search "regret bound under stochastic demand"
 atelier ask -k 8 --show-context "Summarize the method and limitations."
 atelier deep-research --depth deep --max-web-pages 12 \
   "What evidence supports reliable tool use by small local language models?"
+atelier deep-research --depth deep --max-report-sources 5 --trace \
+  "What evidence supports reliable tool use by small local language models?"
 atelier research web-search "reliable local AI agents"
 atelier research fetch https://example.org/research/article
 atelier research graph "quantum logistics tail risk"
@@ -165,6 +167,22 @@ optional OCR status. Model reasoning happens after evidence preparation.
 text is accepted only after public-HTTPS, DNS/redirect, robots, pacing,
 content-type, size, extraction, hashing, secret-redaction, and prompt-injection
 checks; the workflow will not cite a web result lacking safe extracted content.
+
+The default Markdown report is concise and shows the answer plus a ranked,
+small source set. Add `--trace` for a compact `Research trace` summarizing
+queries, accepted/rejected sources, provider skips, fetched pages, coverage
+assessments, and the final stop reason. Use `--json` when the complete raw event
+list is needed;
+failed runs preserve the partial trace in the workflow state, including network
+permission failures. The trace exposes operational decisions, not private
+model chain-of-thought or raw page instructions.
+
+If coverage or citation checks fail, the workflow is persisted as `partial` and
+the report is headed `needs review`; this is an incomplete research result, not
+a publication-ready answer. Before changing models, run the frozen comparison
+suite with `atelier benchmark-research --model qwen3:8b --model <candidate>`.
+Workflow-log cleanup is dry-run first: `atelier workflow retention` lists only
+old failed/cancelled files, while `--apply` performs the exact listed deletions.
 
 ### Repository exploration and coding
 

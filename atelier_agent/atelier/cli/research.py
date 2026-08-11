@@ -14,6 +14,7 @@ from atelier.cli._app import (
     console,
     research_app,
 )
+from atelier.config import settings
 
 
 @app.command("profile", hidden=True)
@@ -77,7 +78,7 @@ def paper_visual(
 @app.command("research-lookup", hidden=True)
 def research_lookup(
     query: str | None = typer.Argument(None, help="Explicit bibliographic query."),
-    source: str = typer.Option("crossref", "--source", help="crossref, arxiv, or semantic_scholar."),
+    source: str = typer.Option("crossref", "--source", help="crossref, arxiv, semantic_scholar, wikipedia, or nobel."),
     doi: str | None = typer.Option(None, "--doi", help="Explicit DOI for a Crossref lookup."),
     max_results: int = typer.Option(5, "--max-results", min=1, max=20),
 ) -> None:
@@ -191,16 +192,18 @@ def deep_research_command(
     question: str = typer.Argument(..., help="Research question to investigate."),
     depth: str = typer.Option("standard", "--depth", help="quick, standard, or deep."),
     sources: str = typer.Option(
-        "web,semantic_scholar,arxiv,crossref", "--sources",
+        "web,wikipedia,nobel,semantic_scholar,arxiv,crossref", "--sources",
         help="Comma-separated web and scholarly providers.",
     ),
     max_rounds: int | None = typer.Option(None, "--max-rounds", min=1, max=5),
     max_sources: int | None = typer.Option(None, "--max-sources", min=3, max=60),
     max_web_pages: int | None = typer.Option(None, "--max-web-pages", min=0, max=30),
+    max_report_sources: int | None = typer.Option(None, "--max-report-sources", min=3, max=20, help="Maximum relevant sources shown in the answer."),
     verify_dois: bool = typer.Option(False, "--verify-dois", help="Recheck up to ten DOI records against Crossref."),
     model_free: bool = typer.Option(False, "--model-free", help="Exercise deterministic orchestration without synthesis."),
     project: str = typer.Option("default", "--project"),
     as_json: bool = typer.Option(False, "--json", help="Print the complete persisted workflow state."),
+    show_trace: bool = typer.Option(False, "--trace", help="Show the research action and decision trace after the answer."),
 ) -> None:
     """Run bounded iterative research, counter-search, synthesis, and citation checks."""
     from atelier.service import AtelierService
@@ -216,18 +219,46 @@ def deep_research_command(
             max_rounds=max_rounds,
             max_sources=max_sources,
             max_web_pages=max_web_pages,
+            max_report_sources=max_report_sources,
             verify_dois=verify_dois,
             model_free=model_free,
         )
     except (KeyError, TypeError, ValueError, WorkspaceError) as exc:
         console.print(f"[red]{exc}[/]")
         raise typer.Exit(code=2) from exc
-    if as_json or result.get("status") != "completed":
-        console.print_json(json.dumps(result, default=str))
+    workflow_path = settings.workflow_dir / (str(result.get("run_id")) + ".json")
+    if as_json:
+        payload = dict(result)
+        payload["workflow_path"] = str(workflow_path)
+        console.print_json(json.dumps(payload, default=str))
+    elif result.get("status") == "failed":
+        console.print("[red]Deep research failed[/]")
+        console.print(str(result.get("error") or "The workflow did not complete."))
+        console.print(f"Workflow state: {workflow_path}")
+        trace = result.get("trace", [])
+        if isinstance(trace, list) and trace:
+            console.print("\nResearch trace summary:")
+            for event in trace[-12:]:
+                if not isinstance(event, dict):
+                    continue
+                phase = str(event.get("phase") or "trace").title()
+                kind = str(event.get("event") or "event").replace("_", " ")
+                summary = str(event.get("decision_summary") or event.get("message") or "").strip()
+                console.print(f"- {phase}: {kind}" + (f" — {summary}" if summary else ""))
+        console.print("\nUse --json to inspect the complete persisted workflow state.")
     else:
         report = result.get("outputs", {}).get("verify report", {}).get("report_markdown")
         if isinstance(report, str):
+            if result.get("status") == "partial":
+                console.print("[yellow]Deep research completed with review required[/]")
             console.print(Markdown(report))
+            if show_trace:
+                trace_report = result.get("outputs", {}).get("verify report", {}).get("trace_markdown")
+                if isinstance(trace_report, str):
+                    trace_marker = "## Research trace"
+                    trace_only = trace_report[trace_report.find(trace_marker):] if trace_marker in trace_report else trace_report
+                    console.print(Markdown(trace_only))
+            console.print(f"\nSaved workflow state: {workflow_path}")
         else:
             console.print_json(json.dumps(result, default=str))
     if result.get("status") == "failed":

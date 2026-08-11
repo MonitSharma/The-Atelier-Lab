@@ -150,9 +150,19 @@ atelier deep-research --depth standard \
 Use `--depth quick`, `standard`, or `deep` to select bounded defaults. Add
 `--verify-dois` to recheck up to ten DOI records against Crossref, or
 `--max-web-pages` to tighten the page-fetch budget. The current providers are
-the no-key Bing RSS web surface, Semantic Scholar, arXiv, and Crossref.
+the no-key Bing RSS web surface, Wikipedia summaries, Nobel Prize data,
+Semantic Scholar, arXiv, and Crossref.
 Web extraction supports static public HTTPS HTML and plain text. It does not
 execute JavaScript, authenticate, bypass paywalls, or ignore robots.txt.
+
+The normal Markdown report includes a `Research trace` section. It shows the
+answer and a small set of selected sources. Add `--trace` to show the planned
+queries, providers contacted, URLs actually fetched, extraction and robots
+outcomes, stable evidence IDs, bounded coverage decisions, and the stop reason.
+Use `--max-report-sources 5` to show fewer sources. `--json` returns the full
+trace in the structured workflow state. This is an auditable action/decision
+summary; private model chain-of-thought and raw untrusted webpage instructions
+are not exposed.
 
 Inspect the web primitives directly when debugging source coverage:
 

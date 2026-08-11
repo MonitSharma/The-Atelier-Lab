@@ -1,6 +1,8 @@
 import json
 
-from agent.research_workflow import DeepResearchWorkflow
+import pytest
+
+from agent.research_workflow import DeepResearchError, DeepResearchWorkflow
 
 
 class ScriptedModel:
@@ -68,11 +70,16 @@ def test_deep_research_runs_challenge_round_and_verifies_citations():
     assert gathered["unique_sources"] == 4
     assert verification["citation_integrity"] is True
     assert "[S1]" in verification["report_markdown"]
+    assert any(event["event"] == "coverage_assessed" for event in verification["research_trace"])
+    assert "## Research trace" in verification["trace_markdown"]
+    assert "## Research trace" not in verification["report_markdown"]
 
 
 def test_deep_research_deduplicates_sources_and_stops_on_diminishing_returns():
     def duplicate_lookup(_arguments):
-        return {"status": "success", "records": [{"title": "Same paper", "doi": "10.1/same"}]}
+        return {"status": "success", "records": [{
+            "title": "Same paper", "doi": "10.1/same", "abstract": "Evidence about a bounded question.",
+        }]}
 
     workflow = DeepResearchWorkflow(lookup=duplicate_lookup, model_call=ScriptedModel())
     frame = workflow.frame({
@@ -104,8 +111,8 @@ def test_deep_research_rejects_unbounded_inputs():
 def test_deep_research_uses_extracted_web_content_and_rejects_injected_citations():
     def web_search(_arguments):
         return {"status": "success", "records": [
-            {"title": "Safe page", "url": "https://example.test/safe", "summary": "safe"},
-            {"title": "Injected page", "url": "https://example.test/injected", "summary": "unsafe"},
+            {"title": "Safe page", "url": "https://example.test/safe", "summary": "safe web report"},
+            {"title": "Injected page", "url": "https://example.test/injected", "summary": "unsafe web report"},
         ]}
 
     def web_fetch(arguments):
@@ -144,6 +151,140 @@ def test_deep_research_uses_extracted_web_content_and_rejects_injected_citations
     assert verification["unsafe_web_citations"] == ["S2"]
 
 
+def test_named_entity_search_filters_irrelevant_results_and_ranks_report_sources():
+    def web_search(_arguments):
+        return {"status": "success", "records": [
+            {"title": "Albert Camus bibliography", "url": "https://example.test/camus", "summary": "Albert Camus books and dates."},
+            {"title": "Unrelated programming list", "url": "https://example.test/python", "summary": "Python books and lists."},
+        ]}
+
+    def web_fetch(arguments):
+        return {
+            "status": "success", "title": "Albert Camus bibliography",
+            "final_url": arguments["url"], "canonical_url": arguments["url"],
+            "text": "Albert Camus bibliography with publication dates and major works. " * 3,
+            "content_sha256": "c" * 64, "robots_allowed": True,
+            "prompt_injection_detected": False,
+        }
+
+    workflow = DeepResearchWorkflow(
+        web_search_call=web_search, web_fetch_call=web_fetch,
+    )
+    frame = workflow.frame({
+        "question": "What books did Albert Camus write?", "depth": "quick",
+        "sources": ["web"], "max_report_sources": 3, "model_free": True,
+    })
+    plan = workflow.plan(frame)
+    gathered = workflow.gather(frame, plan)
+    synthesis = workflow.synthesize(frame, plan, gathered)
+    verification = workflow.verify(frame, gathered, synthesis)
+
+    assert gathered["unique_sources"] == 1
+    assert gathered["sources"][0]["title"] == "Albert Camus bibliography"
+    assert "Showing 1 source(s) from 1 candidates" in verification["report_markdown"]
+
+
+def test_topic_relevance_gate_rejects_unrelated_general_web_results():
+    def web_search(_arguments):
+        return {"status": "success", "records": [
+            {"title": "Gogoprint Singapore", "url": "https://example.test/printing", "summary": "Online printing services and promotions."},
+            {"title": "Printing press in Europe", "url": "https://example.test/history", "summary": "Printing press, education, religion, and science in Europe before 1600."},
+        ]}
+
+    workflow = DeepResearchWorkflow(web_search_call=web_search)
+    frame = workflow.frame({
+        "question": "How did the printing press change Europe before 1600?", "depth": "quick",
+        "sources": ["web"], "min_sources": 1, "model_free": True,
+    })
+    gathered = workflow.gather(frame, workflow.plan(frame))
+
+    assert gathered["unique_sources"] == 1
+    assert gathered["sources"][0]["title"] == "Printing press in Europe"
+    assert any(event.get("topic_overlap", 1) < 0.15 for event in gathered["research_trace"])
+
+
+def test_nobel_provider_is_skipped_for_non_nobel_questions():
+    calls = []
+
+    def lookup(arguments):
+        calls.append(arguments["source"])
+        return {"status": "success", "records": [{"title": "Relevant history", "summary": "Printing press history in Europe."}]}
+
+    workflow = DeepResearchWorkflow(lookup=lookup)
+    frame = workflow.frame({
+        "question": "How did the printing press change Europe?", "depth": "quick",
+        "sources": ["nobel", "crossref"], "min_sources": 1, "model_free": True,
+    })
+    workflow.gather(frame, workflow.plan(frame))
+
+    assert "nobel" not in calls
+
+
+def test_incomplete_coverage_is_explicitly_marked_for_review():
+    workflow = DeepResearchWorkflow(model_call=ScriptedModel())
+    frame = workflow.frame({
+        "question": "Does the intervention work?", "depth": "quick",
+        "sources": ["crossref"], "min_sources": 1,
+    })
+    gathered = {
+        "sources": [{"id": "S1", "source": "crossref", "title": "A source", "authors": [], "published": "2026", "url": "https://example.test"}],
+        "rounds": [{"assessment": {"sufficient": False}}], "stop_reason": "max_rounds",
+        "web_pages_fetched": 0, "research_trace": [],
+    }
+    verification = workflow.verify(frame, gathered, {
+        "executive_summary": "Partial answer.",
+        "findings": [{"claim": "A qualified claim.", "evidence_ids": ["S1"], "confidence": "low"}],
+        "contradictions": [], "limitations": [], "unanswered_questions": [],
+    })
+
+    assert verification["research_complete"] is False
+    assert verification["status"] == "partial"
+    assert "needs review" in verification["report_markdown"]
+    assert "Research coverage: incomplete" in verification["report_markdown"]
+    assert "Round" in verification["trace_markdown"]
+
+
+def test_rate_limited_provider_is_disabled_while_other_providers_continue():
+    def lookup(arguments):
+        if arguments["source"] == "semantic_scholar":
+            return {"status": "error", "error_type": "rate_limited", "message": "HTTP 429"}
+        return {"status": "success", "records": [{
+            "title": "Relevant source", "doi": "10.1234/relevant", "summary": "Bounded question evidence.", "year": 2026,
+        }]}
+
+    workflow = DeepResearchWorkflow(lookup=lookup, model_call=ScriptedModel())
+    frame = workflow.frame({
+        "question": "A bounded question", "depth": "standard",
+        "sources": ["semantic_scholar", "crossref"], "min_sources": 1, "model_free": True,
+    })
+    gathered = workflow.gather(frame, workflow.plan(frame))
+
+    assert gathered["unique_sources"] == 1
+    assert any(event["event"] == "provider_skipped" for event in gathered["research_trace"])
+
+
+def test_compact_evidence_keeps_multiple_sources_when_one_has_long_text():
+    evidence = DeepResearchWorkflow._compact_evidence([
+        {"id": "S1", "source": "wikipedia", "title": "Long", "published": "2026", "content": "long " * 4000},
+        {"id": "S2", "source": "nobel", "title": "Official", "published": "1957", "content": "official Nobel evidence"},
+    ], max_chars=2000)
+
+    assert "S1" in evidence
+    assert "S2" in evidence
+
+
+def test_compact_evidence_keeps_dated_passages_from_long_sources():
+    evidence = DeepResearchWorkflow._compact_evidence([
+        {
+            "id": "S1", "source": "wikipedia", "title": "Biography", "published": "2026",
+            "content": "Introduction. " + ("background " * 900) + "The novel was published in 1942. " + ("context " * 900),
+        },
+    ], max_chars=1200)
+
+    assert "S1" in evidence
+    assert "1942" in evidence
+
+
 def test_report_verification_requires_findings_and_honors_doi_failures():
     workflow = DeepResearchWorkflow(
         lookup=_lookup,
@@ -171,3 +312,21 @@ def test_report_verification_requires_findings_and_honors_doi_failures():
     assert failed_doi["doi_failures"] == ["S1"]
     assert missing["missing_findings"] is True
     assert missing["citation_integrity"] is False
+
+
+def test_failed_discovery_preserves_a_safe_trace():
+    def denied_lookup(_arguments):
+        return {"status": "denied", "error_type": "network_denied", "message": "network capability required"}
+
+    workflow = DeepResearchWorkflow(lookup=denied_lookup, model_call=ScriptedModel())
+    frame = workflow.frame({
+        "question": "What should be checked?", "depth": "quick", "sources": ["crossref"],
+    })
+    plan = workflow.plan(frame)
+
+    with pytest.raises(DeepResearchError) as error:
+        workflow.gather(frame, plan)
+
+    assert error.value.trace
+    assert any(event["event"] == "search_failed" for event in error.value.trace)
+    assert all("content" not in event for event in error.value.trace)

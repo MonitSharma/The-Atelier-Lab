@@ -203,7 +203,8 @@ atelier deep-research --depth deep --verify-dois \
 ```
 
 The controller plans subquestions, searches the general web through a bounded
-no-key RSS provider plus Semantic Scholar, arXiv, and Crossref, deduplicates
+no-key RSS provider plus Wikipedia summaries, Nobel Prize data, Semantic Scholar,
+arXiv, and Crossref, deduplicates
 records, safely extracts selected static webpages, performs a counter-evidence
 pass, and stops on coverage, budget, or diminishing returns. Every stage is
 checkpointed under the Atelier runtime home. Web fetches require public HTTPS,
@@ -211,6 +212,14 @@ revalidate DNS and redirects, honor robots.txt, pace requests per domain, cap
 response types and sizes, remove active HTML, hash extracted content, redact
 secret-shaped strings, and quarantine prompt-injection-shaped pages. Important
 claims still require human review against the primary source before publication.
+
+Research quality is evaluated with the frozen suite at
+`benchmarks/research_deep/questions.json`. Compare local models with
+`atelier benchmark-research --model qwen3:8b --model <candidate>`. The benchmark
+records citation integrity, coverage completeness, expected-fact matches,
+source-domain hits, latency, and each persisted workflow run for later review.
+Use `atelier workflow retention` for a dry-run cleanup plan; add `--apply` only
+after inspecting the exact candidate files.
 
 For time-sensitive questions, use words such as `recent`, `latest`, or `current` explicitly. Atelier parses dates such as `YYYY-MM-DD` from source metadata and filenames, expands the retrieval candidates, and ranks dated sources newest-first. It also displays the date in the retrieved context. This improves chronology; it does not replace checking the source coverage or verifying a live claim.
 

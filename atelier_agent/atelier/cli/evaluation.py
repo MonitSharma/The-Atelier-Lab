@@ -179,6 +179,41 @@ def benchmark_retrieval(
     console.print(f"[bold]Reference-dominated queries:[/] {report['aggregate']['reference_dominated_queries']}")
     console.print(f"[dim]Report: {report['output']}[/]")
 
+
+@app.command("benchmark-research")
+def benchmark_research(
+    models: list[str] | None = typer.Option(None, "--model", help="Model ID; repeat for comparison."),
+    depth: str = typer.Option("quick", "--depth", help="quick, standard, or deep."),
+    max_web_pages: int = typer.Option(0, "--max-web-pages", min=0, max=30),
+    model_free: bool = typer.Option(False, "--model-free", help="Validate orchestration without model synthesis."),
+) -> None:
+    """Run the frozen research benchmark for one or more local models."""
+    from eval.research_benchmark import run, save
+
+    candidates = models or [name for name in (settings.brain_model, settings.expert_model) if name]
+    if not candidates:
+        console.print("[red]No model configured. Use --model MODEL.[/]")
+        raise typer.Exit(code=2)
+    with console.status("Running research benchmark; local models and web providers may take a while..."):
+        report = run(models=candidates, depth=depth, max_web_pages=max_web_pages, model_free=model_free)
+    path = save(report)
+    table = Table(title="Deep-research benchmark")
+    table.add_column("Model")
+    table.add_column("Quality pass")
+    table.add_column("Citation integrity")
+    table.add_column("Complete")
+    table.add_column("Avg seconds")
+    for row in report["models"]:
+        aggregate = row["aggregate"]
+        table.add_row(
+            row["model"], f"{aggregate['quality_pass']}/{aggregate['cases']}",
+            f"{aggregate['citation_integrity']}/{aggregate['cases']}",
+            f"{aggregate['research_complete']}/{aggregate['cases']}",
+            str(aggregate["avg_latency_s"]),
+        )
+    console.print(table)
+    console.print(f"[dim]Report: {path}[/]")
+
 @app.command("reliability", hidden=True)
 def reliability_report(
     input_path: Path | None = typer.Option(None, "--input", exists=True, readable=True, help="JSON list of trial rows."),

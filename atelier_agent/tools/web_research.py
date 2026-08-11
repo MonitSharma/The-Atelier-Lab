@@ -340,6 +340,8 @@ class WebResearchClient:
             return {**cached, "records": safe_records[:max_results], "cached": True}
         response = self._request(request_url, max_bytes=1_000_000)
         if response.status != 200:
+            if response.status == 429:
+                raise WebPolicyError("rate_limited", "Search provider rate limited the request (HTTP 429)")
             raise WebPolicyError("search_failed", f"Search provider returned HTTP {response.status}")
         content_type = response.headers.get("content-type", "").split(";", 1)[0].strip().lower()
         if content_type not in {"application/rss+xml", "application/xml", "text/xml"}:
@@ -405,6 +407,8 @@ class WebResearchClient:
         self.rate_limiter.wait(hostname, crawl_delay=crawl_delay)
         response = self._request(normalized, max_bytes=max_bytes, respect_rate_limit=False)
         if response.status != 200:
+            if response.status == 429:
+                raise WebPolicyError("rate_limited", "Webpage rate limited the request (HTTP 429)")
             raise WebPolicyError("http_error", f"Webpage returned HTTP {response.status}")
         content_type = response.headers.get("content-type", "").split(";", 1)[0].strip().lower()
         if content_type not in ALLOWED_CONTENT_TYPES:

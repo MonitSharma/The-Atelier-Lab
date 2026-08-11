@@ -1,0 +1,62 @@
+{
+  "suite": "research_deep_v1",
+  "description": "Frozen questions for comparing research models and retrieval quality.",
+  "cases": [
+    {
+      "id": "camus_nobel",
+      "category": "dates_and_false_premise",
+      "question": "What books did Albert Camus write, in what year, and when did he receive the Nobel Prize and for what work?",
+      "expected_contains": ["The Stranger", "1942", "1957", "literary production"],
+      "required_source_domains": ["nobelprize.org", "wikipedia.org"]
+    },
+    {
+      "id": "apollo_11",
+      "category": "institutional_facts",
+      "question": "What were the major milestones of Apollo 11, who were the astronauts, and what scientific work was done on the lunar surface?",
+      "expected_contains": ["Armstrong", "Aldrin", "Collins", "NASA"],
+      "required_source_domains": ["nasa.gov"]
+    },
+    {
+      "id": "printing_press",
+      "category": "historical_impact",
+      "question": "How did the printing press change Europe between 1450 and 1600, and what evidence supports its impact on education, religion, and science?",
+      "expected_contains": ["education", "religion", "science"],
+      "required_source_domains": []
+    },
+    {
+      "id": "einstein_nobel",
+      "category": "award_verification",
+      "question": "What did Albert Einstein win the Nobel Prize for, and when?",
+      "expected_contains": ["1921", "photoelectric"],
+      "required_source_domains": ["nobelprize.org"]
+    },
+    {
+      "id": "shakespeare_works",
+      "category": "bibliography",
+      "question": "What are the main works of William Shakespeare, and which are generally considered his major tragedies?",
+      "expected_contains": ["Hamlet", "Macbeth", "Othello", "King Lear"],
+      "required_source_domains": []
+    },
+    {
+      "id": "crisp_cas9",
+      "category": "scientific_history",
+      "question": "What is CRISPR-Cas9, and which scientists are most closely associated with its development?",
+      "expected_contains": ["CRISPR", "Cas9"],
+      "required_source_domains": []
+    },
+    {
+      "id": "false_nobel_book",
+      "category": "false_premise",
+      "question": "Which single book did Albert Camus submit to win the Nobel Prize in Literature?",
+      "expected_contains": ["not", "literary production"],
+      "required_source_domains": ["nobelprize.org"]
+    },
+    {
+      "id": "historical_period_gate",
+      "category": "temporal_constraint",
+      "question": "What evidence shows how printed scientific books changed the circulation of knowledge in Europe before 1600?",
+      "expected_contains": ["before 1600", "science"],
+      "required_source_domains": []
+    }
+  ]
+}
