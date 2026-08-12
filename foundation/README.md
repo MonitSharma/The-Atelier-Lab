@@ -12,6 +12,7 @@ The active from-scratch model work is documented in:
 
 * [Local Sparse Language Model Research Plan](../docs/foundation/LOCAL_SPARSE_LANGUAGE_MODEL_RESEARCH_PLAN.md) — research question, architecture comparisons, Apple Silicon constraints, and supporting literature.
 * [Atelier Foundation Learning and Execution Plan](../docs/foundation/ATELIER_FOUNDATION_EXECUTION_PLAN.md) — implementation order, learning workflow, hard exit gates, and the first session checklist.
+* [Foundation Week 1 Checklist](../docs/foundation/FOUNDATION_WEEK_01_CHECKLIST.md) — the concrete checklist for this week’s model-contract, parameter-count, and RMSNorm milestone.
 
 *   **`datasets/`**: Active dataset sharding pipelines, curation rules, and BPE tokenization.
     *   [**`sanskritpile/`**](datasets/sanskritpile/): Multi-version curated Sanskrit corpora and tokenizer reporting.
