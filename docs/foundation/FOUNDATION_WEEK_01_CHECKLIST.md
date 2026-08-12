@@ -1,8 +1,8 @@
 # Atelier Foundation — Week 1 Checklist
 
-**Dates:** 13–19 August 2026  
-**Branch:** `atelier-foundation`  
-**Time budget:** approximately 10–15 focused hours  
+**Dates:** 13–19 August 2026
+**Branch:** `atelier-foundation`
+**Time budget:** approximately 10–15 focused hours
 **Primary milestone:** understand and implement the first pieces of the dense Transformer contract
 
 This is the working checklist for the first week of the from-scratch language-model project. Check items off as you complete them. Do not move to the next section simply because the calendar moved forward; the exit criteria are the gate.
