@@ -1,3 +1,31 @@
+const themeToggle = document.querySelector('.theme-toggle');
+const themeColor = document.querySelector('meta[name="theme-color"]');
+const root = document.documentElement;
+const systemTheme = matchMedia('(prefers-color-scheme: dark)');
+let themeOverride;
+try { themeOverride = localStorage.getItem('ms-theme'); } catch {}
+
+const applyTheme = (theme) => {
+  root.dataset.theme = theme;
+  themeToggle?.setAttribute('aria-pressed', String(theme === 'dark'));
+  if (themeColor) themeColor.content = getComputedStyle(root).getPropertyValue('--paper').trim();
+};
+
+applyTheme(root.dataset.theme);
+if (themeToggle) {
+  themeToggle.hidden = false;
+  themeToggle.addEventListener('click', () => {
+    themeOverride = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    try { localStorage.setItem('ms-theme', themeOverride); } catch {}
+    applyTheme(themeOverride);
+  });
+}
+systemTheme.addEventListener('change', ({ matches }) => {
+  if (themeOverride !== 'light' && themeOverride !== 'dark') {
+    applyTheme(matches ? 'dark' : 'light');
+  }
+});
+
 const revealItems = document.querySelectorAll('.reveal');
 const progressBar = document.querySelector('#scroll-progress');
 const menuToggle = document.querySelector('.menu-toggle');
